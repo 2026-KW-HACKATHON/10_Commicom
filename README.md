@@ -155,7 +155,7 @@ reports        신고 대상, 사유, 처리 상태
 프론트엔드가 데이터베이스를 무분별하게 직접 수정하지 않도록 주요 작업은 API 또는 서버 액션으로 감쌉니다.
 
 ```text
-GET    /api/stores              매장 목록·지도 조회
+GET    /api/stores              매장 목록·지도 조회 
 GET    /api/stores/:id          매장 상세 조회
 POST   /api/posts/generate      AI 홍보물 생성
 POST   /api/posts               홍보물 게시
