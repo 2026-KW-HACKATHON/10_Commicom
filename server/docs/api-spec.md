@@ -698,6 +698,40 @@ Response 예시 (404)
 
 ---
 
+## PRO
+
+> 사장님 가게 단위 월 구독 (30일). 해커톤: 결제는 모의 처리하고, 만료일에 자동 결제도 하지 않는다 (만료되면 다시 가입).
+> 혜택: 숏폼 피드 우선 노출(서버가 정렬), 영상 재수정·원본 다운로드(클라이언트가 `status`로 버튼을 연다).
+
+| API | Method · Path | 인증 | 설명 |
+| --- | --- | --- | --- |
+| PRO 구독 상태 | `GET /api/stores/{storeId}/pro` | 사장님 | `storeId, status(ACTIVE/EXPIRED/NONE), startedAt, expiresAt, autoRenew`. 가입한 적 없으면 `NONE` (날짜는 `null`) |
+| PRO 가입 | `POST /api/stores/{storeId}/pro` | 사장님 | 오늘부터 30일 (만료일 23:59:59 KST). 만료됐으면 다시 30일. 응답은 상태 조회와 같음 |
+| 해지 예약·취소 | `PATCH /api/stores/{storeId}/pro` | 사장님 | Body `autoRenew` (Boolean, 필수). `false` = 해지 예약(만료일까지 이용), `true` = 해지 취소 |
+
+Response 예시 (200)
+
+```json
+{
+  "storeId": 2,
+  "status": "ACTIVE",
+  "startedAt": "2026-10-09T00:00:00+09:00",
+  "expiresAt": "2026-11-08T23:59:59+09:00",
+  "autoRenew": true
+}
+```
+
+| 상태코드 | 의미 |
+| --- | --- |
+| PRO409 | 이미 PRO 이용 중 (가입) |
+| PRO409_2 | 이용 중인 PRO가 없음 (해지 예약·취소) |
+| STORE403_2 | 내 가게가 아님 |
+| STORE404 | 가게 없음 |
+
+> **DB 변경:** [`docs/sql/2026-10-09-pro-subscription.sql`](sql/2026-10-09-pro-subscription.sql) (`pro_subscription` 테이블)
+
+---
+
 ## Shortform
 
 > 숏폼은 AI가 가게 정보를 바탕으로 나레이션 스크립트를 작성하고 TTS·영상 합성을 거쳐 생성하는 짧은 소개 영상입니다.
@@ -712,8 +746,8 @@ Response 예시 (404)
 | API Path | `/api/shortforms` |
 | Header | 없음 |
 | Request | Query `storeId` (선택, Long): 특정 가게의 숏폼만 조회<br>Query `page` (선택, Int, 기본값 0): 페이지 번호 (0부터 시작)<br>Query `size` (선택, Int, 기본값 10): 페이지 크기 |
-| Response | `totalCount` (Int)<br>`page` (Int)<br>`size` (Int)<br>`hasNext` (Boolean)<br>`shortforms` (Array)<br>`shortforms[].shortformId` (Long)<br>`shortforms[].storeId` (Long)<br>`shortforms[].storeName` (String)<br>`shortforms[].videoUrl` (String)<br>`shortforms[].thumbnailUrl` (String \| null)<br>`shortforms[].title` (String)<br>`shortforms[].duration` (Int)<br>`shortforms[].createdAt` (String) |
-| 로직 간단 설명 | 전체 숏폼을 최신순으로 페이지네이션하여 반환한다. `storeId`가 있으면 해당 가게의 숏폼만 반환한다. 피드 화면에서 스와이프로 영상을 넘길 때 다음 배치를 미리 요청하는 방식으로 사용한다.<br><br>**result 필드**<br>`totalCount`: 조건에 맞는 전체 숏폼 수<br>`page`: 현재 페이지 번호 (0부터 시작)<br>`size`: 요청된 페이지 크기<br>`hasNext`: 다음 페이지 존재 여부<br>`shortforms[].shortformId`: 숏폼 ID<br>`shortforms[].storeId`: 가게 ID (가게 상세로 이동 시 사용)<br>`shortforms[].storeName`: 가게 이름<br>`shortforms[].videoUrl`: 재생할 영상 파일 URL<br>`shortforms[].thumbnailUrl`: 로딩 전 표시할 썸네일 이미지 URL (없으면 `null`)<br>`shortforms[].title`: 숏폼 제목<br>`shortforms[].duration`: 영상 길이 (초 단위)<br>`shortforms[].createdAt`: 생성 일시 (ISO 8601, 예: `2025-10-08T14:30:00`) |
+| Response | `totalCount` (Int)<br>`page` (Int)<br>`size` (Int)<br>`hasNext` (Boolean)<br>`shortforms` (Array)<br>`shortforms[].shortformId` (Long)<br>`shortforms[].storeId` (Long)<br>`shortforms[].storeName` (String)<br>`shortforms[].videoUrl` (String)<br>`shortforms[].thumbnailUrl` (String \| null)<br>`shortforms[].title` (String)<br>`shortforms[].duration` (Int)<br>`shortforms[].createdAt` (String)<br>`shortforms[].promoted` (Boolean) |
+| 로직 간단 설명 | 전체 숏폼을 페이지네이션하여 반환한다. **PRO 이용 중인 가게 영상이 먼저**, 그 안에서는 최신순 ([PRO](#pro)). `storeId`가 있으면 해당 가게의 숏폼만 반환한다. 피드 화면에서 스와이프로 영상을 넘길 때 다음 배치를 미리 요청하는 방식으로 사용한다.<br><br>**result 필드**<br>`totalCount`: 조건에 맞는 전체 숏폼 수<br>`page`: 현재 페이지 번호 (0부터 시작)<br>`size`: 요청된 페이지 크기<br>`hasNext`: 다음 페이지 존재 여부<br>`shortforms[].shortformId`: 숏폼 ID<br>`shortforms[].storeId`: 가게 ID (가게 상세로 이동 시 사용)<br>`shortforms[].storeName`: 가게 이름<br>`shortforms[].videoUrl`: 재생할 영상 파일 URL<br>`shortforms[].thumbnailUrl`: 로딩 전 표시할 썸네일 이미지 URL (없으면 `null`)<br>`shortforms[].title`: 숏폼 제목<br>`shortforms[].duration`: 영상 길이 (초 단위)<br>`shortforms[].createdAt`: 생성 일시 (ISO 8601, 예: `2025-10-08T14:30:00`)<br>`shortforms[].promoted`: PRO 가게 영상이면 `true` (추천 배지) |
 | 상태코드 | COMMON200: 조회 성공<br>COMMON400: 잘못된 파라미터 (page·size 음수 등) |
 
 Request 예시
@@ -908,6 +942,7 @@ Response 예시 (200, 처리 중)
 ## Scrap
 
 > 스크랩은 관심 가게를 저장하는 기능입니다. 모든 스크랩 API는 로그인이 필요합니다.
+> 숏폼 영상 스크랩(피드의 🔖)은 [숏폼 스크랩](#숏폼-스크랩)을 쓰세요. 가게 스크랩과 따로 저장됩니다.
 
 ### 스크랩 추가
 
@@ -1029,3 +1064,23 @@ Response 예시 (200)
   }
 }
 ```
+
+### 숏폼 스크랩
+
+> 피드에서 🔖를 누른 숏폼 영상을 저장한다. 앱의 "메뉴 > 스크랩한 영상" 화면에서 쓴다. 로그인 필요.
+
+| API | Method · Path | 설명 |
+| --- | --- | --- |
+| 숏폼 스크랩 추가 | `POST /api/scraps/shortforms` | Body `shortformId` (Long, 필수). 응답 `scrapId, shortformId, storeId, storeName, videoUrl, thumbnailUrl, title, duration, createdAt(영상 생성 일시), scrappedAt` (201) |
+| 숏폼 스크랩 취소 | `DELETE /api/scraps/shortforms/{shortformId}` | `result` 생략 |
+| 내 숏폼 스크랩 목록 | `GET /api/scraps/shortforms` | `count`, `shortforms[]` (추가 응답과 같은 모양). 스크랩한 순서 최신순 |
+
+| 상태코드 | 의미 |
+| --- | --- |
+| COMMON400 | `shortformId` 누락 |
+| COMMON401 | 토큰 없음·만료 |
+| SHORTFORM404 | 숏폼 없음 |
+| SCRAP409_2 | 이미 스크랩한 영상 |
+| SCRAP404_2 | 스크랩하지 않은 영상 |
+
+> **DB 변경:** [`docs/sql/2026-10-09-shortform-scrap.sql`](sql/2026-10-09-shortform-scrap.sql) (`shortform_scrap` 테이블). 회원 탈퇴 시 함께 삭제된다. 숏폼을 삭제하는 API를 만들 때는 `ShortformScrapRepository.deleteAllByShortform`으로 그 숏폼의 스크랩을 먼저 지워야 한다.
