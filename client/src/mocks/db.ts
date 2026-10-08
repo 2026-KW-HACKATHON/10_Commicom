@@ -22,6 +22,9 @@ import { validateCoupon } from '@/features/coupon/schema'
 import { distanceMeters, GPS_BYPASS } from '@/features/quest/geo'
 import {
   LEVEL_TABLE,
+  QUEST_TEMPLATES,
+  TEMPLATE_REWARD_FEED,
+  TEMPLATE_TARGET,
   MAX_LEVEL,
   VISIT_RADIUS_M,
   type FeedPigeonResult,
@@ -34,6 +37,8 @@ import {
   type QuestQr,
   type QuestSubscription,
   type QuestType,
+  type OwnerQuestTemplate,
+  type QuestTemplateKey,
   type VisitRequest,
   type VisitResult,
 } from '@/features/quest/schema'
@@ -84,6 +89,8 @@ interface Db {
   history: HistoryItem[]
   quests: { questId: number; title: string; type: QuestType; targetCount: number; rewardFeed: number; basicCount: number }[]
   visits: { questId: number; storeId: number; date: string }[]
+  /** 템플릿 퀘스트별 참여 가게 (2026-10-08 추가 — 예전 저장본엔 없을 수 있음) */
+  questParticipants?: Partial<Record<QuestTemplateKey, number[]>>
   subscriptions: Record<number, { startedAt: string; expiresAt: string }>
   coupons: CouponRow[]
   userCoupons: UserCouponRow[]
@@ -135,6 +142,8 @@ function seed(): Db {
       { questId: 3, title: '지도에서 가게 3곳 둘러보기', type: 'BASIC', targetCount: 3, rewardFeed: 1, basicCount: 1 },
     ],
     visits: [{ questId: 1, storeId: 5, date: ago(1) }],
+    // 1 월계 분식, 3 김가네, 5 헤어살롱 (모두 퀘스트 가게). 2 광운 카페(사장님 데모)는 아직 미참여
+    questParticipants: { restaurant: [1, 3], korean: [3], snack: [1], beauty: [5] },
     subscriptions: {
       1: { startedAt: `${ago(10)}T00:00:00+09:00`, expiresAt: endOfKstDay(addDays(today, 20)) },
       3: { startedAt: `${ago(5)}T00:00:00+09:00`, expiresAt: endOfKstDay(addDays(today, 25)) },
@@ -205,6 +214,8 @@ function db(): Db {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     cache = saved ? (JSON.parse(saved) as Db) : seed()
+    // 예전에 저장된 목업에는 퀘스트 참여 정보가 없음 → 기본값으로 채움
+    cache.questParticipants ??= seed().questParticipants
   } catch {
     cache = seed()
   }
@@ -382,7 +393,44 @@ export function mockQrHint(storeId: number) {
 
 /* ── 2. Quest ── */
 
-function questView(q: Db['quests'][number]) {
+type QuestRow = Db['quests'][number] & { templateKey: QuestTemplateKey | null; storeIds: number[] | null }
+
+const TEMPLATE_QUEST_ID_BASE = 100
+
+/** 지금 활성(유료 등록 유지 중)인 템플릿 참여 가게 */
+function participants(key: QuestTemplateKey) {
+  return (db().questParticipants?.[key] ?? []).filter(isQuestStore)
+}
+
+/**
+ * 손님에게 보이는 퀘스트.
+ * - 앱 기본 퀘스트(BASIC)는 항상
+ * - "동네 가게 N곳 방문"(VISIT, 가게 제한 없음)은 퀘스트 가게가 1곳 이상일 때
+ * - 템플릿 퀘스트는 참여 가게가 1곳 이상일 때만 (없으면 깰 수 없으니 숨김). 목표는 참여 가게 수를 넘지 않음
+ */
+function visibleQuests(): QuestRow[] {
+  const anyQuestStore = MOCK_STORES.some((s) => isQuestStore(s.storeId))
+  const base: QuestRow[] = db()
+    .quests.filter((q) => q.type === 'BASIC' || anyQuestStore)
+    .map((q) => ({ ...q, templateKey: null, storeIds: null }))
+  const templates: QuestRow[] = QUEST_TEMPLATES.flatMap((t, i) => {
+    const storeIds = participants(t.key)
+    if (storeIds.length === 0) return []
+    return [{
+      questId: TEMPLATE_QUEST_ID_BASE + i,
+      title: t.title,
+      type: 'VISIT' as const,
+      targetCount: Math.min(TEMPLATE_TARGET, storeIds.length),
+      rewardFeed: TEMPLATE_REWARD_FEED,
+      basicCount: 0,
+      templateKey: t.key,
+      storeIds,
+    }]
+  })
+  return [...base, ...templates]
+}
+
+function questView(q: QuestRow) {
   const currentCount =
     q.type === 'VISIT' ? db().visits.filter((v) => v.questId === q.questId).length : q.basicCount
   return {
@@ -393,20 +441,25 @@ function questView(q: Db['quests'][number]) {
     currentCount: Math.min(currentCount, q.targetCount),
     rewardFeed: q.rewardFeed,
     status: currentCount >= q.targetCount ? ('COMPLETED' as const) : ('IN_PROGRESS' as const),
+    templateKey: q.templateKey,
+    storeIds: q.storeIds,
   }
 }
 
 export const mockQuestApi = {
-  list: () => respond<QuestListResult>(() => ({ quests: db().quests.map(questView) })),
+  list: () => respond<QuestListResult>(() => ({ quests: visibleQuests().map(questView) })),
 
   visit: (questId: number, body: VisitRequest) =>
     respond<VisitResult>(() => {
       const d = db()
-      const q = d.quests.find((x) => x.questId === questId && x.type === 'VISIT')
+      const q = visibleQuests().find((x) => x.questId === questId && x.type === 'VISIT')
       if (!q) fail(404, 'QUEST4041', '퀘스트를 찾을 수 없어요')
       const before = questView(q)
       if (before.status === 'COMPLETED') fail(409, 'QUEST4092', '이미 완료한 퀘스트예요')
       if (!isQuestStore(body.storeId)) fail(403, 'QUEST4031', '퀘스트 가게가 아니에요')
+      if (q.storeIds && !q.storeIds.includes(body.storeId)) {
+        fail(403, 'QUEST4032', '이 퀘스트에 참여한 가게가 아니에요')
+      }
 
       const store = MOCK_STORES.find((s) => s.storeId === body.storeId)
       if (store && !GPS_BYPASS) {
@@ -442,6 +495,49 @@ export const mockQuestApi = {
         },
         ...granted,
       }
+    }),
+
+  /* 사장님: 퀘스트 템플릿 참여 (명세 추가 제안) */
+
+  templates: (storeId: number) =>
+    respond<{ templates: OwnerQuestTemplate[] }>(() => {
+      assertMyStore(storeId, 'COMMON403')
+      return {
+        templates: QUEST_TEMPLATES.map((t) => {
+          const count = participants(t.key).length
+          return {
+            templateKey: t.key,
+            title: t.title,
+            description: `동네 ${t.place} ${TEMPLATE_TARGET}곳 방문하기`,
+            targetCount: TEMPLATE_TARGET,
+            rewardFeed: TEMPLATE_REWARD_FEED,
+            participantCount: count,
+            joined: (db().questParticipants?.[t.key] ?? []).includes(storeId),
+          }
+        }),
+      }
+    }),
+
+  joinTemplate: (storeId: number, key: QuestTemplateKey) =>
+    respond<{ templateKey: QuestTemplateKey; joined: boolean }>(() => {
+      assertMyStore(storeId, 'COMMON403')
+      if (!isQuestStore(storeId)) fail(403, 'QUEST4031', '퀘스트 가게로 등록해야 퀘스트에 참여할 수 있어요')
+      const d = db()
+      d.questParticipants ??= {}
+      const list = d.questParticipants[key] ?? []
+      if (list.includes(storeId)) fail(409, 'QUEST4096', '이미 참여 중인 퀘스트예요')
+      d.questParticipants[key] = [...list, storeId]
+      return { templateKey: key, joined: true }
+    }),
+
+  leaveTemplate: (storeId: number, key: QuestTemplateKey) =>
+    respond<{ templateKey: QuestTemplateKey; joined: boolean }>(() => {
+      assertMyStore(storeId, 'COMMON403')
+      const d = db()
+      const list = d.questParticipants?.[key] ?? []
+      if (!list.includes(storeId)) fail(409, 'QUEST4097', '참여하지 않은 퀘스트예요')
+      d.questParticipants = { ...d.questParticipants, [key]: list.filter((id) => id !== storeId) }
+      return { templateKey: key, joined: false }
     }),
 
   getSubscription: (storeId: number) =>

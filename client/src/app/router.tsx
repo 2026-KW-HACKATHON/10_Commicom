@@ -8,6 +8,7 @@ import {
   CouponCreatePage,
   OwnerCouponsPage,
   OwnerHomePage,
+  OwnerQuestsPage,
   OwnerRedeemPage,
   OwnerSettlementPage,
   ProPage,
@@ -45,6 +46,7 @@ export const router = createBrowserRouter([
     element: <OwnerLayout />,
     children: [
       { index: true, element: <OwnerHomePage />, handle: { title: '우리 가게' } },
+      { path: 'quests', element: <OwnerQuestsPage />, handle: { title: '퀘스트 등록' } },
       { path: 'coupons', element: <OwnerCouponsPage />, handle: { title: '쿠폰 관리' } },
       { path: 'coupons/new', element: <CouponCreatePage />, handle: { title: '쿠폰 발행' } },
       { path: 'redeem', element: <OwnerRedeemPage />, handle: { title: '쿠폰 사용 처리' } },

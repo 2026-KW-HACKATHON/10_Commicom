@@ -18,7 +18,9 @@ type Step = 'verify' | 'visited' | 'quest-done'
 /** Figma 2. GPS 방문 인증 → 3. 방문 인증 완료 → 4. 퀘스트 완료 → 레벨업 뽑기 (2-2) */
 export function QuestVisit({ quest }: { quest: Quest }) {
   const navigate = useNavigate()
-  const { data: stores, isLoading } = useStores(true)
+  const { data: questStores, isLoading } = useStores(true)
+  // 템플릿 퀘스트는 참여 가게에서만 인증 가능
+  const stores = quest.storeIds ? questStores?.filter((s) => quest.storeIds!.includes(s.storeId)) : questStores
   const location = useMyLocation()
   const visit = useVisit(quest.questId)
 
@@ -72,7 +74,7 @@ export function QuestVisit({ quest }: { quest: Quest }) {
 
       {isLoading && <div className="h-24 animate-pulse rounded-2xl bg-q-mint" />}
       {stores && stores.length === 0 && (
-        <p className="rounded-2xl bg-q-panel py-8 text-center text-sm text-q-muted">근처에 퀘스트 가게가 없어요</p>
+        <p className="rounded-2xl bg-q-panel py-8 text-center text-sm text-q-muted">이 퀘스트에 참여한 가게가 없어요</p>
       )}
 
       {store && (

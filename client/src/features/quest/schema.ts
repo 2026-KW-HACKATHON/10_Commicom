@@ -1,3 +1,15 @@
+import tplRestaurant from '@/assets/quest/templates/restaurant.png'
+import tplKorean from '@/assets/quest/templates/korean.png'
+import tplChinese from '@/assets/quest/templates/chinese.png'
+import tplJapanese from '@/assets/quest/templates/japanese.png'
+import tplWestern from '@/assets/quest/templates/western.png'
+import tplSnack from '@/assets/quest/templates/snack.png'
+import tplChicken from '@/assets/quest/templates/chicken.png'
+import tplCafe from '@/assets/quest/templates/cafe.png'
+import tplMart from '@/assets/quest/templates/mart.png'
+import tplShopping from '@/assets/quest/templates/shopping.png'
+import tplBeauty from '@/assets/quest/templates/beauty.png'
+import tplService from '@/assets/quest/templates/service.png'
 import lv01 from '@/assets/quest/pigeon-lv-01.png'
 import lv02 from '@/assets/quest/pigeon-lv-02.png'
 import lv03 from '@/assets/quest/pigeon-lv-03.png'
@@ -23,6 +35,10 @@ export interface Quest {
   currentCount: number
   rewardFeed: number
   status: QuestStatus
+  /** 템플릿 퀘스트면 템플릿 키 (명세 추가 제안). 앱 기본 퀘스트는 null */
+  templateKey?: QuestTemplateKey | null
+  /** 방문 인증할 수 있는 가게. null이면 모든 퀘스트 가게 (명세 추가 제안) */
+  storeIds?: number[] | null
 }
 
 export interface QuestListResult {
@@ -140,6 +156,60 @@ export interface QuestSubscription {
 export interface QuestQr {
   qrToken: string
   expiresAt: string
+}
+
+/* ── 퀘스트 템플릿 (서버 고정값, 2026-10-08 추가) ──
+ * 사장님은 이 중 우리 가게가 참여할 퀘스트를 고르고,
+ * 손님에게는 참여 가게가 1곳 이상인 템플릿만 퀘스트로 보인다. */
+
+export const QUEST_TEMPLATES = [
+  { key: 'restaurant', label: '식당', title: '동네 밥집 탐방', place: '밥집', image: tplRestaurant },
+  { key: 'korean', label: '한식', title: '한식 맛집 탐방', place: '한식집', image: tplKorean },
+  { key: 'chinese', label: '중식', title: '중식 맛집 탐방', place: '중식집', image: tplChinese },
+  { key: 'japanese', label: '일식', title: '일식 맛집 탐방', place: '일식집', image: tplJapanese },
+  { key: 'western', label: '양식', title: '골목 양식집 찾기', place: '양식집', image: tplWestern },
+  { key: 'snack', label: '분식', title: '분식 골목 투어', place: '분식집', image: tplSnack },
+  { key: 'chicken', label: '치킨', title: '치킨 맛집 도장깨기', place: '치킨집', image: tplChicken },
+  { key: 'cafe', label: '카페', title: '동네 카페 투어', place: '카페', image: tplCafe },
+  { key: 'mart', label: '마트', title: '동네 장보기', place: '마트·식료품점', image: tplMart },
+  { key: 'shopping', label: '쇼핑', title: '골목 쇼핑 나들이', place: '가게', image: tplShopping },
+  { key: 'beauty', label: '뷰티', title: '뷰티 가게 방문', place: '뷰티 가게', image: tplBeauty },
+  { key: 'service', label: '생활', title: '생활 서비스 이용하기', place: '생활 서비스 가게', image: tplService },
+] as const
+
+export type QuestTemplateKey = (typeof QUEST_TEMPLATES)[number]['key']
+
+/** 템플릿 퀘스트 기본 목표·보상 (참여 가게가 적으면 목표는 참여 가게 수로 줄어듦) */
+export const TEMPLATE_TARGET = 2
+export const TEMPLATE_REWARD_FEED = 2
+
+export function questTemplate(key: string | null | undefined) {
+  return QUEST_TEMPLATES.find((t) => t.key === key) ?? null
+}
+
+/** 가게 업종 코드 → 추천 템플릿 (사장님 화면에서 "추천" 표시) */
+export const CATEGORY_TEMPLATES: Record<string, QuestTemplateKey[]> = {
+  RESTAURANT: ['restaurant', 'korean', 'chinese', 'japanese', 'western', 'snack', 'chicken'],
+  CAFE_BAKERY_PUB: ['cafe'],
+  FOOD_RETAIL: ['mart'],
+  GENERAL_RETAIL: ['mart', 'shopping'],
+  FASHION: ['shopping'],
+  LIVING: ['shopping'],
+  ELECTRONICS: ['shopping'],
+  HOBBY_LEISURE: ['shopping'],
+  BEAUTY: ['beauty'],
+}
+
+/** GET /api/stores/{storeId}/quest-templates (명세 추가 제안) */
+export interface OwnerQuestTemplate {
+  templateKey: QuestTemplateKey
+  title: string
+  description: string
+  targetCount: number
+  rewardFeed: number
+  /** 지금 참여 중인 퀘스트 가게 수 (내 가게 포함) */
+  participantCount: number
+  joined: boolean
 }
 
 /* ── 레벨 표 (서버 고정값, 3-0) — 서버가 requiredFeed를 주지만 목업·안내 문구에서 사용 ── */
