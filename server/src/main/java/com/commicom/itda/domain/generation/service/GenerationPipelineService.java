@@ -7,6 +7,7 @@ import com.commicom.itda.domain.shortform.repository.ShortformRepository;
 import com.commicom.itda.domain.store.entity.Store;
 import com.commicom.itda.global.config.AsyncConfig;
 import com.commicom.itda.infra.ai.BedrockImageService;
+import com.commicom.itda.infra.ai.PostCaptionService;
 import com.commicom.itda.infra.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class GenerationPipelineService {
     private final ShortformRepository shortformRepository;
     private final BedrockImageService bedrockImageService;
     private final StorageService storageService;
+    private final PostCaptionService postCaptionService;
     private final GenerationCancelRegistry cancelRegistry;
 
     /**
@@ -38,7 +40,7 @@ public class GenerationPipelineService {
      */
     @Async(AsyncConfig.VIDEO_GENERATION_EXECUTOR)
     @Transactional
-    public void execute(Long generationId, String menuInfo, String referenceImageUrl, List<String> photoUrls) {
+    public void execute(Long generationId, String menuInfo, String appeal, String referenceImageUrl, List<String> photoUrls) {
         Generation generation = generationRepository.findById(generationId).orElse(null);
         if (generation == null) {
             log.error("Generation {} 을 찾을 수 없음", generationId);
@@ -64,6 +66,9 @@ public class GenerationPipelineService {
                     referenceImageUrl);
             log.info("[생성 {}] AI 이미지 생성 완료 ({}KB)", generationId, imageBytes.length / 1024);
 
+            // 게시물 소개 글: 사장님 어필을 다듬음 (실패하면 어필 그대로)
+            String caption = postCaptionService.write(store, appeal, menuInfo);
+
             // 이미지를 만드는 동안 취소했으면 올리지도 저장하지도 않음
             if (cancelRegistry.isCanceled(generationId)) {
                 log.info("[생성 {}] 사장님이 취소함", generationId);
@@ -87,6 +92,7 @@ public class GenerationPipelineService {
                     .store(store)
                     .imageUrl(imageUrl)
                     .title(cleanStoreName)
+                    .caption(caption)
                     .photoUrls(photoUrls)
                     // 사장님이 결과를 보고 [업로드]해야 손님 피드에 보임
                     .published(false)

@@ -16,6 +16,8 @@ public record ShortformDetailResponse(
         /** 옆으로 넘겨 볼 사진 전체 (첫 장 = imageUrl, 최대 5장) */
         List<String> imageUrls,
         String title,
+        /** 게시물 소개 글 (사장님 어필을 다듬은 문장, 없으면 null) */
+        String caption,
         LocalDateTime createdAt
 ) {
 
@@ -30,6 +32,7 @@ public record ShortformDetailResponse(
                 shortform.getImageUrl(),
                 shortform.getImageUrls(),
                 shortform.getTitle(),
+                shortform.getCaption(),
                 shortform.getCreatedAt()
         );
     }

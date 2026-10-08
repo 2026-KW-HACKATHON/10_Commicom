@@ -61,6 +61,7 @@ public class GenerationService {
         // 트랜잭션 커밋 완료 후에 비동기 파이프라인 실행 (커밋 전엔 DB에서 못 찾음)
         Long generationId = generation.getId();
         String menuInfo = request.menuInfo();
+        String appeal = request.appeal();
         String menuImageUrl = request.menuImageUrl();
         // 게시물에 넣을 사장님 사진: 이 가게 사진 폴더에 올라간 것만 (POST /api/stores/{storeId}/photos)
         List<String> photoUrls = request.photoUrls() == null ? List.of()
@@ -68,7 +69,7 @@ public class GenerationService {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                pipelineService.execute(generationId, menuInfo, menuImageUrl, photoUrls);
+                pipelineService.execute(generationId, menuInfo, appeal, menuImageUrl, photoUrls);
             }
         });
 

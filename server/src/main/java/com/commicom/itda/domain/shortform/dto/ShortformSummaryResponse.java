@@ -13,6 +13,8 @@ public record ShortformSummaryResponse(
         /** 옆으로 넘겨 볼 사진 전체 (첫 장 = imageUrl, 최대 5장) */
         List<String> imageUrls,
         String title,
+        /** 게시물 소개 글 (사장님 어필을 다듬은 문장, 없으면 null) */
+        String caption,
         LocalDateTime createdAt,
         /** PRO 가게 게시물 (피드 우선 노출·추천 배지) */
         boolean promoted
@@ -26,6 +28,7 @@ public record ShortformSummaryResponse(
                 shortform.getImageUrl(),
                 shortform.getImageUrls(),
                 shortform.getTitle(),
+                shortform.getCaption(),
                 shortform.getCreatedAt(),
                 promoted
         );

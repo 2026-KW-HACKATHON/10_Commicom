@@ -42,6 +42,10 @@ public class Shortform extends BaseTimeEntity {
     @Column(nullable = false, length = 200)
     private String title;
 
+    /** 피드 게시물 소개 글 — 사장님 어필을 AI로 다듬은 문장 (없으면 null, 화면은 title) */
+    @Column(length = 500)
+    private String caption;
+
     /** 사장님이 올린 메뉴판·음식·가게 사진 (AI 사진 뒤에 붙어 옆으로 넘겨 봄, 최대 MAX_PHOTOS) */
     @ElementCollection
     @CollectionTable(name = "shortform_photo", joinColumns = @JoinColumn(name = "shortform_id"))
@@ -57,10 +61,11 @@ public class Shortform extends BaseTimeEntity {
     public static final int MAX_PHOTOS = 4;
 
     @Builder
-    private Shortform(Store store, String imageUrl, String title, List<String> photoUrls, Boolean published) {
+    private Shortform(Store store, String imageUrl, String title, String caption, List<String> photoUrls, Boolean published) {
         this.store = store;
         this.imageUrl = imageUrl;
         this.title = title;
+        this.caption = caption;
         // 따로 정하지 않으면 공개 (샘플 데이터 등). AI 생성 결과는 false 로 만듦
         this.published = published == null || published;
         if (photoUrls != null) {
