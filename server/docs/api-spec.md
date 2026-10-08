@@ -35,7 +35,7 @@
 
 - 로그인 API로 받은 `accessToken`을 헤더에 담아 보냅니다: `Authorization: Bearer {accessToken}`
 - 토큰 유효기간: 24시간
-- 로그인 없이 쓸 수 있는 API: 회원가입, 로그인, 가게·업종 조회(`GET /api/stores/**`)
+- 로그인 없이 쓸 수 있는 API: 회원가입, 로그인, 이메일 인증번호 받기·확인, 이메일·닉네임 중복 확인, 가게·업종 조회(`GET /api/stores/**`)
 - 그 외 API는 모두 로그인이 필요하며, 토큰이 없으면 `COMMON401`
 
 로컬(H2) 샘플 계정 (비밀번호 모두 `password1234`)
@@ -59,8 +59,8 @@
 | Header | `Content-Type: application/json` |
 | Request | Body<br>`email` (필수): 이메일 형식<br>`password` (필수): 8~64자<br>`nickname` (필수): 30자 이하<br>`role` (필수): `RESIDENT`(주민) 또는 `OWNER`(사장님) |
 | Response | `memberId` (Long)<br>`email` (String)<br>`nickname` (String)<br>`role` (String)<br>`roleName` (String)<br>`profileImageUrl` (String \| null) |
-| 로직 간단 설명 | 이메일 중복을 확인한 뒤 비밀번호를 BCrypt로 암호화해 회원을 저장한다. `ADMIN`으로는 가입할 수 없다. 가입만 하고 토큰은 발급하지 않으므로 이어서 로그인 API를 호출한다.<br><br>**result 필드**<br>`memberId`: 생성된 회원 ID<br>`email`: 가입한 이메일<br>`nickname`: 닉네임<br>`role`: 회원 유형 코드 (`RESIDENT` / `OWNER` / `ADMIN`)<br>`roleName`: 회원 유형 한글 이름 (주민 / 사장님 / 관리자)<br>`profileImageUrl`: 프로필 이미지 URL (없으면 `null`) |
-| 상태코드 | COMMON201: 회원가입 성공<br>COMMON400: 입력값 검증 실패 (`result`에 필드별 메시지)<br>MEMBER400: 가입할 수 없는 회원 유형 (`ADMIN`)<br>MEMBER409: 이미 가입된 이메일 |
+| 로직 간단 설명 | 이메일·닉네임 중복과 **이메일 인증 완료 여부**를 확인한 뒤 비밀번호를 BCrypt로 암호화해 회원을 저장한다. 먼저 [이메일 인증번호 받기](#이메일-인증번호-받기) → [확인](#이메일-인증번호-확인)을 마쳐야 하며, 인증은 30분 동안 유효하다. `ADMIN`으로는 가입할 수 없다. 가입만 하고 토큰은 발급하지 않으므로 이어서 로그인 API를 호출한다.<br><br>**result 필드**<br>`memberId`: 생성된 회원 ID<br>`email`: 가입한 이메일<br>`nickname`: 닉네임<br>`role`: 회원 유형 코드 (`RESIDENT` / `OWNER` / `ADMIN`)<br>`roleName`: 회원 유형 한글 이름 (주민 / 사장님 / 관리자)<br>`profileImageUrl`: 프로필 이미지 URL (없으면 `null`) |
+| 상태코드 | COMMON201: 회원가입 성공<br>COMMON400: 입력값 검증 실패 (`result`에 필드별 메시지)<br>MEMBER400: 가입할 수 없는 회원 유형 (`ADMIN`)<br>MEMBER400_2: 이메일 인증을 하지 않았거나 인증이 만료됨<br>MEMBER409: 이미 가입된 이메일<br>MEMBER409_2: 이미 사용 중인 닉네임 |
 
 Request 예시
 
@@ -104,6 +104,58 @@ Response 예시 (400, 입력값 검증 실패)
   }
 }
 ```
+
+### 이메일 중복 확인
+
+| 항목 | 내용 |
+| --- | --- |
+| API명 | 이메일 중복 확인 |
+| HTTP Method | `GET` |
+| API Path | `/api/members/check-email` |
+| Header | 없음 |
+| Request | Query `email` (필수) |
+| Response | `available` (Boolean) |
+| 로직 간단 설명 | 가입 전에 이메일을 쓸 수 있는지 확인한다. `available=true`면 사용 가능. |
+| 상태코드 | COMMON200: 조회 성공 |
+
+### 닉네임 중복 확인
+
+| 항목 | 내용 |
+| --- | --- |
+| API명 | 닉네임 중복 확인 |
+| HTTP Method | `GET` |
+| API Path | `/api/members/check-nickname` |
+| Header | `Authorization: Bearer {accessToken}` (선택) |
+| Request | Query `nickname` (필수) |
+| Response | `available` (Boolean) |
+| 로직 간단 설명 | 닉네임을 쓸 수 있는지 확인한다. 로그인한 상태로 부르면 **내 현재 닉네임은 사용 가능**으로 본다(닉네임 수정 화면). 사장님은 가게명을 닉네임으로 쓴다. |
+| 상태코드 | COMMON200: 조회 성공 |
+
+### 이메일 인증번호 받기
+
+| 항목 | 내용 |
+| --- | --- |
+| API명 | 이메일 인증번호 받기 |
+| HTTP Method | `POST` |
+| API Path | `/api/members/email-verifications` |
+| Header | `Content-Type: application/json` |
+| Request | Body<br>`email` (필수): 이메일 형식 |
+| Response | `expiresInSeconds` (Long): 인증번호 유효 시간 (300)<br>`resendAfterSeconds` (Long): 다시 받기까지 기다릴 시간 (60)<br>`devCode` (String, 로컬 개발에서만): 메일 서버가 없을 때 인증번호 |
+| 로직 간단 설명 | 6자리 인증번호를 메일로 보낸다. 메일 서버는 `server/.env`의 `MAIL_HOST`·`MAIL_PORT`·`MAIL_USERNAME`·`MAIL_PASSWORD`(·`MAIL_FROM`)로 설정(SMTP). `MAIL_HOST`가 비어 있으면 메일을 보내지 않고 서버 로그에 남기며, `local` 프로필에서는 응답 `devCode`로도 준다(운영에선 절대 안 줌). 인증 정보는 서버 메모리에 보관하므로 서버를 다시 켜면 진행 중인 인증은 사라진다. |
+| 상태코드 | COMMON200: 발송 성공<br>COMMON400: 이메일 형식 오류<br>MEMBER409: 이미 가입된 이메일<br>EMAIL429_2: 60초 안에 다시 요청<br>EMAIL500: 메일 발송 실패 |
+
+### 이메일 인증번호 확인
+
+| 항목 | 내용 |
+| --- | --- |
+| API명 | 이메일 인증번호 확인 |
+| HTTP Method | `POST` |
+| API Path | `/api/members/email-verifications/confirm` |
+| Header | `Content-Type: application/json` |
+| Request | Body<br>`email` (필수)<br>`code` (필수): 숫자 6자리 |
+| Response | 없음 (`result` 생략) |
+| 로직 간단 설명 | 인증번호가 맞으면 30분 동안 이 이메일로 가입할 수 있다. 같은 인증번호로 5번까지 틀릴 수 있고, 넘으면 다시 받아야 한다. |
+| 상태코드 | COMMON200: 인증 성공<br>COMMON400: 형식 오류 (6자리 숫자 아님)<br>EMAIL400: 인증번호 불일치<br>EMAIL400_2: 인증번호 만료 또는 받은 적 없음<br>EMAIL429: 틀린 횟수 초과 |
 
 ### 로그인
 
@@ -226,7 +278,7 @@ Response 예시 (200)
 | Request | Body<br>`nickname` (필수): 30자 이하 |
 | Response | `memberId` (Long)<br>`email` (String)<br>`nickname` (String)<br>`role` (String)<br>`roleName` (String)<br>`profileImageUrl` (String \| null) |
 | 로직 간단 설명 | 로그인한 회원의 닉네임을 변경한다. 변경된 정보 전체를 반환한다.<br><br>**result 필드**<br>회원가입·내 정보 조회의 result 필드와 동일 |
-| 상태코드 | COMMON200: 수정 성공<br>COMMON400: 닉네임 미입력 또는 30자 초과<br>COMMON401: 토큰 없음·만료 |
+| 상태코드 | COMMON200: 수정 성공<br>COMMON400: 닉네임 미입력 또는 30자 초과<br>COMMON401: 토큰 없음·만료<br>MEMBER409_2: 다른 회원이 쓰는 닉네임 |
 
 Request 예시
 
@@ -251,6 +303,28 @@ Response 예시 (200)
     "roleName": "사장님",
     "profileImageUrl": null
   }
+}
+```
+
+### 비밀번호 변경
+
+| 항목 | 내용 |
+| --- | --- |
+| API명 | 비밀번호 변경 |
+| HTTP Method | `PATCH` |
+| API Path | `/api/members/me/password` |
+| Header | `Authorization: Bearer {accessToken}` (필수)<br>`Content-Type: application/json` |
+| Request | Body<br>`currentPassword` (필수): 지금 비밀번호<br>`newPassword` (필수): 8~64자 |
+| Response | 없음 (`result` 생략) |
+| 로직 간단 설명 | 현재 비밀번호가 맞는지 확인한 뒤 새 비밀번호를 BCrypt로 암호화해 저장한다. 이미 발급된 토큰은 만료 전까지 그대로 쓸 수 있다. 현재 비밀번호가 틀려도 로그아웃되지 않도록 401이 아닌 400으로 응답한다. |
+| 상태코드 | COMMON200: 변경 성공<br>COMMON400: 입력값 검증 실패 (`result`에 필드별 메시지)<br>COMMON401: 토큰 없음·만료<br>MEMBER400_3: 현재 비밀번호가 맞지 않음<br>MEMBER400_4: 새 비밀번호가 지금과 같음<br>MEMBER404: 회원 없음 |
+
+Request 예시
+
+```json
+{
+  "currentPassword": "password1234",
+  "newPassword": "newpass5678"
 }
 ```
 
@@ -437,6 +511,190 @@ Response 예시 (404)
   "message": "가게를 찾을 수 없어요"
 }
 ```
+
+### 내 가게 조회
+
+| 항목 | 내용 |
+| --- | --- |
+| API명 | 내 가게 조회 |
+| HTTP Method | `GET` |
+| API Path | `/api/stores/me` |
+| Header | `Authorization: Bearer {accessToken}` (필수) |
+| Request | 없음 |
+| Response | 가게 상세 조회와 동일 |
+| 로직 간단 설명 | 로그인한 사장님이 등록한 가게를 조회한다. 사장님 1명당 가게 1곳. 아직 등록하지 않았으면(손님 계정 포함) `STORE404_2` → 클라이언트는 가게 등록 화면을 보여 준다. |
+| 상태코드 | COMMON200: 조회 성공<br>COMMON401: 토큰 없음·만료<br>STORE404_2: 등록한 가게가 없음 |
+
+### 가게 등록 (사장님)
+
+| 항목 | 내용 |
+| --- | --- |
+| API명 | 가게 등록 |
+| HTTP Method | `POST` |
+| API Path | `/api/stores` |
+| Header | `Authorization: Bearer {accessToken}` (필수)<br>`Content-Type: multipart/form-data` |
+| Request | Part `data` (필수, `application/json`): `name` (String, 필수, 100자 이하), `category` (String, 필수, [업종 코드](#업종-코드)), `address` (String, 필수, 도로명 + 상세주소), `latitude` (Double, 필수), `longitude` (Double, 필수)<br>Part `image` (선택): 대표 사진 |
+| Response | 가게 상세 조회와 동일 |
+| 로직 간단 설명 | 사장님 계정이 자기 가게를 등록한다. 좌표는 클라이언트가 카카오 지도 Geocoder로 도로명 주소를 변환해 보낸다. 사진은 S3(`stores/`)에 올리고 `thumbnailUrl`에 담는다. 가입 직후 바로 호출한다 (가게명 = 사장님 닉네임). |
+| 상태코드 | COMMON200: 등록 성공<br>COMMON400: 입력값 오류<br>COMMON401: 토큰 없음·만료<br>STORE403: 사장님 계정이 아님<br>STORE409: 이미 등록한 가게가 있음 |
+
+### 가게 정보 수정 (사장님)
+
+| 항목 | 내용 |
+| --- | --- |
+| API명 | 가게 정보 수정 |
+| HTTP Method | `PATCH` |
+| API Path | `/api/stores/{storeId}` |
+| Header | `Authorization: Bearer {accessToken}` (필수) |
+| Request | Body (JSON, 보낸 항목만 수정): `name` (String), `category` (String), `address` (String), `latitude` (Double), `longitude` (Double). 주소를 바꾸면 좌표도 같이 보낸다 |
+| Response | 가게 상세 조회와 동일 |
+| 로직 간단 설명 | 내 가게만 수정할 수 있다. 사장님은 가게 이름이 곧 닉네임이라 `name`을 바꾸면 회원 닉네임도 같이 바뀐다 (다른 회원 닉네임과 겹치면 `MEMBER409_2`). |
+| 상태코드 | COMMON200: 수정 성공<br>COMMON400: 입력값 오류 (빈 이름·주소)<br>COMMON401: 토큰 없음·만료<br>STORE403_2: 내 가게가 아님<br>STORE404: 가게 없음<br>MEMBER409_2: 이름(닉네임) 중복 |
+
+### 가게 대표 사진 수정 (사장님)
+
+| 항목 | 내용 |
+| --- | --- |
+| API명 | 가게 대표 사진 수정 |
+| HTTP Method | `PATCH` |
+| API Path | `/api/stores/{storeId}/image` |
+| Header | `Authorization: Bearer {accessToken}` (필수)<br>`Content-Type: multipart/form-data` |
+| Request | Form `image` (필수): 이미지 파일 |
+| Response | 가게 상세 조회와 동일 |
+| 로직 간단 설명 | 사진을 S3(`stores/`)에 올리고 `thumbnailUrl`을 바꾼다. 내 가게만 가능. |
+| 상태코드 | COMMON200: 수정 성공<br>COMMON400: 파일 미첨부<br>COMMON401: 토큰 없음·만료<br>STORE403_2: 내 가게가 아님<br>STORE404: 가게 없음 |
+
+> **DB 변경 (배포 서버 `ddl-auto: validate`라 직접 반영 필요)**
+> `store` 테이블에 사장님 연결 컬럼(`owner_id`) 추가. 회원 탈퇴 시 가게는 남기고 `owner_id`만 `NULL`로 바꾼다.
+> SQL: [`docs/sql/2026-10-09-store-owner-quest-pigeon.sql`](sql/2026-10-09-store-owner-quest-pigeon.sql) (퀘스트·비둘기·쿠폰 테이블 포함)
+
+
+---
+
+## Quest
+
+> 날짜 기준은 KST. 퀘스트로 받은 먹이는 비둘기 **보유 먹이(feedBalance)** 에 쌓이고, 레벨업은 [먹이 주기] 때 일어난다.
+> 퀘스트 고정 데이터(기본 3개 + 템플릿 12개)는 서버 시작 때 자동으로 채운다.
+
+| API | Method · Path | 인증 | 설명 |
+| --- | --- | --- | --- |
+| 퀘스트 목록 | `GET /api/quests` | 선택 | 로그인 전이면 진행도 0. 기본(BASIC)은 항상, "동네 가게 N곳 방문"은 퀘스트 가게가 1곳 이상일 때, 템플릿 퀘스트는 참여 가게(등록 기간 중)가 1곳 이상일 때만 보인다. 템플릿 목표는 `min(2, 참여 가게 수)` |
+| 방문 인증 | `POST /api/quests/{questId}/visits` | 필수 | Body `storeId, latitude, longitude, qrToken`. 퀘스트 가게 + 반경 100m + 오늘의 가게 QR. 방문마다 먹이 1개, 완료하면 보너스 `rewardFeed` |
+| 기본 퀘스트 진행 | `POST /api/quests/events` | 필수 | Body `type` (`SHORTFORM_VIEW`: 숏폼 2초 이상 시청, `STORE_VIEW`: 가게 상세 열기), `targetId` (숏폼·가게 id). 같은 대상은 한 번만 센다. 응답 `completedQuests[]`(새로 완료한 퀘스트), `feedBalance` |
+| 퀘스트 가게 상태 | `GET /api/stores/{storeId}/quest-subscription` | 없음 | `status`: `ACTIVE` / `EXPIRED` / `NONE`, `startedAt`, `expiresAt` |
+| 퀘스트 가게 등록 | `POST /api/stores/{storeId}/quest-subscription` | 사장님 | 30일 (해커톤: 결제 모의 처리). 만료됐으면 다시 30일 |
+| 템플릿 목록 | `GET /api/stores/{storeId}/quest-templates` | 사장님 | `templates[]`: `templateKey, title, description, targetCount, rewardFeed, participantCount, joined` |
+| 템플릿 참여 / 취소 | `POST` · `DELETE /api/stores/{storeId}/quest-templates/{templateKey}` | 사장님 | 참여는 퀘스트 가게로 등록돼 있어야 함 |
+| 오늘의 방문 QR | `GET /api/stores/{storeId}/quest-qr` | 사장님 | `qrToken`(8자리, 가게·날짜별 HMAC), `expiresAt`(오늘 23:59:59). 가게 QR에는 `/quest/scan?storeId&qrToken` 주소를 담는다 |
+
+방문 인증 Response 예시 (200)
+
+```json
+{
+  "visitId": 1,
+  "feedGained": 1,
+  "quest": { "questId": 9, "currentCount": 1, "targetCount": 1, "completed": true, "bonusFeed": 2 },
+  "pigeon": { "levelBefore": 2, "levelAfter": 2, "currentFeed": 1, "requiredFeed": 5, "levelName": null },
+  "levelUps": [],
+  "feedBalance": 4
+}
+```
+
+| 상태코드 | 의미 |
+| --- | --- |
+| QUEST400 | 가게 반경 100m 밖 (`result.distanceM`에 거리) |
+| QUEST400_2 | QR 값이 틀렸거나 지난 날짜 |
+| QUEST400_3 | 없는 템플릿 키 |
+| QUEST403 | 퀘스트 가게가 아님 (등록 안 했거나 만료) |
+| QUEST403_2 | 이 템플릿 퀘스트에 참여하지 않은 가게 |
+| QUEST404 | 퀘스트 없음 (보이지 않는 퀘스트 포함) |
+| QUEST409 | 오늘 이미 이 가게에서 인증함 (한 가게는 하루 한 번) |
+| QUEST409_2 | 이미 완료한 퀘스트 |
+| QUEST409_3 | 이 퀘스트에서 이미 인정된 가게 |
+| QUEST409_4 | 이미 퀘스트 가게로 등록됨 |
+| QUEST409_5 / QUEST409_6 | 이미 참여 중 / 참여하지 않음 |
+| STORE403_2 | 내 가게가 아님 (사장님 API) |
+
+---
+
+## Pigeon
+
+> 회원 1명당 지금 키우는 비둘기 1마리. **알(Lv.0)** 로 시작 → 먹이 1개로 **부화**(종류 6가지 중 랜덤: `KOREAN` 한식 / `JAPANESE` 일식 / `CHINESE` 중식 / `WESTERN` 양식 / `MART` 마트 / `CAFE` 카페) → Lv.10 → **졸업**하면 앨범에 남고 새 알(다음 기수).
+> 먹이는 보유 먹이에 쌓이고 `POST /api/pigeon/feed`로 먹여야 레벨업. 최고 레벨이어도 무료·광고 먹이는 받아서 모아 둘 수 있고, 졸업해도 보유 먹이는 이어진다.
+> 레벨업마다 뽑기: 쿠폰 / 먹이 1개 / 먹이 2개. 쿠폰은 사장님들이 비둘기 보상으로 내놓은 쿠폰 풀에서 지급하고, 풀이 비면 먹이 2개(Lv.10은 0개).
+
+| API | Method · Path | 설명 |
+| --- | --- | --- |
+| 내 비둘기 | `GET /api/pigeon` | `level(0=알), maxLevel(10), levelName(null), currentFeed, requiredFeed(최고 레벨이면 null), isEgg, isMaxLevel, feedBalance, breed(알이면 null), breedName, generation(몇 번째 비둘기), startedAt, today{dailyFeedClaimed, adFeedCount, adFeedLimit(3)}` |
+| 하루 무료 먹이 | `POST /api/pigeon/feeds/daily` | 하루 1번 먹이 1개 |
+| 광고 보상 먹이 | `POST /api/pigeon/feeds/ad` | Body `adTransactionId`. 하루 3번, 같은 거래 id는 한 번만 |
+| 먹이 주기 | `POST /api/pigeon/feed` | Body `amount`(1 이상). 알이면 먹이 1개로 부화(`hatched{breed, breedName}`, 뽑기 없음), 그 뒤로는 필요 먹이를 채울 때마다 레벨업 + 뽑기 (한 번에 여러 레벨 가능). 응답 `fed, pigeon, hatched(부화 안 했으면 null), levelUps[], feedBalance` |
+| 졸업 | `POST /api/pigeon/graduate` | Lv.10 일 때만. 앨범에 남기고 새 알을 줌. 응답 `graduated{generation, breed, breedName, startedAt, graduatedAt, days, rewardCouponCount}, pigeon(새 알)` |
+| 비둘기 앨범 | `GET /api/pigeon/album` | 졸업한 비둘기 최근 순. `graduates[]` (졸업 응답의 graduated 와 같은 모양) |
+| 레벨업 기록 | `GET /api/pigeon/history?page&size` | 최근 순, size 최대 50. `history[]{historyId, generation, fromLevel, toLevel, reward{type, feedAmount, userCoupon}, createdAt}` |
+
+레벨 표 (현재 레벨 → 다음 레벨)
+
+| 레벨업 | 필요 먹이 | 쿠폰 | 먹이 1개 | 먹이 2개 |
+| --- | --- | --- | --- | --- |
+| 알→1 (부화) | 1 | - | - | - |
+| 1→2 | 3 | 1% | 70% | 29% |
+| 2→3 | 5 | 1.5% | 70% | 28.5% |
+| 3→4 | 8 | 2% | 70% | 28% |
+| 4→5 | 11 | 20% | 70% | 10% |
+| 5→6 | 14 | 4% | 70% | 26% |
+| 6→7 | 17 | 4.5% | 70% | 25.5% |
+| 7→8 | 20 | 5% | 70% | 25% |
+| 8→9 | 25 | 7.5% | 70% | 22.5% |
+| 9→10 | 30 | 99% | 0.7% | 0.3% |
+
+| 상태코드 | 의미 |
+| --- | --- |
+| PIGEON409 | 오늘 무료 먹이를 이미 받음 |
+| PIGEON409_2 | 이미 처리한 광고 거래 |
+| PIGEON409_3 | 최고 레벨이라 먹일 수 없음 (졸업하면 새 알) |
+| PIGEON409_4 | 보유 먹이 부족 |
+| PIGEON409_5 | Lv.10 이 아니라 졸업할 수 없음 |
+| PIGEON429 | 오늘 광고 보상 3번을 다 받음 |
+
+> **로컬(local 프로필) 전용 테스트 API** — 운영 서버엔 없음
+> `POST /api/dev/pigeon/feed {amount}`: 보유 먹이 추가 · `GET /api/dev/quest-qr/{storeId}`: 가게의 오늘 QR 값.
+> 로컬은 `quest.gps-bypass: true`라 GPS 거리 검사를 건너뛴다 (운영은 `QUEST_GPS_BYPASS` 환경변수, 기본 false).
+
+
+---
+
+## Coupon
+
+> 사장님이 직접 발행 (할인은 사장님 부담). 손님이 쓰면 건당 수수료 **100원**을 정산에 남긴다.
+> `useAsPigeonReward: true`인 쿠폰은 비둘기 레벨업 뽑기의 쿠폰 보상 풀에 들어간다 (아직 안 가진 쿠폰을 먼저 줌).
+> 지도 `GET /api/stores`의 `availableCouponCount` = 지금 받을 수 있는(ACTIVE·남은 수량 있음) 쿠폰 수.
+
+| API | Method · Path | 인증 | 설명 |
+| --- | --- | --- | --- |
+| 쿠폰 발행 | `POST /api/stores/{storeId}/coupons` | 사장님 | Body `title`(1~30자), `discountType`(`AMOUNT`/`RATE`), `discountValue`(정액 100원 이상 / 정률 10~80%), `minOrderAmount`(선택, 0 이상), `totalQuantity`(1~1,000), `validDays`(1~30), `useAsPigeonReward`(선택). 응답 `couponId, status, createdAt` |
+| 내 가게 쿠폰 목록 | `GET /api/stores/{storeId}/coupons?status=` | 사장님 | `coupons[]`: `couponId, title, discountType, discountValue, minOrderAmount, totalQuantity, issuedCount, usedCount, remainingQuantity, useAsPigeonReward, status(ACTIVE/STOPPED/SOLD_OUT), createdAt` |
+| 발행 중지 | `PATCH /api/stores/{storeId}/coupons/{couponId}` | 사장님 | Body `{ "status": "STOPPED" }`. 이미 받은 쿠폰은 기한까지 쓸 수 있음 |
+| 받을 수 있는 쿠폰 | `GET /api/stores/{storeId}/coupons/available` | 선택 | `coupons[]`: `couponId, title, discountType, discountValue, minOrderAmount, validDays, remainingQuantity, alreadyDownloaded`(로그인 전이면 false) |
+| 쿠폰 받기 | `POST /api/coupons/{couponId}/downloads` | 필수 | 같은 쿠폰은 한 번만. 응답 `userCouponId, redeemCode(6자리), expiresAt(받은 날 + validDays 23:59:59)` |
+| 내 쿠폰함 | `GET /api/coupons/me?status=&page=&size=` | 필수 | status `AVAILABLE`/`USED`/`EXPIRED`. 쓸 수 있는 쿠폰은 기한 임박 순, 나머지는 최근 순. `coupons[]`: `userCouponId, storeId, storeName, title, discountType, discountValue, minOrderAmount, source(DOWNLOAD/PIGEON_REWARD/QUEST_REWARD), redeemCode, status, expiresAt, usedAt` |
+| 사용 처리 | `POST /api/coupons/redeem` | 사장님 | Body `redeemCode` (대소문자 무관). 내 가게 쿠폰만. 응답 `userCouponId, title, discountType, discountValue, minOrderAmount, fee, redeemedAt` |
+| 정산 | `GET /api/stores/{storeId}/coupon-settlements?month=YYYY-MM` | 사장님 | KST 기준 그 달. `month, usedCount, totalDiscount, totalFee, items[]{userCouponId, title, discountValue, fee, redeemedAt}` |
+
+| 상태코드 | 의미 |
+| --- | --- |
+| COUPON400 | 정액 할인 100원 미만 |
+| COUPON400_2 | 정률 할인 10~80% 밖 |
+| COUPON403 | 다른 가게 쿠폰 (사용 처리) |
+| COUPON404 / COUPON404_2 | 쿠폰 없음 / 코드에 해당하는 쿠폰 없음 |
+| COUPON409 | 이미 받은 쿠폰 |
+| COUPON409_2 | 이미 사용된 쿠폰 |
+| COUPON409_3 | 이미 중지·소진된 쿠폰 (중지 요청) |
+| COUPON410 / COUPON410_2 | 수량 소진 / 기한 지남 |
+| STORE403_2 | 내 가게가 아님 · STORE404_2: 사용 처리하는 사장님에게 등록한 가게가 없음 |
+
+> **로컬 샘플:** 월계 분식 "떡볶이 10% 할인"(비둘기 보상), 광운 카페 "아메리카노 1,000원 할인"(비둘기 보상), 골목 베이커리 "소금빵 500원 할인".
+> 샘플 주민(resident@test.com)이 광운 카페 쿠폰 코드 **QK7M2P**를 가지고 있어 샘플 사장님으로 사용 처리를 해 볼 수 있다.
 
 ---
 
