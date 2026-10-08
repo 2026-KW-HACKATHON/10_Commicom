@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 import software.amazon.awssdk.services.polly.PollyClient;
 import software.amazon.awssdk.services.s3.S3Client;
 
@@ -37,6 +38,14 @@ public class AwsConfig {
     @Bean
     public PollyClient pollyClient() {
         return PollyClient.builder()
+                .region(Region.of(region))
+                .credentialsProvider(credentialsProvider())
+                .build();
+    }
+
+    @Bean
+    public BedrockRuntimeClient bedrockRuntimeClient() {
+        return BedrockRuntimeClient.builder()
                 .region(Region.of(region))
                 .credentialsProvider(credentialsProvider())
                 .build();

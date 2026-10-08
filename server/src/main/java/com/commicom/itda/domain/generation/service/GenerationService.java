@@ -53,12 +53,10 @@ public class GenerationService {
         Long generationId = generation.getId();
         String menuInfo = request.menuInfo();
         String menuImageUrl = request.menuImageUrl();
-        String interiorImageUrl = request.interiorImageUrl();
-        String tableImageUrl = request.tableImageUrl();
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                pipelineService.execute(generationId, menuInfo, menuImageUrl, interiorImageUrl, tableImageUrl);
+                pipelineService.execute(generationId, menuInfo, menuImageUrl);
             }
         });
 

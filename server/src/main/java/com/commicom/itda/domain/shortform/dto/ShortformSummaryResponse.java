@@ -8,10 +8,8 @@ public record ShortformSummaryResponse(
         Long shortformId,
         Long storeId,
         String storeName,
-        String videoUrl,
-        String thumbnailUrl,
+        String imageUrl,
         String title,
-        int duration,
         LocalDateTime createdAt
 ) {
 
@@ -20,10 +18,8 @@ public record ShortformSummaryResponse(
                 shortform.getId(),
                 shortform.getStore().getId(),
                 shortform.getStore().getName(),
-                shortform.getVideoUrl(),
-                shortform.getThumbnailUrl(),
+                shortform.getImageUrl(),
                 shortform.getTitle(),
-                shortform.getDuration(),
                 shortform.getCreatedAt()
         );
     }
