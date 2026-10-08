@@ -16,6 +16,7 @@ export function ShortformFeed({ storeId, startId }: { storeId?: number; startId?
   const [activeIndex, setActiveIndex] = useState(0)
   // 브라우저는 소리 있는 자동재생을 막아서 처음엔 음소거로 시작
   const [muted, setMuted] = useState(true)
+  const [hintDone, setHintDone] = useState(false)
   const [couponFor, setCouponFor] = useState<Shortform | null>(null)
 
   // 화면에 60% 이상 보이는 영상을 "지금 영상"으로
@@ -76,11 +77,13 @@ export function ShortformFeed({ storeId, startId }: { storeId?: number; startId?
         ))}
       </div>
 
-      {muted && (
+      {/* 음소거여도 계속 떠 있지 않고 잠깐 보였다가 사라짐 (이후엔 오른쪽 소리 버튼으로) */}
+      {muted && !hintDone && (
         <button
           type="button"
           onClick={() => setMuted(false)}
-          className="absolute top-[86px] left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/45 px-3.5 py-1.5 text-xs font-bold text-white backdrop-blur-md"
+          onAnimationEnd={() => setHintDone(true)}
+          className="absolute top-[86px] left-1/2 z-10 -translate-x-1/2 animate-[hint-fade_3s_ease-in-out_forwards] rounded-full bg-black/45 px-3.5 py-1.5 text-xs font-bold text-white backdrop-blur-md"
         >
           🔇 눌러서 소리 켜기
         </button>

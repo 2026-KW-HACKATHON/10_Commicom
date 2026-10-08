@@ -147,10 +147,11 @@ export function ShortformItem({ item, active, muted, onToggleMute, couponCount, 
 
       {/* 위·아래 그늘 (글자·버튼이 잘 보이게) */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/45 to-transparent" />
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-96 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
       {/* 오른쪽 버튼 */}
-      <div className="absolute right-3 bottom-[120px] flex flex-col items-center gap-4 text-white">
+      {/* 하단 탭 바가 영상 위에 떠 있으므로 그 높이(--nav-h, 바가 줄면 같이 줄어듦)만큼 위로 */}
+      <div className="absolute right-3 bottom-[calc(var(--nav-h,0px)+120px)] flex transition-[bottom] duration-300 flex-col items-center gap-4 text-white">
         {couponCount > 0 && (
           <SideButton label={`쿠폰 ${couponCount}`} onClick={onOpenCoupons} accent>
             <TicketSmallIcon />
@@ -169,7 +170,7 @@ export function ShortformItem({ item, active, muted, onToggleMute, couponCount, 
       </div>
 
       {/* 가게 정보 */}
-      <div className="absolute inset-x-0 bottom-0 px-4 pb-4 text-white">
+      <div className="absolute inset-x-0 bottom-0 px-4 pb-[calc(var(--nav-h,0px)+12px)] text-white transition-[padding] duration-300">
         <div className="flex items-center gap-2.5 pr-14">
           <Link
             to={`/map/stores/${item.storeId}`}
@@ -183,6 +184,8 @@ export function ShortformItem({ item, active, muted, onToggleMute, couponCount, 
               {item.storeName}
             </Link>
             <div className="mt-0.5 flex items-center gap-1.5 text-[11px]">
+              {/* PRO 가게(우선 노출)는 손님에게도 알 수 있게 표시 */}
+              {item.promoted && <span className="shrink-0 rounded-full bg-point-yellow px-1.5 py-px font-bold text-ink">추천</span>}
               <span className="shrink-0 rounded-full bg-green-4 px-1.5 py-px font-bold">{item.categoryName}</span>
               <Link to={`/map?storeId=${item.storeId}`} className="truncate opacity-90">
                 📍 {item.address}

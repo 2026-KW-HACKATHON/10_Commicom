@@ -6,11 +6,13 @@ export type Speed = 'normal' | 'hold' | 'locked'
 const HOLD_MS = 350
 /** 2배속 중 아래로 이만큼 내리면 고정 */
 const LOCK_DY = 60
+/** 고정한 뒤 손을 떼지 않고 이만큼 더 올리면(LOCK_DY보다 위) 고정 해제 — 경계에서 깜빡이지 않게 여유 */
+const UNLOCK_GAP = 20
 /** 길게 누르기 전에 이만큼 움직이면 피드 넘기기(스와이프)로 봄 */
 const MOVE_CANCEL = 10
 
 /**
- * 숏폼 꾹 누르기: 누르는 동안 2배속, 누른 채 아래로 내리면 2배속 고정.
+ * 숏폼 꾹 누르기: 누르는 동안 2배속, 누른 채 아래로 내리면 2배속 고정, 떼지 않고 다시 올리면 고정 해제.
  * - 길게 누르기 전에 움직이면 평소처럼 피드 넘기기
  * - 2배속이 켜진 뒤엔 아래로 끌어도 피드가 넘어가지 않게 막음
  */
@@ -20,7 +22,8 @@ export function useSpeedPress(
   active: boolean,
 ) {
   const [speed, setSpeed] = useState<Speed>('normal')
-  const press = useRef<{ timer: number; x: number; y: number; long: boolean } | null>(null)
+  // lockedHere: 이번에 누른 채로 내려서 고정했는지 (그때만 다시 올려 해제)
+  const press = useRef<{ timer: number; x: number; y: number; long: boolean; lockedHere: boolean } | null>(null)
   // 길게 누른 뒤 손을 뗄 때 따라오는 click(재생/일시정지)을 무시하기 위함
   const suppressClick = useRef(false)
 
@@ -55,7 +58,7 @@ export function useSpeedPress(
       setSpeed((s) => (s === 'locked' ? 'locked' : 'hold'))
       videoRef.current?.play().catch(() => {})
     }, HOLD_MS)
-    press.current = { timer, x: e.clientX, y: e.clientY, long: false }
+    press.current = { timer, x: e.clientX, y: e.clientY, long: false, lockedHere: false }
   }
 
   const onPointerMove = (e: PointerEvent) => {
@@ -70,7 +73,14 @@ export function useSpeedPress(
       }
       return
     }
-    if (dy > LOCK_DY) setSpeed('locked')
+    if (dy > LOCK_DY) {
+      p.lockedHere = true
+      setSpeed('locked')
+    } else if (p.lockedHere && dy < LOCK_DY - UNLOCK_GAP) {
+      // 손을 떼지 않고 다시 올리면 고정 해제 → 누르는 동안만 2배속, 떼면 원래 속도
+      p.lockedHere = false
+      setSpeed('hold')
+    }
   }
 
   const end = () => {
