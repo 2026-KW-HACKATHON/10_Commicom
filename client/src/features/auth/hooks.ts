@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/authStore'
 import { useModeStore } from '@/stores/modeStore'
+import { toast } from '@/stores/toastStore'
 import { fetchMe, login, withdraw } from './api'
 import { modeOfRole } from './schema'
 
@@ -19,6 +20,7 @@ export function useLogin() {
       setSession(accessToken, me)
       setMode(modeOfRole(me.role))
       queryClient.invalidateQueries()
+      toast(`${me.nickname} 님, 반가워요!`)
     },
   })
 }
@@ -27,14 +29,15 @@ export function useLogin() {
 export function useLogout() {
   const logout = useAuthStore((s) => s.logout)
   const queryClient = useQueryClient()
-  return () => {
+  return (message = '로그아웃했어요') => {
     logout()
     queryClient.invalidateQueries()
+    toast(message)
   }
 }
 
 /** 회원 탈퇴 → 토큰 즉시 제거 */
 export function useWithdraw() {
   const logout = useLogout()
-  return useMutation({ mutationFn: withdraw, onSuccess: logout })
+  return useMutation({ mutationFn: withdraw, onSuccess: () => logout('탈퇴했어요. 그동안 고마웠어요') })
 }

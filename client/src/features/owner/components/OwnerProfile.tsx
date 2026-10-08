@@ -13,6 +13,7 @@ import { PlayIcon } from '@/shared/ui/icons'
 import { StoreAvatar } from '@/shared/ui/StoreAvatar'
 import { updateNickname } from '@/features/auth/api'
 import { useAuthStore, useMe } from '@/stores/authStore'
+import { toast } from '@/stores/toastStore'
 import { storeEditOf, updateMyStore } from '../api'
 import { useMyStore, useMyStoreId } from '../hooks'
 
@@ -42,6 +43,7 @@ export function OwnerProfile() {
       await queryClient.invalidateQueries({ queryKey: ['stores'] })
       queryClient.invalidateQueries({ queryKey: ['shortforms'] })
       setEditing(null)
+      toast('저장했어요')
     } catch (e) {
       setError(errorMessage(e))
     } finally {
