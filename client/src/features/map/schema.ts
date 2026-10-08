@@ -21,6 +21,23 @@ export interface StoreSummary {
   availableCouponCount?: number
 }
 
+/** GET /api/stores/{storeId} */
+export interface StoreDetail {
+  storeId: number
+  name: string
+  category: string
+  categoryName: string
+  address: string
+  latitude: number
+  longitude: number
+  phone: string | null
+  /** 자유 형식 (예: 매일 11:00-21:00) */
+  businessHours: string
+  description: string
+  thumbnailUrl: string | null
+  accessibility: { stepFree: boolean; elevator: boolean }
+}
+
 export interface StoreListResult {
   count: number
   stores: StoreSummary[]
@@ -63,6 +80,37 @@ export const MAP_CATEGORIES = [
 ] as const
 
 export type MapCategoryKey = (typeof MAP_CATEGORIES)[number]['key']
+
+/** 명세 업종 코드 16종 (GET /api/stores/categories 와 같은 순서) — 사장님 가입·가게 정보 편집의 대분류 */
+export const STORE_CATEGORIES = [
+  { code: 'RESTAURANT', name: '음식점' },
+  { code: 'CAFE_BAKERY_PUB', name: '카페·베이커리·주점' },
+  { code: 'FOOD_RETAIL', name: '식품 판매' },
+  { code: 'BEAUTY', name: '뷰티' },
+  { code: 'FASHION', name: '패션·잡화' },
+  { code: 'LIVING', name: '생활·리빙' },
+  { code: 'EDUCATION', name: '교육' },
+  { code: 'PET', name: '반려동물' },
+  { code: 'HOBBY_LEISURE', name: '취미·레저' },
+  { code: 'GENERAL_RETAIL', name: '종합 소매·유통' },
+  { code: 'ELECTRONICS', name: 'IT·통신·전기·전자' },
+  { code: 'CONSTRUCTION_INTERIOR', name: '건축·인테리어·설비' },
+  { code: 'AUTO_TRANSPORT', name: '자동차·운송' },
+  { code: 'MANUFACTURING', name: '제조·산업기계' },
+  { code: 'ADVERTISING_MEDIA', name: '광고·미디어' },
+  { code: 'ETC_SERVICE', name: '기타 서비스' },
+] as const
+
+/** 사장님이 고치는 가게 정보 (가입·프로필 편집) */
+export interface StoreEdit {
+  name?: string
+  /** 도로명 주소 (찾기로 고른 값) */
+  roadAddress?: string
+  addressDetail?: string
+  category?: string
+  subCategory?: string
+  thumbnailUrl?: string | null
+}
 
 /** 광운대 정문 근처 — 위치 권한이 없을 때 기본 중심 */
 export const DEFAULT_CENTER: LatLng = { lat: 37.6194, lng: 127.0597 }

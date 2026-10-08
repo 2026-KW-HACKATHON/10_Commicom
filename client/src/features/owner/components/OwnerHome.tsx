@@ -64,7 +64,8 @@ export function OwnerHome() {
       </OwnerCard>
 
       <OwnerCard title="바로가기" className="mt-3">
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-5 gap-1">
+          <Shortcut to="/owner/videos" image={OWNER_ILLUST.videoEdit} label="내 영상" />
           <Shortcut to="/owner/redeem" image={OWNER_ILLUST.coupon} label="쿠폰 사용" />
           <Shortcut to="/owner/coupons/new" image={OWNER_ILLUST.couponNew} label="쿠폰 발행" />
           <Shortcut to="/owner/quest-store" image={OWNER_ILLUST.qr} label="방문 QR" />
@@ -78,6 +79,11 @@ export function OwnerHome() {
           onClick={() => {
             resetMockDb()
             localStorage.removeItem('itda-pro')
+            localStorage.removeItem('itda-mock-published')
+            localStorage.removeItem('itda-mock-deleted')
+            localStorage.removeItem('itda-mock-store-edits')
+            localStorage.removeItem('itda-mock-members')
+            localStorage.removeItem('itda-auth')
             window.location.reload()
           }}
           className="mx-auto mt-8 block text-xs text-q-muted underline"
@@ -129,10 +135,10 @@ function Stat({ label, value }: { label: string; value: string }) {
 function Shortcut({ to, image, label }: { to: string; image: string; label: string }) {
   return (
     <Link to={to} className="flex flex-col items-center gap-1 rounded-xl py-2 active:bg-q-panel">
-      <span aria-hidden className="flex size-14 items-center justify-center rounded-2xl bg-q-mint">
-        <img src={image} alt="" className="size-12 object-contain" />
+      <span aria-hidden className="flex size-[52px] items-center justify-center rounded-2xl bg-q-mint">
+        <img src={image} alt="" className="size-11 object-contain" />
       </span>
-      <span className="text-xs font-medium text-q-sub">{label}</span>
+      <span className="text-[11px] font-medium whitespace-nowrap text-q-sub">{label}</span>
     </Link>
   )
 }

@@ -1,3 +1,4 @@
+import pigeonWalk from '@/assets/map/pigeon-walk.png'
 import { OWNER_ILLUST } from '@/features/owner/illustrations'
 import { ChartNavIcon, FlagNavIcon, HomeNavIcon, ScanNavIcon, TicketNavIcon } from '@/shared/ui/icons'
 import { AppShell, type TabItem } from './AppShell'
@@ -12,6 +13,8 @@ const TABS: TabItem[] = [
 ]
 
 const MENU: MenuItem[] = [
+  { to: '/owner/profile', label: '가게 정보 · 프로필', icon: '🏪', image: pigeonWalk },
+  { to: '/owner/videos', label: '내 영상', icon: '🎬', image: OWNER_ILLUST.videoEdit },
   { to: '/owner/quest-store', label: '퀘스트 가게 · 방문 QR', icon: '📍', image: OWNER_ILLUST.qr },
   { to: '/owner/coupons/new', label: '쿠폰 발행', icon: '🎟', image: OWNER_ILLUST.couponNew },
   { to: '/owner/redeem', label: '쿠폰 사용 처리', icon: '✅', image: OWNER_ILLUST.coupon },

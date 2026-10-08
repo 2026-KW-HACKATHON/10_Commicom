@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import pigeonWalk from '@/assets/map/pigeon-walk.png'
 import pigeonGps from '@/assets/quest/pigeon-gps.png'
 import logo from '@/assets/logo-itda.svg'
@@ -100,6 +100,12 @@ export function WelcomePage() {
       >
         {picked === 'OWNER' ? '사장님으로 시작하기' : picked === 'USER' ? '손님으로 시작하기' : '하나를 골라 주세요'}
       </button>
+      <p className="mt-4 text-center text-[13px] text-q-muted">
+        이미 계정이 있나요?{' '}
+        <Link to="/login" className="font-bold text-green-6 underline">
+          로그인
+        </Link>
+      </p>
     </div>
   )
 }
