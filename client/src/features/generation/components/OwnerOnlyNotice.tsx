@@ -11,7 +11,7 @@ export function OwnerOnlyNotice() {
       <p className="mt-6 text-center text-[15px] leading-relaxed font-medium text-green-4">
         잇다에서는
         <br />
-        사장님만 홍보 영상을
+        사장님만 홍보 게시물을
         <br />
         만들 수 있어요!
       </p>

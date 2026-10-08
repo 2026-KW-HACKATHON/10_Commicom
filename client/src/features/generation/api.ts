@@ -14,7 +14,7 @@ function toMenuInfo(body: GenerationRequest) {
   if (menus.length) lines.push(`메뉴: ${menus.map((m) => (m.price ? `${m.name} ${m.price.toLocaleString()}원` : m.name)).join(', ')}`)
   if (body.appeal?.trim()) lines.push(`가게 어필: ${body.appeal.trim()}`)
   if (body.mapUrl?.trim()) lines.push(`지도 링크: ${body.mapUrl.trim()}`)
-  if (body.revision) lines.push(`수정 요청(${body.revision.target === 'VIDEO' ? '영상' : '대본·자막'}): ${body.revision.request}`)
+  if (body.revision) lines.push(`수정 요청(${body.revision.target === 'VIDEO' ? '사진' : '글·문구'}): ${body.revision.request}`)
   return lines.join('\n') || undefined
 }
 

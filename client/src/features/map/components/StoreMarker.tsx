@@ -21,7 +21,7 @@ const menuItem = `block w-full px-[10px] leading-10 ${bubbleText}`
  * 가게 핀 + 말풍선 (Figma 94:106).
  * - 단일: "가게명" 민트 말풍선
  * - 겹침: "가게명 외 n개" → 탭하면 목록 말풍선
- * - 선택: 핀 밝은 초록 + 흰 카드 [홍보 영상 보기 / 프로필 보기 / 쿠폰 받기]
+ * - 선택: 핀 밝은 초록 + 흰 카드 [홍보 게시물 보기 / 프로필 보기 / 쿠폰 받기]
  * - 퀘스트 가게: 이름 앞 깃발, 받을 쿠폰이 있으면 핀에 쿠폰 배지 (API 명세 5-4)
  */
 export function StoreMarker({
@@ -132,7 +132,7 @@ function StorePopup({
             <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden>
               <path d="M2.5 1.2v9.6c0 .5.5.8.9.5l7.3-4.8a.6.6 0 0 0 0-1L3.4.7c-.4-.3-.9 0-.9.5Z" fill="currentColor" />
             </svg>
-            홍보 영상 보기
+            홍보 게시물 보기
           </button>
           <button
             type="button"

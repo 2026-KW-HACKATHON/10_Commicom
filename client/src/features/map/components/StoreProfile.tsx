@@ -6,7 +6,7 @@ import type { Shortform } from '@/features/feed/schema'
 import { useQuestEvent } from '@/features/quest/hooks'
 import { errorMessage } from '@/shared/lib/error'
 import { shareLink } from '@/shared/lib/share'
-import { LocationIcon, PlayIcon, ShareIcon, TicketSmallIcon } from '@/shared/ui/icons'
+import { LocationIcon, PhotoIcon, ShareIcon, TicketSmallIcon } from '@/shared/ui/icons'
 import { StoreAvatar } from '@/shared/ui/StoreAvatar'
 import { useStoreDetail, useStores } from '../hooks'
 
@@ -60,12 +60,12 @@ export function StoreProfile({ storeId }: { storeId: number }) {
             </Action>
           )}
           <Action
-            label="홍보 영상"
+            label="홍보 게시물"
             disabled={!videos?.length}
             onClick={() => videos?.[0] && navigate(`/map/stores/${storeId}/shortform?start=${videos[0].shortformId}`)}
           >
-            <span className="scale-[0.55] pl-0.5">
-              <PlayIcon />
+            <span className="scale-[0.55]">
+              <PhotoIcon />
             </span>
           </Action>
           <Action
@@ -125,18 +125,18 @@ export function StoreProfile({ storeId }: { storeId: number }) {
       )}
 
       <section className="mt-5">
-        <h3 className="px-5 text-[15px] font-bold text-q-text">홍보 영상 {videos?.length ? <span className="text-q-green">{videos.length}</span> : null}</h3>
+        <h3 className="px-5 text-[15px] font-bold text-q-text">홍보 게시물 {videos?.length ? <span className="text-q-green">{videos.length}</span> : null}</h3>
         {videos && videos.length === 0 ? (
-          <p className="py-10 text-center text-[13px] text-q-muted">아직 올라온 영상이 없어요</p>
+          <p className="py-10 text-center text-[13px] text-q-muted">아직 올라온 게시물이 없어요</p>
         ) : (
           <ul className="mt-2 grid grid-cols-3 gap-px">
             {videos?.map((v) => (
               <li key={v.shortformId}>
                 <Link to={`/map/stores/${storeId}/shortform?start=${v.shortformId}`} className="relative block aspect-[9/13] overflow-hidden bg-[#dde5e2]">
                   <Thumb video={v} />
-                  <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded bg-white/90 pl-px text-q-text">
+                  <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded bg-white/90 text-q-text">
                     <span className="scale-[0.3]">
-                      <PlayIcon />
+                      <PhotoIcon />
                     </span>
                   </span>
                 </Link>

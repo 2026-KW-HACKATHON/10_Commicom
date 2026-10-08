@@ -24,7 +24,7 @@ const TABS: TabItem[] = [
 
 const MENU: MenuItem[] = [
   { to: '/owner/profile', label: '가게 정보 · 프로필', icon: '🏪', image: pigeonWalk },
-  { to: '/owner/create', label: '피드 제작', icon: '🎬', image: OWNER_ILLUST.videoEdit },
+  { to: '/owner/create', label: '게시물 제작', icon: '📸', image: OWNER_ILLUST.videoEdit },
   { to: '/owner/quest-store', label: '퀘스트 가게 · 방문 QR', icon: '📍', image: OWNER_ILLUST.qr },
   { to: '/owner/coupons/new', label: '쿠폰 발행', icon: '🎟', image: OWNER_ILLUST.couponNew },
   { to: '/owner/redeem', label: '쿠폰 사용 처리', icon: '✅', image: OWNER_ILLUST.coupon },

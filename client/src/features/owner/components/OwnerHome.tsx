@@ -41,7 +41,7 @@ export function OwnerHome() {
           to="/owner/pro"
           label="잇다 PRO"
           value={isPro ? '이용 중' : '미구독'}
-          sub={isPro ? '혜택 이용 중' : '숏폼 우선 노출'}
+          sub={isPro ? '혜택 이용 중' : '피드 우선 노출'}
           on={isPro}
           image={OWNER_ILLUST.pro}
         />
@@ -68,7 +68,7 @@ export function OwnerHome() {
 
       <OwnerCard title="바로가기" className="mt-3">
         <div className="grid grid-cols-5 gap-1">
-          <Shortcut to="/owner/create" image={OWNER_ILLUST.videoEdit} label="피드 제작" />
+          <Shortcut to="/owner/create" image={OWNER_ILLUST.videoEdit} label="게시물 제작" />
           <Shortcut to="/owner/redeem" image={OWNER_ILLUST.coupon} label="쿠폰 사용" />
           <Shortcut to="/owner/coupons/new" image={OWNER_ILLUST.couponNew} label="쿠폰 발행" />
           <Shortcut to="/owner/quest-store" image={OWNER_ILLUST.qr} label="방문 QR" />

@@ -115,14 +115,14 @@ export const mockShortformApi = {
   async get(shortformId: number): Promise<ShortformDetail> {
     await wait(200)
     const d = drafts.get(shortformId)
-    if (!d) throw new ApiError('SHORTFORM404', '숏폼을 찾을 수 없어요')
+    if (!d) throw new ApiError('SHORTFORM404', '게시물을 찾을 수 없어요')
     return { ...d }
   },
   /** 목업 전용: 업로드하면 손님 숏폼 피드 맨 앞에 보이게 */
   async publish(shortformId: number) {
     await wait(500)
     const d = drafts.get(shortformId)
-    if (!d) throw new ApiError('SHORTFORM404', '숏폼을 찾을 수 없어요')
+    if (!d) throw new ApiError('SHORTFORM404', '게시물을 찾을 수 없어요')
     publishMockShortform(d)
   },
   async remove(shortformId: number) {
@@ -133,7 +133,7 @@ export const mockShortformApi = {
   async replace(oldId: number, newId: number) {
     await wait(500)
     const d = drafts.get(newId)
-    if (!d) throw new ApiError('SHORTFORM404', '숏폼을 찾을 수 없어요')
+    if (!d) throw new ApiError('SHORTFORM404', '게시물을 찾을 수 없어요')
     replaceMockShortform(oldId, d)
     drafts.delete(newId)
   },

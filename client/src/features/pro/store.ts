@@ -36,7 +36,7 @@ export const useProStore = create<ProState>()(
 )
 
 export const PRO_BENEFITS = [
-  { image: OWNER_ILLUST.pro, title: '숏폼 우선 노출', description: '손님 숏폼 피드에 우리 가게 홍보 영상이 더 자주 떠요' },
-  { image: OWNER_ILLUST.videoEdit, title: '영상 재수정', description: 'AI가 만든 홍보 영상의 대본·자막·BGM을 다시 고쳐 만들 수 있어요' },
-  { image: OWNER_ILLUST.videoDownload, title: '제작 영상 다운로드', description: '완성된 9:16 영상을 원본 화질로 내려받아 다른 SNS에도 올릴 수 있어요' },
+  { image: OWNER_ILLUST.pro, title: '피드 우선 노출', description: '손님 피드에 우리 가게 홍보 게시물이 더 자주 떠요' },
+  { image: OWNER_ILLUST.videoEdit, title: '게시물 재수정', description: 'AI가 만든 홍보 게시물의 사진·문구를 다시 고쳐 만들 수 있어요' },
+  { image: OWNER_ILLUST.videoDownload, title: '원본 사진 다운로드', description: '완성된 게시물 사진을 원본 화질로 내려받아 다른 SNS에도 올릴 수 있어요' },
 ] as const

@@ -11,11 +11,11 @@ import { useCanSubscribePro, useProQuery, useSetProAutoRenew, useSubscribePro } 
 import { PRO_BENEFITS } from '../store'
 
 const COMPARE = [
-  ['AI 홍보 영상 만들기', true, true],
-  ['지도·숏폼에 영상 올리기', true, true],
-  ['숏폼 피드 우선 노출', false, true],
-  ['영상 재수정', false, true],
-  ['원본 영상 다운로드', false, true],
+  ['AI 홍보 게시물 만들기', true, true],
+  ['지도·피드에 게시물 올리기', true, true],
+  ['피드 우선 노출', false, true],
+  ['게시물 재수정', false, true],
+  ['원본 사진 다운로드', false, true],
 ] as const
 
 /** 가입 전에 알아 둘 것 */
@@ -60,14 +60,14 @@ export function ProPlan() {
           <section className="flex min-h-[230px] flex-1 flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-q-green to-q-green-dark px-6 pt-6 pb-5 text-white">
             <span className="w-fit rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-bold tracking-wider">PRO</span>
             <h2 className="mt-3 text-[26px] leading-snug font-bold">
-              홍보 영상을
+              홍보 게시물을
               <br />
               끝까지 내 마음대로
             </h2>
             <p className="mt-2 text-[13px] leading-relaxed opacity-85">
               사장님을 위한 잇다 PRO 월 구독
               <br />
-              {storeName} 영상이 손님 피드 앞쪽에 떠요
+              {storeName} 게시물이 손님 피드 앞쪽에 떠요
             </p>
             <img src={OWNER_ILLUST.pro} alt="" className="mt-auto -mr-2 -mb-3 ml-auto h-[150px] w-auto object-contain drop-shadow-lg" />
           </section>
@@ -221,7 +221,7 @@ export function ProPlan() {
         <CelebrationScreen
           image={OWNER_ILLUST.pro}
           title="PRO 시작!"
-          subtitle="이제 손님 숏폼 피드 맨 앞에 우리 가게 영상이 뜨고, 영상을 다시 고치거나 원본으로 내려받을 수 있어요"
+          subtitle="이제 손님 피드 맨 앞에 우리 가게 게시물이 뜨고, 게시물을 다시 고치거나 원본 사진으로 내려받을 수 있어요"
           actions={<PrimaryButton onClick={() => setWelcome(false)}>확인</PrimaryButton>}
         />
       )}

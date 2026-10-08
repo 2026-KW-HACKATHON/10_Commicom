@@ -23,7 +23,7 @@ export interface RouteHandle {
   action?: { label: string; to: string } | null
 }
 
-const DEFAULT_ACTION = { label: '숏폼 만들기', to: '/create' }
+const DEFAULT_ACTION = { label: '게시물 만들기', to: '/create' }
 
 /** 하단 네비와 같은 톤: 흰 바탕 + 민트 테두리 + 초록 그림자 */
 const circleButton =

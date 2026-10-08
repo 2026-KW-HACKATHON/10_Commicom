@@ -67,7 +67,7 @@ export const router = createBrowserRouter([
       { path: 'coupons', element: <OwnerCouponsPage />, handle: { title: '쿠폰', action: { label: '쿠폰 발행', to: '/owner/coupons/new' } } },
       { path: 'coupons/new', element: <CouponCreatePage />, handle: { title: '쿠폰 발행' } },
       { path: 'redeem', element: <OwnerRedeemPage />, handle: { title: '쿠폰 사용 처리', action: null } },
-      { path: 'create', element: <OwnerVideosPage />, handle: { title: '피드 제작', action: null } },
+      { path: 'create', element: <OwnerVideosPage />, handle: { title: '게시물 제작', action: null } },
       { path: 'quest-store', element: <QuestStorePage />, handle: { title: '퀘스트 가게' } },
       { path: 'pro', element: <ProPage />, handle: { title: '잇다 PRO' } },
       // 예전 주소 호환 (정산은 쿠폰 탭 안으로, 내 영상은 제작 탭으로)

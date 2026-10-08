@@ -181,7 +181,7 @@ function seed(): Db {
     // 명세 7. 시드 데이터
     quests: [
       { questId: 1, title: '동네 가게 3곳 방문하기', type: 'VISIT', targetCount: 3, rewardFeed: 2, basicCount: 0 },
-      { questId: 2, title: '숏폼 5개 보기', type: 'BASIC', targetCount: 5, rewardFeed: 1, basicCount: 5 },
+      { questId: 2, title: '게시물 5개 보기', type: 'BASIC', targetCount: 5, rewardFeed: 1, basicCount: 5 },
       { questId: 3, title: '지도에서 가게 3곳 둘러보기', type: 'BASIC', targetCount: 3, rewardFeed: 1, basicCount: 1 },
     ],
     visits: [{ questId: 1, storeId: 5, date: ago(1) }],

@@ -82,7 +82,7 @@ export function CreateShortformFlow() {
 
   const close = () => {
     const dirty = step !== 'source' || mapUrl || files.length > 0
-    if (step === 'done' || !dirty || window.confirm('숏폼 만들기를 그만둘까요?\n입력한 내용은 저장되지 않아요.')) navigate('/owner', { replace: true })
+    if (step === 'done' || !dirty || window.confirm('게시물 만들기를 그만둘까요?\n입력한 내용은 저장되지 않아요.')) navigate('/owner', { replace: true })
   }
 
   const goMenus = () => {
@@ -173,7 +173,7 @@ export function CreateShortformFlow() {
       {step === 'generate' && generation.data?.status !== 'COMPLETED' && (
         <StepWaiting
           startedAt={startedAt}
-          failed={generation.data?.status === 'FAILED' ? (generation.data.errorMessage ?? '영상을 만들지 못했어요') : null}
+          failed={generation.data?.status === 'FAILED' ? (generation.data.errorMessage ?? '게시물을 만들지 못했어요') : null}
           onCancel={() => setModal('cancel')}
           onRetry={() => setStep('appeal')}
         />
@@ -188,7 +188,7 @@ export function CreateShortformFlow() {
             {detail.data ? (
               <FramedVideo videoUrl={detail.data.videoUrl} posterUrl={detail.data.thumbnailUrl} frame={detail.data.frame} />
             ) : (
-              <p className="flex h-full items-center justify-center text-sm text-q-muted">영상을 불러오는 중...</p>
+              <p className="flex h-full items-center justify-center text-sm text-q-muted">게시물을 불러오는 중...</p>
             )}
           </div>
           {detail.data && (
@@ -230,7 +230,7 @@ export function CreateShortformFlow() {
           prev={{ onClick: () => setStep('editPick') }}
           next={{ label: generate.isPending ? '요청 중...' : '확인', onClick: startRevision, disabled: !editRequest.trim() || generate.isPending }}
         >
-          <p className="mb-2 text-xs font-bold text-q-muted">{editTarget === 'VIDEO' ? '영상' : '대본 및 자막'} 수정</p>
+          <p className="mb-2 text-xs font-bold text-q-muted">{editTarget === 'VIDEO' ? '사진' : '글·문구'} 수정</p>
           <textarea
             value={editRequest}
             onChange={(e) => setEditRequest(e.target.value)}
@@ -247,14 +247,14 @@ export function CreateShortformFlow() {
       {step === 'done' && (
         <div className="flex flex-1 flex-col items-center px-6 pb-[max(20px,env(safe-area-inset-bottom))]">
           <p className="mt-10 text-[22px] font-bold text-green-4">업로드 성공!</p>
-          <p className="mt-1 text-sm text-q-muted">이제 동네 손님들 숏폼 피드에 내 가게 영상이 보여요</p>
+          <p className="mt-1 text-sm text-q-muted">이제 동네 손님들 피드에 내 가게 게시물이 보여요</p>
           <img src={pigeonUploaded} alt="" className="mt-8 h-[220px] w-auto animate-[rise-center_.5s_ease-out] object-contain" />
           <button
             type="button"
             onClick={() => navigate('/owner/videos', { replace: true })}
             className="mt-auto h-[52px] w-full rounded-xl bg-green-4 text-base font-bold text-white"
           >
-            내 영상으로 가기
+            내 게시물로 가기
           </button>
         </div>
       )}
@@ -292,7 +292,7 @@ export function CreateShortformFlow() {
       )}
       {modal === 'delete' && (
         <Dialog
-          title="이 영상을 삭제할까요?"
+          title="이 게시물을 삭제할까요?"
           image={pigeonCrying}
           primary={{ label: '아니요', onClick: () => setModal(null) }}
           secondary={{ label: remove.isPending ? '삭제 중...' : '네 삭제할래요', onClick: () => remove.mutate() }}
@@ -300,8 +300,8 @@ export function CreateShortformFlow() {
       )}
       {modal === 'pro' && (
         <Dialog
-          title="영상 수정은 PRO 기능이에요"
-          text="PRO를 구독하면 대본·자막·영상을 원하는 대로 다시 만들 수 있어요"
+          title="게시물 수정은 PRO 기능이에요"
+          text="PRO를 구독하면 사진·문구를 원하는 대로 다시 만들 수 있어요"
           image={pigeonUpload}
           primary={{ label: 'PRO 알아보기', onClick: () => navigate('/owner/pro') }}
           secondary={{ label: '닫기', onClick: () => setModal(null) }}
@@ -333,7 +333,7 @@ function StepSource({
 
   return (
     <Screen
-      hero={<Hero sub={'지도 링크나 메뉴판만 올리면\n홍보 영상이 완성돼요!'} />}
+      hero={<Hero sub={'지도 링크나 메뉴판만 올리면\n홍보 게시물이 완성돼요!'} />}
       prev={{ onClick: onPrev }}
       next={{ onClick: onNext, disabled: !ready }}
     >

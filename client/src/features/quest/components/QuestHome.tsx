@@ -54,19 +54,23 @@ export function QuestHome() {
   )
 }
 
+// 기본 퀘스트는 제목으로 구분 — 예전 제목(숏폼 5개 보기)으로 저장된 서버 데이터도 같이 받음
 const BASIC_HINT: Record<string, string> = {
-  '숏폼 5개 보기': '숏폼을 2초 이상 보면 1개씩 쌓여요',
+  '게시물 5개 보기': '게시물을 2초 이상 보면 1개씩 쌓여요',
+  '숏폼 5개 보기': '게시물을 2초 이상 보면 1개씩 쌓여요',
   '지도에서 가게 3곳 둘러보기': '지도에서 가게를 눌러 둘러보면 쌓여요',
 }
 
 /** 기본 퀘스트를 누르면 진행하는 화면으로 */
 const BASIC_PATH: Record<string, string> = {
+  '게시물 5개 보기': '/',
   '숏폼 5개 보기': '/',
   '지도에서 가게 3곳 둘러보기': '/map',
 }
 
 /** 템플릿이 아닌 퀘스트의 비둘기 그림 (기본 퀘스트는 제목으로 구분) */
 const BASIC_IMAGE: Record<string, string> = {
+  '게시물 5개 보기': OWNER_ILLUST.videoDownload,
   '숏폼 5개 보기': OWNER_ILLUST.videoDownload,
   '지도에서 가게 3곳 둘러보기': pigeonWalk,
 }

@@ -8,14 +8,14 @@ const COPY = {
   RESIDENT: {
     badge: '손님으로 가입 완료',
     image: pigeonCheer,
-    sub: '동네 가게 숏폼을 구경하고\n퀘스트로 내 비둘기를 키워 보세요',
-    chips: ['🎬 동네 숏폼', '🗺 가게 지도', '🕊 비둘기 키우기'],
+    sub: '동네 가게 게시물을 구경하고\n퀘스트로 내 비둘기를 키워 보세요',
+    chips: ['📸 동네 게시물', '🗺 가게 지도', '🕊 비둘기 키우기'],
   },
   OWNER: {
     badge: '사장님으로 가입 완료',
     image: pigeonUploaded,
-    sub: 'AI 홍보 영상으로\n우리 가게를 동네에 알려 보세요',
-    chips: ['🎬 AI 홍보 영상', '🚩 퀘스트 가게', '🎟 쿠폰 발행'],
+    sub: 'AI 홍보 게시물로\n우리 가게를 동네에 알려 보세요',
+    chips: ['📸 AI 홍보 게시물', '🚩 퀘스트 가게', '🎟 쿠폰 발행'],
   },
 } as const
 
@@ -62,7 +62,7 @@ export function SignupWelcome({ role, name }: { role: 'RESIDENT' | 'OWNER'; name
             onClick={() => navigate('/create', { replace: true })}
             className="h-[52px] rounded-xl border-2 border-green-4 bg-white text-base font-bold text-green-4"
           >
-            첫 홍보 영상 만들기
+            첫 홍보 게시물 만들기
           </button>
         )}
         <button

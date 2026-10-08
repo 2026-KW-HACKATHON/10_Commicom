@@ -54,14 +54,14 @@ export function SearchIcon() {
   )
 }
 
-/** 하단 네비: 숏폼(비디오) */
-export function VideoNavIcon() {
+/** 하단 네비: 피드 (AI 홍보 게시물 — 사진 액자, 비디오 아이콘과 같은 채움 스타일) */
+export function PhotoNavIcon() {
   return (
-    <svg width="30" height="21" viewBox="46 20 30 21" fill="none" aria-hidden>
+    <svg width="28" height="22" viewBox="0 0 28 22" fill="none" aria-hidden>
       <path
         fillRule="evenodd"
         clipRule="evenodd"
-        d="M48.9268 20H73.0732C75.0244 20 76 21.12 76 23.36V37.64C76 39.88 75.0244 41 73.0732 41H48.9268C46.9756 41 46 39.88 46 37.64V23.36C46 21.12 46.9756 20 48.9268 20ZM58.0732 25.04V35.96L66.122 30.5L58.0732 25.04Z"
+        d="M3.5 0h21C26.43 0 28 1.57 28 3.5v15c0 1.93-1.57 3.5-3.5 3.5h-21C1.57 22 0 20.43 0 18.5v-15C0 1.57 1.57 0 3.5 0Zm16 4a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM3 17.5 9.5 10l5.5 6 3-3 7 4.5v1c0 .55-.45 1-1 1h-21c-.55 0-1-.45-1-1v-1Z"
         fill="currentColor"
       />
     </svg>
@@ -165,6 +165,17 @@ export function ShareIcon() {
   return (
     <svg width="22" height="24" viewBox="0 0 22 24" fill="none" aria-hidden>
       <path d="M11 15V2.5M6.5 7 11 2.5 15.5 7M6 11H4.5A1.5 1.5 0 0 0 3 12.5v8A1.5 1.5 0 0 0 4.5 22h13a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5H16" {...stroke} />
+    </svg>
+  )
+}
+
+/** 게시물 썸네일 배지·버튼: 사진 (예전 재생 ▶ 대신 — 쓰는 곳의 scale 이 그대로 맞게 PlayIcon 과 비슷한 크기) */
+export function PhotoIcon() {
+  return (
+    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="3" y="4" width="18" height="16" rx="3" {...stroke} />
+      <circle cx="15.5" cy="9" r="1.8" fill="currentColor" />
+      <path d="m3.5 17 5-5.5 4 4.5 2.5-2.5 5.5 4.5" {...stroke} />
     </svg>
   )
 }

@@ -52,15 +52,15 @@ export interface ShortformDetail {
   frame?: { top: number; height: number }
 }
 
-/** 재수정(PRO)에서 무엇을 고칠지: 영상 / 대본 및 자막 */
+/** 재수정(PRO)에서 무엇을 고칠지: 사진 / 글·문구 (값 VIDEO·SCRIPT 는 서버와 맞춘 이름이라 그대로) */
 export const EDIT_TARGETS = [
-  ['VIDEO', '영상'],
-  ['SCRIPT', '대본 및 자막'],
+  ['VIDEO', '사진'],
+  ['SCRIPT', '글·문구'],
 ] as const
 export type EditTarget = (typeof EDIT_TARGETS)[number][0]
 
 export const editPlaceholder = (target: EditTarget) =>
-  target === 'VIDEO' ? '예) 음식 장면을 더 길게 보여주세요' : '예) 마지막에 "학생 10% 할인" 문구를 넣어주세요'
+  target === 'VIDEO' ? '예) 음식 사진을 더 크게 보여주세요' : '예) 마지막에 "학생 10% 할인" 문구를 넣어주세요'
 
 /**
  * 네이버·카카오 지도 공유 링크인지

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { OWNER_ILLUST } from '@/features/owner/illustrations'
-import { PlayIcon } from '@/shared/ui/icons'
+import { PhotoIcon } from '@/shared/ui/icons'
 import { useCanScrap, useScrappedShortforms } from '../hooks'
 
 /** 스크랩 — 3열 영상 썸네일 (Figma 11:1426) */
@@ -12,7 +12,7 @@ export function ScrapGrid() {
     return (
       <div className="flex h-full flex-col items-center justify-center px-8 text-center">
         <img src={OWNER_ILLUST.videoDownload} alt="" className="h-[110px] w-auto object-contain opacity-90" />
-        <p className="mt-3 text-[16px] font-bold text-ink">로그인하면 스크랩한 영상을 볼 수 있어요</p>
+        <p className="mt-3 text-[16px] font-bold text-ink">로그인하면 스크랩한 게시물을 볼 수 있어요</p>
         <Link to="/login?next=/scraps" className="mt-5 flex h-11 w-full items-center justify-center rounded-xl bg-green-4 text-[15px] font-bold text-white">
           로그인
         </Link>
@@ -20,14 +20,14 @@ export function ScrapGrid() {
     )
   }
   if (isLoading) return <div className="grid h-40 animate-pulse grid-cols-3 gap-0.5 bg-q-panel" />
-  if (isError) return <p className="py-10 text-center text-sm text-q-muted">스크랩한 영상을 불러오지 못했어요</p>
+  if (isError) return <p className="py-10 text-center text-sm text-q-muted">스크랩한 게시물을 불러오지 못했어요</p>
   if (scrapped.length === 0) {
     return (
       <div className="flex h-full flex-col items-center justify-center px-8 text-center text-sm leading-relaxed text-q-muted">
         <img src={OWNER_ILLUST.videoDownload} alt="" className="mb-3 h-[110px] w-auto object-contain opacity-90" />
-        아직 스크랩한 영상이 없어요.
+        아직 스크랩한 게시물이 없어요.
         <br />
-        숏폼에서 🔖 버튼을 눌러 마음에 드는 가게를 모아 보세요!
+        피드에서 🔖 버튼을 눌러 마음에 드는 가게를 모아 보세요!
       </div>
     )
   }
@@ -46,9 +46,9 @@ export function ScrapGrid() {
                 style={s.frame ? { height: `${100 / s.frame.height}%`, top: `${(-100 * s.frame.top) / s.frame.height}%` } : { height: '100%', top: 0 }}
               />
             )}
-            <span className="absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-md bg-white/90 pl-0.5 text-q-text">
+            <span className="absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-md bg-white/90 text-q-text">
               <span className="scale-[0.35]">
-                <PlayIcon />
+                <PhotoIcon />
               </span>
             </span>
             <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/70 to-transparent px-1.5 pt-4 pb-1 text-[11px] font-bold text-white">
