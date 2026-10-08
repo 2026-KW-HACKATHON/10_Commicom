@@ -2,14 +2,23 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { untilText } from '@/features/coupon/schema'
 import { ConfettiBurst } from '@/shared/ui/Confetti'
-import { pigeonImage, type LevelUp } from '../schema'
+import { pigeonImage, type LevelUp, type PigeonBreed } from '../schema'
 import { CelebrationScreen, FeedBowlIcon, FeedIcon, OutlineButton, PrimaryButton } from './QuestUi'
 import { RewardCardDraw } from './RewardCardDraw'
 
 /**
  * 먹이 지급 API 응답의 levelUps[]를 순서대로 연출 (Figma 6. 레벨업 + 3-0 보상 뽑기).
  */
-export function LevelUpSequence({ levelUps, onDone }: { levelUps: LevelUp[]; onDone: () => void }) {
+export function LevelUpSequence({
+  levelUps,
+  breed,
+  onDone,
+}: {
+  levelUps: LevelUp[]
+  /** Lv.10 이 되면 종류 비둘기 그림으로 */
+  breed?: PigeonBreed | null
+  onDone: () => void
+}) {
   const [index, setIndex] = useState(0)
   const current = levelUps[index]
   if (!current) return null
@@ -19,6 +28,7 @@ export function LevelUpSequence({ levelUps, onDone }: { levelUps: LevelUp[]; onD
     <LevelUpStep
       key={index}
       levelUp={current}
+      breed={breed ?? null}
       position={levelUps.length > 1 ? `${index + 1} / ${levelUps.length}` : null}
       isLast={isLast}
       onNext={() => (isLast ? onDone() : setIndex((i) => i + 1))}
@@ -29,11 +39,13 @@ export function LevelUpSequence({ levelUps, onDone }: { levelUps: LevelUp[]; onD
 /** 레벨업 축하 + 카드 뽑기 → 결과 */
 function LevelUpStep({
   levelUp,
+  breed,
   position,
   isLast,
   onNext,
 }: {
   levelUp: LevelUp
+  breed: PigeonBreed | null
   position: string | null
   isLast: boolean
   onNext: () => void
@@ -46,7 +58,7 @@ function LevelUpStep({
   return (
     <CelebrationScreen
       compact
-      image={pigeonImage(levelUp.toLevel)}
+      image={pigeonImage(levelUp.toLevel, breed)}
       title="비둘기 레벨업!"
       subtitle={
         <>

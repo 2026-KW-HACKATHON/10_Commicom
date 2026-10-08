@@ -43,12 +43,59 @@ function me(token: string | null) {
   return m
 }
 
+/** 이메일 인증 (서버와 같은 규칙: 5분 유효, 60초 뒤 다시 받기, 5번까지 틀릴 수 있음, 인증 후 30분 안에 가입) */
+const pendingCodes = new Map<string, { code: string; sentAt: number; expiresAt: number; attempts: number }>()
+const verifiedUntil = new Map<string, number>()
+const norm = (email: string) => email.trim().toLowerCase()
+const emailTaken = (email: string) => members.some((m) => norm(m.email) === norm(email))
+const nicknameTaken = (nickname: string, exceptMemberId?: number) =>
+  members.some((m) => m.nickname === nickname.trim() && m.memberId !== exceptMemberId)
+
 export const mockAuthApi = {
+  async isEmailTaken(email: string) {
+    await wait(300)
+    return emailTaken(email)
+  },
+
+  async sendEmailCode(email: string) {
+    await wait(500)
+    if (emailTaken(email)) throw new ApiError('MEMBER409', '이미 가입된 이메일이에요')
+    const before = pendingCodes.get(norm(email))
+    if (before && before.sentAt + 60_000 > Date.now()) throw new ApiError('EMAIL429_2', '인증번호는 1분 뒤에 다시 받을 수 있어요')
+    const code = String(Math.floor(Math.random() * 1_000_000)).padStart(6, '0')
+    pendingCodes.set(norm(email), { code, sentAt: Date.now(), expiresAt: Date.now() + 5 * 60_000, attempts: 0 })
+    verifiedUntil.delete(norm(email))
+    // 목업은 메일을 못 보내므로 화면에 인증번호를 보여 줌 (서버 로컬 개발 모드와 같음)
+    return { expiresInSeconds: 300, resendAfterSeconds: 60, devCode: code }
+  },
+
+  async confirmEmailCode(email: string, code: string) {
+    await wait(300)
+    const p = pendingCodes.get(norm(email))
+    if (!p || p.expiresAt < Date.now()) {
+      pendingCodes.delete(norm(email))
+      throw new ApiError('EMAIL400_2', '인증번호가 만료됐어요. 다시 받아 주세요')
+    }
+    if (p.attempts >= 5) {
+      pendingCodes.delete(norm(email))
+      throw new ApiError('EMAIL429', '인증 시도가 너무 많아요. 인증번호를 다시 받아 주세요')
+    }
+    if (p.code !== code.trim()) {
+      p.attempts += 1
+      throw new ApiError('EMAIL400', '인증번호가 맞지 않아요')
+    }
+    pendingCodes.delete(norm(email))
+    verifiedUntil.set(norm(email), Date.now() + 30 * 60_000)
+  },
+
   async signup(body: SignupRequest): Promise<MemberInfo> {
     await wait()
-    if (members.some((m) => m.email.toLowerCase() === body.email.trim().toLowerCase())) {
-      throw new ApiError('MEMBER409', '이미 가입된 이메일이에요')
+    if (emailTaken(body.email)) throw new ApiError('MEMBER409', '이미 가입된 이메일이에요')
+    if (nicknameTaken(body.nickname)) throw new ApiError('MEMBER409_2', '이미 사용 중인 닉네임이에요')
+    if (!((verifiedUntil.get(norm(body.email)) ?? 0) > Date.now())) {
+      throw new ApiError('MEMBER400_2', '이메일 인증을 먼저 완료해 주세요')
     }
+    verifiedUntil.delete(norm(body.email))
     const m: MockMember = {
       memberId: Math.max(0, ...members.map((x) => x.memberId)) + 1,
       email: body.email.trim(),
@@ -84,14 +131,18 @@ export const mockAuthApi = {
   async updateNickname(token: string | null, nickname: string): Promise<MemberInfo> {
     await wait()
     const m = me(token)
+    if (nicknameTaken(nickname, m.memberId)) throw new ApiError('MEMBER409_2', '이미 사용 중인 닉네임이에요')
     m.nickname = nickname.trim()
     save()
     return info(m)
   },
 
-  async updatePassword(token: string | null, password: string) {
+  async updatePassword(token: string | null, currentPassword: string, newPassword: string) {
     await wait()
-    me(token).password = password
+    const m = me(token)
+    if (m.password !== currentPassword) throw new ApiError('MEMBER400_3', '현재 비밀번호가 맞지 않아요')
+    if (m.password === newPassword) throw new ApiError('MEMBER400_4', '지금과 다른 비밀번호를 입력해 주세요')
+    m.password = newPassword
     save()
   },
 

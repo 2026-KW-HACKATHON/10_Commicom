@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { StoreCouponSheet } from '@/features/coupon/components/StoreCouponSheet'
 import { useStoreShortforms } from '@/features/feed/hooks'
 import type { Shortform } from '@/features/feed/schema'
+import { useQuestEvent } from '@/features/quest/hooks'
 import { errorMessage } from '@/shared/lib/error'
 import { shareLink } from '@/shared/lib/share'
 import { LocationIcon, PlayIcon, ShareIcon, TicketSmallIcon } from '@/shared/ui/icons'
@@ -19,6 +20,8 @@ export function StoreProfile({ storeId }: { storeId: number }) {
   const { data: stores } = useStores()
   const { data: videos } = useStoreShortforms(storeId)
   const [couponOpen, setCouponOpen] = useState(false)
+  // 퀘스트 "지도에서 가게 3곳 둘러보기": 가게 상세가 열리면 셈
+  useQuestEvent('STORE_VIEW', store?.storeId)
 
   const summary = stores?.find((s) => s.storeId === storeId)
   const couponCount = summary?.availableCouponCount ?? 0

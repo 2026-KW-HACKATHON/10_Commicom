@@ -19,7 +19,7 @@ import {
   ProPage,
   QuestStorePage,
 } from '@/pages/OwnerPage'
-import { PigeonHistoryPage, QuestPage, QuestScanPage, QuestVisitPage } from '@/pages/QuestPage'
+import { PigeonAlbumPage, PigeonHistoryPage, QuestPage, QuestScanPage, QuestVisitPage } from '@/pages/QuestPage'
 
 export const router = createBrowserRouter([
   // 처음 실행: 손님 / 사장님 선택
@@ -45,6 +45,7 @@ export const router = createBrowserRouter([
       { path: '/quest', element: <QuestPage />, handle: { immersive: true } },
       // 퀘스트 하위 화면: /quest 하위라 퀘스트 탭이 활성 상태로 유지됨
       { path: '/quest/history', element: <PigeonHistoryPage />, handle: { title: '성장 기록' } },
+      { path: '/quest/album', element: <PigeonAlbumPage />, handle: { title: '비둘기 앨범' } },
       { path: '/quest/scan', element: <QuestScanPage />, handle: { title: '방문 인증' } },
       { path: '/quest/:questId/visit', element: <QuestVisitPage />, handle: { title: '방문 인증' } },
       { path: '/coupons', element: <CouponPage />, handle: { title: '내 쿠폰함' } },

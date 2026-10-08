@@ -4,12 +4,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import pigeonWalk from '@/assets/map/pigeon-walk.png'
 import { StoreCouponSheet } from '@/features/coupon/components/StoreCouponSheet'
 import { useFilteredStores, useMyLocation, useStoreGroups, useStores } from '../hooks'
+import { KAKAO_KEY, KAKAO_LOADER_OPTIONS } from '../kakao'
 import { DEFAULT_CENTER, type MapCategoryKey, type StoreSummary } from '../schema'
 import { MapBottomSheet } from './MapBottomSheet'
 import { MyLocationMarker } from './MyLocationMarker'
 import { StoreMarker } from './StoreMarker'
 
-const KAKAO_KEY = import.meta.env.VITE_KAKAO_MAP_KEY
 /** 지도 기본 배율 (카카오 level, 작을수록 확대) */
 const DEFAULT_LEVEL = 3
 
@@ -19,7 +19,7 @@ export function StoreMapView() {
     // 시트를 내렸을 때 아래 탭 바를 덮지 않도록 지도 영역 밖은 잘라냄
     <div className="relative h-full overflow-hidden bg-gray-1">
       {KAKAO_KEY ? (
-        <KakaoStoreMap appkey={KAKAO_KEY} />
+        <KakaoStoreMap />
       ) : (
         <MapMessage>
           .env에 VITE_KAKAO_MAP_KEY(카카오 JavaScript 키)를 넣어주세요
@@ -29,8 +29,8 @@ export function StoreMapView() {
   )
 }
 
-function KakaoStoreMap({ appkey }: { appkey: string }) {
-  const [sdkLoading, sdkError] = useKakaoLoader({ appkey })
+function KakaoStoreMap() {
+  const [sdkLoading, sdkError] = useKakaoLoader(KAKAO_LOADER_OPTIONS)
   const navigate = useNavigate()
 
   const [map, setMap] = useState<kakao.maps.Map | null>(null)

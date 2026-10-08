@@ -3,7 +3,7 @@ import { useOwnerCoupons, useSettlement } from '@/features/coupon/hooks'
 import { untilText } from '@/features/coupon/schema'
 import { useIsPro } from '@/features/pro/store'
 import { useQuestSubscription } from '@/features/quest/hooks'
-import { resetMockDb, USE_MOCK } from '@/mocks/db'
+import { HAS_MOCK, resetAllLocalData } from '@/mocks/db'
 import { useMyStoreId, useMyStoreName } from '../hooks'
 import { OWNER_ILLUST } from '../illustrations'
 import { currentMonth } from '../date'
@@ -73,19 +73,10 @@ export function OwnerHome() {
         </div>
       </OwnerCard>
 
-      {USE_MOCK && (
+      {HAS_MOCK && (
         <button
           type="button"
-          onClick={() => {
-            resetMockDb()
-            localStorage.removeItem('itda-pro')
-            localStorage.removeItem('itda-mock-published')
-            localStorage.removeItem('itda-mock-deleted')
-            localStorage.removeItem('itda-mock-store-edits')
-            localStorage.removeItem('itda-mock-members')
-            localStorage.removeItem('itda-auth')
-            window.location.reload()
-          }}
+          onClick={resetAllLocalData}
           className="mx-auto mt-8 block text-xs text-q-muted underline"
         >
           목업 데이터 처음 상태로 되돌리기

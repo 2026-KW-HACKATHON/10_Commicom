@@ -1,5 +1,5 @@
-import { USE_MOCK } from '@/mocks/db'
-import { api, request } from '@/shared/api/client'
+import { MOCK_ONLY, USE_MOCK } from '@/mocks/db'
+import { api, ApiError, request } from '@/shared/api/client'
 import { useAuthStore } from '@/stores/authStore'
 import { mockAuthApi } from './mock'
 import type { LoginResult, MemberInfo, SignupRequest } from './schema'
@@ -25,12 +25,39 @@ export function fetchMe(accessToken = token()): Promise<MemberInfo> {
 }
 
 /**
- * 닉네임 중복 확인 (Figma 회원가입·프로필의 [중복확인]).
- * TODO: 명세에 API 없음 — 서버에 요청 필요. 서버 연동 시엔 가입·수정 때 서버가 막을 때까지 통과로 둠
+ * 닉네임 중복 확인 — GET /api/members/check-nickname (Figma 회원가입·프로필의 [중복확인]).
+ * 로그인한 상태면 서버가 내 현재 닉네임은 사용 가능으로 봄
  */
 export async function isNicknameTaken(nickname: string, exceptMemberId?: number): Promise<boolean> {
   if (USE_MOCK) return mockAuthApi.isNicknameTaken(nickname, exceptMemberId)
-  return false
+  const { available } = await request<{ available: boolean }>(api.get('/api/members/check-nickname', { params: { nickname: nickname.trim() } }))
+  return !available
+}
+
+/** 이메일 중복 확인 — GET /api/members/check-email */
+export async function isEmailTaken(email: string): Promise<boolean> {
+  if (USE_MOCK) return mockAuthApi.isEmailTaken(email)
+  const { available } = await request<{ available: boolean }>(api.get('/api/members/check-email', { params: { email: email.trim() } }))
+  return !available
+}
+
+/** 인증번호 발송 결과. devCode는 메일 서버 없는 로컬 개발 환경에서만 옴 */
+export interface EmailCodeSent {
+  expiresInSeconds: number
+  resendAfterSeconds: number
+  devCode?: string
+}
+
+/** 이메일 인증번호 받기 — POST /api/members/email-verifications (이미 가입된 이메일이면 MEMBER409) */
+export function sendEmailCode(email: string): Promise<EmailCodeSent> {
+  if (USE_MOCK) return mockAuthApi.sendEmailCode(email)
+  return request(api.post('/api/members/email-verifications', { email: email.trim() }))
+}
+
+/** 이메일 인증번호 확인 — POST /api/members/email-verifications/confirm */
+export async function confirmEmailCode(email: string, code: string) {
+  if (USE_MOCK) return mockAuthApi.confirmEmailCode(email, code)
+  await request(api.post('/api/members/email-verifications/confirm', { email: email.trim(), code: code.trim() }))
 }
 
 /** PATCH /api/members/me/nickname */
@@ -39,10 +66,12 @@ export function updateNickname(nickname: string): Promise<MemberInfo> {
   return request(api.patch('/api/members/me/nickname', { nickname: nickname.trim() }))
 }
 
-/** 비밀번호 변경. TODO: 명세에 API 없음 (임시: PATCH /api/members/me/password) */
-export async function updatePassword(password: string) {
-  if (USE_MOCK) return mockAuthApi.updatePassword(token(), password)
-  return request(api.patch('/api/members/me/password', { password }))
+/** PATCH /api/members/me/password — 현재 비밀번호가 틀리면 MEMBER400_3, 지금과 같으면 MEMBER400_4 */
+export async function updatePassword(currentPassword: string, newPassword: string) {
+  if (USE_MOCK) return mockAuthApi.updatePassword(token(), currentPassword, newPassword)
+  // 실제 서버 계정은 목업으로 바꿀 수 없어서 안내만
+  if (MOCK_ONLY.memberExtra) throw new ApiError('NOT_READY', '비밀번호 변경은 서버 준비 중이에요')
+  await request(api.patch('/api/members/me/password', { currentPassword, newPassword }))
 }
 
 /** PATCH /api/members/me/profile-image (multipart image) */

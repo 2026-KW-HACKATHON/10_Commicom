@@ -37,8 +37,17 @@
   --color-q-ground: #efe6d6;
 
   --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  /* Jalnan 2 폰트 파일은 assets에 추가 후 @font-face 등록 */
-  --font-title: 'Jalnan 2', 'Pretendard', sans-serif;
+  /* Figma 타이틀 폰트 Jalnan 2 — 웹폰트가 없어 같은 계열의 여기어때 잘난체(Jalnan)로 (아래 @font-face) */
+  --font-title: 'Jalnan 2', 'Jalnan', 'Pretendard', sans-serif;
+}
+
+/* 여기어때 잘난체 (무료 폰트, 눈누 CDN) — font-title 을 쓰는 화면에서만 내려받음 */
+@font-face {
+  font-family: 'Jalnan';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_four@1.2/JalnanOTF00.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 html,
@@ -168,6 +177,52 @@ body {
   }
   80% {
     transform: translateY(8px) scale(0.86);
+  }
+}
+
+/* 비둘기 알(Lv.0): 가끔 좌우로 흔들 — 곧 깨어날 것처럼 */
+@keyframes egg-wobble {
+  0%,
+  60%,
+  100% {
+    transform: rotate(0);
+  }
+  68% {
+    transform: rotate(-7deg);
+  }
+  76% {
+    transform: rotate(6deg);
+  }
+  84% {
+    transform: rotate(-4deg);
+  }
+  92% {
+    transform: rotate(2deg);
+  }
+}
+
+/* 비둘기 먹이 먹기: 아래(발)를 기준으로 살짝 움츠렸다 폈다 — 위아래로 튀지 않음 */
+@keyframes pigeon-eat {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  30% {
+    transform: scale(1.05, 0.93);
+  }
+  60% {
+    transform: scale(0.98, 1.03);
+  }
+}
+
+/* 가입 환영 비둘기: 둥실둥실 */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
   }
 }
 

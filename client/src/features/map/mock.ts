@@ -49,6 +49,21 @@ function apply(storeId: number) {
 }
 Object.keys(edits).forEach((id) => apply(Number(id)))
 
+/**
+ * 서버에서 받은 가게에 목업 편집 내용을 덮어씀 (가게 수정 API가 생기기 전, 실제 서버 연동 중에도 편집이 보이게).
+ */
+export function withStoreEdit<T extends { storeId: number; name: string; address: string; category: string; categoryName: string; thumbnailUrl: string | null }>(store: T): T {
+  const e = edits[store.storeId]
+  if (!e) return store
+  return {
+    ...store,
+    ...(e.name ? { name: e.name } : {}),
+    ...(e.roadAddress ? { address: [e.roadAddress, e.addressDetail].filter(Boolean).join(' ') } : {}),
+    ...(e.category ? { category: e.category, categoryName: STORE_CATEGORIES.find((c) => c.code === e.category)?.name ?? store.categoryName } : {}),
+    ...(e.thumbnailUrl !== undefined ? { thumbnailUrl: e.thumbnailUrl } : {}),
+  }
+}
+
 export function mockStoreEdit(storeId: number): StoreEdit {
   return { ...edits[storeId] }
 }

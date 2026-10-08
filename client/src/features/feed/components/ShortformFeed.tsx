@@ -1,8 +1,13 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import guideScrap from '@/assets/feed/guide-scrap.png'
+import guideSound from '@/assets/feed/guide-sound.png'
+import guideSpeed from '@/assets/feed/guide-speed.png'
+import guideSwipe from '@/assets/feed/guide-swipe.png'
 import pigeonUploaded from '@/assets/generation/pigeon-uploaded.png'
 import { StoreCouponSheet } from '@/features/coupon/components/StoreCouponSheet'
 import { useStores } from '@/features/map/hooks'
+import { useQuestEvent } from '@/features/quest/hooks'
 import { useShortformFeed } from '../hooks'
 import type { Shortform } from '../schema'
 import { ShortformItem } from './ShortformItem'
@@ -21,6 +26,8 @@ export function ShortformFeed({ storeId, startId }: { storeId?: number; startId?
   const [muted, setMuted] = useState(true)
   const [hintDone, setHintDone] = useState(false)
   const [couponFor, setCouponFor] = useState<Shortform | null>(null)
+  // 퀘스트 "숏폼 5개 보기": 넘기다 스친 영상은 빼고 2초 이상 본 영상만 셈
+  useQuestEvent('SHORTFORM_VIEW', items?.[activeIndex]?.shortformId, 2000)
 
   // 화면에 60% 이상 보이는 영상을 "지금 영상"으로
   useEffect(() => {
@@ -131,9 +138,10 @@ export function ShortformFeed({ storeId, startId }: { storeId?: number; startId?
           type="button"
           onClick={() => setMuted(false)}
           onAnimationEnd={() => setHintDone(true)}
-          className="absolute top-[86px] left-1/2 z-10 -translate-x-1/2 animate-[hint-fade_3s_ease-in-out_forwards] rounded-full bg-black/45 px-3.5 py-1.5 text-xs font-bold text-white backdrop-blur-md"
+          className="absolute top-[86px] left-1/2 z-10 flex -translate-x-1/2 animate-[hint-fade_3s_ease-in-out_forwards] items-center gap-1.5 rounded-full bg-black/45 py-1 pr-3.5 pl-2 text-xs font-bold whitespace-nowrap text-white backdrop-blur-md"
         >
-          🔇 눌러서 소리 켜기
+          <img src={guideSound} alt="" className="size-6 object-contain" />
+          눌러서 소리 켜기
         </button>
       )}
 
@@ -170,20 +178,22 @@ function FeedGuide() {
       type="button"
       onClick={close}
       aria-label="안내 닫기"
-      className="absolute inset-0 z-20 flex animate-[fade_.3s] flex-col items-center justify-center gap-9 bg-black/65 px-8 text-white"
+      className="absolute inset-0 z-20 flex animate-[fade_.3s] flex-col items-center justify-center gap-7 bg-black/65 px-8 text-white"
     >
-      <GuideRow icon={<span className="block animate-[guide-swipe_1.6s_ease-in-out_infinite] text-[34px]">👆</span>} title="위로 넘기면 다음 영상" sub="동네 가게 영상을 하나씩 구경해요" />
-      <GuideRow icon={<span className="block animate-[guide-press_1.6s_ease-in-out_infinite] text-[34px]">👇</span>} title="꾹 누르면 2배속" sub="누른 채 아래로 내리면 2배속 고정, 다시 올리면 해제" />
-      <GuideRow icon={<span className="text-[30px]">🔖</span>} title="마음에 들면 스크랩" sub="오른쪽 버튼으로 스크랩·쿠폰·위치 보기" />
+      {/* 아이콘: 2026-10-09 사용자 제공 */}
+      <GuideRow icon={guideSwipe} motion="animate-[guide-swipe_1.6s_ease-in-out_infinite]" title="위로 넘기면 다음 영상" sub="동네 가게 영상을 하나씩 구경해요" />
+      <GuideRow icon={guideSpeed} motion="animate-[guide-press_1.6s_ease-in-out_infinite]" title="꾹 누르면 2배속" sub="누른 채 아래로 내리면 2배속 고정, 다시 올리면 해제" />
+      <GuideRow icon={guideScrap} title="마음에 들면 스크랩" sub="오른쪽 버튼으로 스크랩·쿠폰·위치 보기" />
+      <GuideRow icon={guideSound} title="소리 키우기" sub="처음엔 소리가 꺼져 있어요. 오른쪽 소리 버튼을 눌러 켜요" />
       <span className="mt-2 rounded-full bg-white px-6 py-2.5 text-[15px] font-bold text-ink">알겠어요</span>
     </button>
   )
 }
 
-function GuideRow({ icon, title, sub }: { icon: ReactNode; title: string; sub: string }) {
+function GuideRow({ icon, motion = '', title, sub }: { icon: string; motion?: string; title: string; sub: string }) {
   return (
-    <span className="flex w-full max-w-[300px] items-center gap-4 text-left">
-      <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-white/15">{icon}</span>
+    <span className="flex w-full max-w-[290px] items-center gap-4 text-left">
+      <img src={icon} alt="" className={`size-16 shrink-0 object-contain drop-shadow-lg ${motion}`} />
       <span>
         <span className="block text-[17px] font-bold">{title}</span>
         <span className="block text-[13px] text-white/75">{sub}</span>

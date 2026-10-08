@@ -6,8 +6,11 @@ import pigeonWalk from '@/assets/map/pigeon-walk.png'
 import { LoginForm } from '@/features/auth/components/LoginForm'
 import { useLogout } from '@/features/auth/hooks'
 import { canUseOwnerMode, modeOfRole } from '@/features/auth/schema'
-import { mockAddFeed, resetMockDb, USE_MOCK } from '@/mocks/db'
+import { addTestFeed } from '@/features/quest/api'
+import { HAS_MOCK, resetAllLocalData } from '@/mocks/db'
+import { errorMessage } from '@/shared/lib/error'
 import { CloseIcon, MenuIcon } from '@/shared/ui/icons'
+import { toast } from '@/stores/toastStore'
 import { useAuthStore, useMe } from '@/stores/authStore'
 import { MODE_HOME, useModeStore, type AppMode } from '@/stores/modeStore'
 
@@ -248,12 +251,17 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
                       처음 화면(모드 선택) 다시 보기
                     </button>
                   </li>
-                  {USE_MOCK && (
+                  {HAS_MOCK && (
                     <li>
                       <button
                         type="button"
-                        onClick={() => {
-                          mockAddFeed(1000)
+                        onClick={async () => {
+                          try {
+                            await addTestFeed(1000)
+                          } catch (e) {
+                            toast(errorMessage(e, '로그인한 뒤 받을 수 있어요'))
+                            return
+                          }
                           queryClient.invalidateQueries({ queryKey: ['pigeon'] })
                           if (mode !== 'USER') setMode('USER')
                           navigate('/quest')
@@ -264,20 +272,11 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
                       </button>
                     </li>
                   )}
-                  {USE_MOCK && (
+                  {HAS_MOCK && (
                     <li>
                       <button
                         type="button"
-                        onClick={() => {
-                          resetMockDb()
-                          localStorage.removeItem('itda-pro')
-                          localStorage.removeItem('itda-mock-published')
-                          localStorage.removeItem('itda-mock-deleted')
-                          localStorage.removeItem('itda-mock-store-edits')
-                          localStorage.removeItem('itda-mock-members')
-                          localStorage.removeItem('itda-auth')
-                          window.location.reload()
-                        }}
+                        onClick={resetAllLocalData}
                         className="w-full border-b border-q-line py-3.5 text-left"
                       >
                         목업 데이터 초기화

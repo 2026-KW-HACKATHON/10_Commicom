@@ -121,6 +121,9 @@ function loadDeleted(): number[] {
   }
 }
 
+/** 삭제(숨김)한 영상인지 — 서버에 삭제 API가 없을 때 실제 서버 영상도 이 기기에서 숨김 */
+export const isHiddenShortform = (shortformId: number) => deleted.has(shortformId)
+
 /** 피드·내 영상에 보여 줄 전체 목록 (올린 영상이 앞, 지운 영상은 뺌) */
 export function allMockShortforms() {
   return [...PUBLISHED_SHORTFORMS, ...MOCK_SHORTFORMS]

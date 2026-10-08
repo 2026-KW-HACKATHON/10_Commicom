@@ -10,6 +10,7 @@ import tplMart from '@/assets/quest/templates/mart.png'
 import tplShopping from '@/assets/quest/templates/shopping.png'
 import tplBeauty from '@/assets/quest/templates/beauty.png'
 import tplService from '@/assets/quest/templates/service.png'
+import egg from '@/assets/quest/pigeon-egg.png'
 import lv01 from '@/assets/quest/pigeon-lv-01.png'
 import lv02 from '@/assets/quest/pigeon-lv-02.png'
 import lv03 from '@/assets/quest/pigeon-lv-03.png'
@@ -94,9 +95,20 @@ export interface VisitResult {
   feedBalance: number
 }
 
+/** 비둘기 종류 — 알이 부화할 때 랜덤으로 정해짐 */
+export type PigeonBreed = 'KOREAN' | 'JAPANESE' | 'CHINESE' | 'WESTERN' | 'MART' | 'CAFE'
+
 /** GET /api/pigeon */
 export interface Pigeon {
+  /** 0 = 알 */
   level: number
+  isEgg: boolean
+  /** 알이면 null */
+  breed: PigeonBreed | null
+  breedName: string | null
+  /** 몇 번째 비둘기인지 (졸업할 때마다 +1) */
+  generation: number
+  startedAt: string
   maxLevel: number
   levelName: string | null
   currentFeed: number
@@ -121,16 +133,19 @@ export interface FeedResult {
   feedBalance: number
 }
 
-/** POST /api/pigeon/feed { amount } (명세 추가 제안) — 보유 먹이를 먹이고 레벨업·뽑기 처리 */
+/** POST /api/pigeon/feed { amount } — 보유 먹이를 먹이고 레벨업·뽑기 처리. 알이 깨어났으면 hatched */
 export interface FeedPigeonResult {
   fed: number
   pigeon: PigeonChange
+  hatched: { breed: PigeonBreed; breedName: string } | null
   levelUps: LevelUp[]
   feedBalance: number
 }
 
 export interface HistoryItem extends LevelUp {
   historyId: number
+  /** 몇 번째 비둘기의 기록인지 */
+  generation: number
   createdAt: string
 }
 
@@ -140,6 +155,33 @@ export interface HistoryPage {
   page: number
   size: number
   hasNext: boolean
+}
+
+/** POST /api/quests/events (기본 퀘스트 진행) */
+export type QuestEventType = 'SHORTFORM_VIEW' | 'STORE_VIEW'
+
+export interface QuestEventResult {
+  /** 이번 행동으로 새로 완료한 퀘스트 (보너스 먹이는 보유 먹이에 쌓임) */
+  completedQuests: { questId: number; title: string; rewardFeed: number }[]
+  feedBalance: number
+}
+
+/** 졸업한 비둘기 (내 비둘기 앨범) */
+export interface AlbumItem {
+  generation: number
+  breed: PigeonBreed
+  breedName: string
+  startedAt: string
+  graduatedAt: string
+  /** 알을 받은 날부터 졸업까지 (일) */
+  days: number
+  rewardCouponCount: number
+}
+
+/** POST /api/pigeon/graduate */
+export interface GraduateResult {
+  graduated: AlbumItem
+  pigeon: Pigeon
 }
 
 export type SubscriptionStatus = 'ACTIVE' | 'EXPIRED' | 'NONE'
@@ -216,8 +258,9 @@ export interface OwnerQuestTemplate {
 
 export const MAX_LEVEL = 10
 
-/** key = 현재 레벨 (key → key+1 레벨업). 2026-10-08 확정 표 */
+/** key = 현재 레벨 (key → key+1 레벨업). 2026-10-08 확정 표, 0 = 알(먹이 1개로 부화, 뽑기 없음) */
 export const LEVEL_TABLE: Record<number, { requiredFeed: number; coupon: number; feed1: number; feed2: number }> = {
+  0: { requiredFeed: 1, coupon: 0, feed1: 0, feed2: 0 },
   1: { requiredFeed: 3, coupon: 0.01, feed1: 0.7, feed2: 0.29 },
   2: { requiredFeed: 5, coupon: 0.015, feed1: 0.7, feed2: 0.285 },
   3: { requiredFeed: 8, coupon: 0.02, feed1: 0.7, feed2: 0.28 },
@@ -232,12 +275,35 @@ export const LEVEL_TABLE: Record<number, { requiredFeed: number; coupon: number;
 /** 레벨별 비둘기 (Figma 디자인 시스템 pigeon-lv-01~10) */
 const PIGEON_IMAGES = [lv01, lv02, lv03, lv04, lv05, lv06, lv07, lv08, lv09, lv10]
 
-export function pigeonImage(level: number) {
-  return PIGEON_IMAGES[Math.min(Math.max(level, 1), MAX_LEVEL) - 1]
+/** 종류별 비둘기 (Figma 음식 비둘기 — 음식을 들고 있는 모습, Lv.10·졸업 앨범에서 씀) */
+export const PIGEON_BREEDS: Record<PigeonBreed, { name: string; emoji: string; image: string }> = {
+  KOREAN: { name: '한식', emoji: '🍚', image: tplKorean },
+  JAPANESE: { name: '일식', emoji: '🍣', image: tplJapanese },
+  CHINESE: { name: '중식', emoji: '🥟', image: tplChinese },
+  WESTERN: { name: '양식', emoji: '🍝', image: tplWestern },
+  MART: { name: '마트', emoji: '🛒', image: tplMart },
+  CAFE: { name: '카페', emoji: '☕', image: tplCafe },
 }
 
-/** 레벨 이름은 확정 전까지 서버가 null → "Lv. 4"만 표시 */
+export const PIGEON_EGG_IMAGE = egg
+
+/** 알(Lv.0) → 알 그림, Lv.1~9 → 성장 그림, Lv.10 → 종류 비둘기(음식 든 모습) */
+export function pigeonImage(level: number, breed?: PigeonBreed | null) {
+  if (level <= 0) return egg
+  if (level >= MAX_LEVEL && breed) return PIGEON_BREEDS[breed].image
+  return PIGEON_IMAGES[Math.min(level, MAX_LEVEL) - 1]
+}
+
+/** "🍚 한식 비둘기" */
+export function breedLabel(breed: PigeonBreed | null | undefined) {
+  if (!breed) return null
+  const b = PIGEON_BREEDS[breed]
+  return `${b.emoji} ${b.name} 비둘기`
+}
+
+/** 레벨 이름은 확정 전까지 서버가 null → "Lv. 4"만 표시. 알은 "알" */
 export function levelLabel(level: number, levelName: string | null) {
+  if (level <= 0) return '🥚 알'
   return levelName ? `Lv. ${level} · ${levelName}` : `Lv. ${level}`
 }
 

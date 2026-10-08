@@ -26,13 +26,17 @@ import {
   TEMPLATE_REWARD_FEED,
   TEMPLATE_TARGET,
   MAX_LEVEL,
+  PIGEON_BREEDS,
   VISIT_RADIUS_M,
+  type AlbumItem,
   type FeedPigeonResult,
+  type GraduateResult,
   type FeedResult,
   type HistoryItem,
   type HistoryPage,
   type LevelUp,
   type Pigeon,
+  type PigeonBreed,
   type QuestListResult,
   type QuestQr,
   type QuestSubscription,
@@ -43,10 +47,41 @@ import {
   type VisitResult,
 } from '@/features/quest/schema'
 
+/** true면 모든 기능을 목업으로 (서버 없이 시연) */
 export const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
-/** 목업에서 "내 가게"(사장님 계정)로 쓰는 가게 — 내 가게 조회 API가 생기면 교체 */
+/**
+ * 서버에 아직 API가 없는 기능 — VITE_USE_MOCK=false여도 이 기능들만 목업으로 동작.
+ * 서버에 API가 생기면 해당 항목을 false로 바꾸면 그 기능만 실제 서버로 붙음.
+ */
+export const MOCK_ONLY = {
+  /** 퀘스트·비둘기·먹이·레벨업 */
+  quest: false,
+  /** 쿠폰 발행·받기·사용·정산 */
+  coupon: false,
+  /** 사장님 가게 등록·정보 수정 */
+  storeEdit: false,
+  /** 숏폼 삭제·재수정 교체 (명세상 생성 완료 = 바로 공개) */
+  shortformManage: true,
+  /** 비밀번호 변경 */
+  memberExtra: false,
+} as const
+
+/** 이 기능을 목업으로 돌릴지 */
+export const mockFor = (feature: keyof typeof MOCK_ONLY) => USE_MOCK || MOCK_ONLY[feature]
+
+/** 목업으로 도는 기능이 하나라도 있는지 (설정의 "목업 초기화"·테스트 버튼 표시용) */
+export const HAS_MOCK = USE_MOCK || Object.values(MOCK_ONLY).some(Boolean)
+
+/** 가게 등록·수정이 목업이거나 로그인 전일 때 "내 가게"로 쓰는 가게 (샘플 광운 카페) */
 export const MOCK_OWNER_STORE_ID = 2
+
+/** 목업 퀘스트·쿠폰이 "내 가게"로 볼 가게 — 서버 내 가게를 불러오면 그 id로 바뀜 (useMyStoreId) */
+let ownerStoreId = MOCK_OWNER_STORE_ID
+export const mockOwnerStoreId = () => ownerStoreId
+export const setMockOwnerStoreId = (storeId: number) => {
+  ownerStoreId = storeId
+}
 
 const AD_FEED_LIMIT = 3
 const COUPON_FEE = 100
@@ -84,7 +119,9 @@ interface UserCouponRow {
 interface Db {
   seq: number
   /** feedBalance: 받았지만 아직 안 먹인 먹이 (2026-10-08: 자동 먹이기 → 쌓아 두고 직접 주기로 변경) */
-  pigeon: { level: number; currentFeed: number; feedBalance?: number }
+  pigeon: { level: number; currentFeed: number; feedBalance?: number; breed?: PigeonBreed | null; generation?: number; startedAt?: string }
+  /** 졸업한 비둘기 (2026-10-09 추가 — 예전 저장본엔 없을 수 있음) */
+  graduates?: AlbumItem[]
   feedLogs: { date: string; source: 'DAILY' | 'AD' | 'QUEST' | 'DRAW'; amount: number; adTransactionId?: string }[]
   history: HistoryItem[]
   quests: { questId: number; title: string; type: QuestType; targetCount: number; rewardFeed: number; basicCount: number }[]
@@ -124,11 +161,13 @@ function seed(): Db {
   const ago = (d: number) => addDays(today, -d)
   return {
     seq: 1000,
-    pigeon: { level: 2, currentFeed: 3, feedBalance: 2 },
+    pigeon: { level: 2, currentFeed: 3, feedBalance: 2, breed: 'KOREAN', generation: 1, startedAt: `${ago(3)}T09:00:00+09:00` },
+    graduates: [],
     feedLogs: [],
     history: [
       {
         historyId: 1,
+        generation: 1,
         fromLevel: 1,
         toLevel: 2,
         reward: { type: 'FEED', feedAmount: 1, userCoupon: null },
@@ -235,6 +274,25 @@ export function resetMockDb() {
   save()
 }
 
+/** "목업 데이터 초기화"에서 함께 지우는 기기 저장값 (처음 써 보는 상태로) */
+const LOCAL_KEYS = [
+  'itda-pro', // PRO 구독
+  'itda-mock-published', // 업로드한 숏폼
+  'itda-mock-deleted', // 지운 숏폼
+  'itda-mock-store-edits', // 가게 정보 수정
+  'itda-mock-members', // 목업 회원
+  'itda-auth', // 로그인
+  'itda-scraps', // 스크랩
+  'itda-feed-guide-seen', // 숏폼 사용법 안내 (다시 보이게)
+]
+
+/** 목업 DB + 기기 저장값을 모두 처음 상태로 돌리고 새로고침 */
+export function resetAllLocalData() {
+  resetMockDb()
+  LOCAL_KEYS.forEach((key) => localStorage.removeItem(key))
+  window.location.reload()
+}
+
 /** 목업 전용 테스트: 보유 먹이를 바로 채움 (Lv.10까지 해보기용) */
 export function mockAddFeed(amount: number) {
   const d = db()
@@ -306,10 +364,13 @@ function pigeonChange(levelBefore: number) {
 
 /* ── 3-0. 레벨업 처리 로직 (먹이 주기 때 실행) ── */
 
+const BREEDS: PigeonBreed[] = ['KOREAN', 'JAPANESE', 'CHINESE', 'WESTERN', 'MART', 'CAFE']
+
 function feedPigeon(amount: number) {
   const d = db()
   const levelBefore = d.pigeon.level
   const levelUps: LevelUp[] = []
+  let hatched: FeedPigeonResult['hatched'] = null
   d.pigeon.feedBalance = (d.pigeon.feedBalance ?? 0) - amount
 
   d.pigeon.currentFeed += amount
@@ -317,17 +378,24 @@ function feedPigeon(amount: number) {
     const row = LEVEL_TABLE[d.pigeon.level]
     d.pigeon.currentFeed -= row.requiredFeed
     d.pigeon.level += 1
+    // 알(Lv.0)은 먹이 1개로 부화 — 종류 랜덤, 뽑기 없음
+    if (d.pigeon.level === 1) {
+      const breed = BREEDS[Math.floor(Math.random() * BREEDS.length)]
+      d.pigeon.breed = breed
+      hatched = { breed, breedName: PIGEON_BREEDS[breed].name }
+      continue
+    }
     const reward = draw(row, d.pigeon.level)
     // 뽑기로 나온 먹이도 바로 먹이지 않고 보유 먹이에 쌓음
     if (reward.type === 'FEED') d.pigeon.feedBalance = (d.pigeon.feedBalance ?? 0) + reward.feedAmount
 
     const levelUp: LevelUp = { fromLevel: d.pigeon.level - 1, toLevel: d.pigeon.level, reward }
     levelUps.push(levelUp)
-    d.history.unshift({ ...levelUp, historyId: nextId(), createdAt: kstIso() })
+    d.history.unshift({ ...levelUp, historyId: nextId(), generation: d.pigeon.generation ?? 1, createdAt: kstIso() })
   }
   if (d.pigeon.level >= MAX_LEVEL) d.pigeon.currentFeed = 0
 
-  return { fed: amount, pigeon: pigeonChange(levelBefore), levelUps, feedBalance: d.pigeon.feedBalance }
+  return { fed: amount, pigeon: pigeonChange(levelBefore), hatched, levelUps, feedBalance: d.pigeon.feedBalance }
 }
 
 function draw(row: (typeof LEVEL_TABLE)[number], toLevel: number): LevelUp['reward'] {
@@ -453,12 +521,12 @@ export const mockQuestApi = {
     respond<VisitResult>(() => {
       const d = db()
       const q = visibleQuests().find((x) => x.questId === questId && x.type === 'VISIT')
-      if (!q) fail(404, 'QUEST4041', '퀘스트를 찾을 수 없어요')
+      if (!q) fail(404, 'QUEST404', '퀘스트를 찾을 수 없어요')
       const before = questView(q)
-      if (before.status === 'COMPLETED') fail(409, 'QUEST4092', '이미 완료한 퀘스트예요')
-      if (!isQuestStore(body.storeId)) fail(403, 'QUEST4031', '퀘스트 가게가 아니에요')
+      if (before.status === 'COMPLETED') fail(409, 'QUEST409_2', '이미 완료한 퀘스트예요')
+      if (!isQuestStore(body.storeId)) fail(403, 'QUEST403', '퀘스트 가게가 아니에요')
       if (q.storeIds && !q.storeIds.includes(body.storeId)) {
-        fail(403, 'QUEST4032', '이 퀘스트에 참여한 가게가 아니에요')
+        fail(403, 'QUEST403_2', '이 퀘스트에 참여한 가게가 아니에요')
       }
 
       const store = MOCK_STORES.find((s) => s.storeId === body.storeId)
@@ -466,17 +534,17 @@ export const mockQuestApi = {
         const distanceM = Math.round(
           distanceMeters({ lat: body.latitude, lng: body.longitude }, { lat: store.latitude, lng: store.longitude }),
         )
-        if (distanceM > VISIT_RADIUS_M) fail(400, 'QUEST4001', '가게 반경 100m 밖이에요', { distanceM })
+        if (distanceM > VISIT_RADIUS_M) fail(400, 'QUEST400', '가게 반경 100m 밖이에요', { distanceM })
       }
       if (body.qrToken.trim().toLowerCase() !== qrToken(body.storeId)) {
-        fail(400, 'QUEST4002', 'QR 코드가 맞지 않거나 만료됐어요')
+        fail(400, 'QUEST400_2', 'QR 코드가 맞지 않거나 만료됐어요')
       }
       const today = kstDate()
       if (d.visits.some((v) => v.storeId === body.storeId && v.date === today)) {
-        fail(409, 'QUEST4091', '오늘 이미 이 가게에서 인증했어요')
+        fail(409, 'QUEST409', '오늘 이미 이 가게에서 인증했어요')
       }
       if (d.visits.some((v) => v.questId === questId && v.storeId === body.storeId)) {
-        fail(409, 'QUEST4093', '이 퀘스트에서 이미 인정된 가게예요')
+        fail(409, 'QUEST409_3', '이 퀘스트에서 이미 인정된 가게예요')
       }
 
       d.visits.push({ questId, storeId: body.storeId, date: today })
@@ -521,11 +589,11 @@ export const mockQuestApi = {
   joinTemplate: (storeId: number, key: QuestTemplateKey) =>
     respond<{ templateKey: QuestTemplateKey; joined: boolean }>(() => {
       assertMyStore(storeId, 'COMMON403')
-      if (!isQuestStore(storeId)) fail(403, 'QUEST4031', '퀘스트 가게로 등록해야 퀘스트에 참여할 수 있어요')
+      if (!isQuestStore(storeId)) fail(403, 'QUEST403', '퀘스트 가게로 등록해야 퀘스트에 참여할 수 있어요')
       const d = db()
       d.questParticipants ??= {}
       const list = d.questParticipants[key] ?? []
-      if (list.includes(storeId)) fail(409, 'QUEST4096', '이미 참여 중인 퀘스트예요')
+      if (list.includes(storeId)) fail(409, 'QUEST409_5', '이미 참여 중인 퀘스트예요')
       d.questParticipants[key] = [...list, storeId]
       return { templateKey: key, joined: true }
     }),
@@ -535,7 +603,7 @@ export const mockQuestApi = {
       assertMyStore(storeId, 'COMMON403')
       const d = db()
       const list = d.questParticipants?.[key] ?? []
-      if (!list.includes(storeId)) fail(409, 'QUEST4097', '참여하지 않은 퀘스트예요')
+      if (!list.includes(storeId)) fail(409, 'QUEST409_6', '참여하지 않은 퀘스트예요')
       d.questParticipants = { ...d.questParticipants, [key]: list.filter((id) => id !== storeId) }
       return { templateKey: key, joined: false }
     }),
@@ -550,7 +618,7 @@ export const mockQuestApi = {
   subscribe: (storeId: number) =>
     respond<QuestSubscription>(() => {
       assertMyStore(storeId, 'COMMON403')
-      if (isQuestStore(storeId)) fail(409, 'QUEST4094', '이미 퀘스트 가게로 등록되어 있어요')
+      if (isQuestStore(storeId)) fail(409, 'QUEST409_4', '이미 퀘스트 가게로 등록되어 있어요')
       const today = kstDate()
       const sub = { startedAt: `${today}T00:00:00+09:00`, expiresAt: endOfKstDay(addDays(today, 30)) }
       db().subscriptions[storeId] = sub
@@ -560,13 +628,13 @@ export const mockQuestApi = {
   getQr: (storeId: number) =>
     respond<QuestQr>(() => {
       assertMyStore(storeId, 'COMMON403')
-      if (!isQuestStore(storeId)) fail(403, 'QUEST4031', '퀘스트 가게로 등록해야 QR을 받을 수 있어요')
+      if (!isQuestStore(storeId)) fail(403, 'QUEST403', '퀘스트 가게로 등록해야 QR을 받을 수 있어요')
       return { qrToken: qrToken(storeId), expiresAt: endOfKstDay(kstDate()) }
     }),
 }
 
 function assertMyStore(storeId: number, code: string) {
-  if (storeId !== MOCK_OWNER_STORE_ID) fail(403, code, '내 가게가 아니에요')
+  if (storeId !== ownerStoreId) fail(403, code, '내 가게가 아니에요')
 }
 
 /* ── 3. 비둘기 ── */
@@ -578,6 +646,11 @@ export const mockPigeonApi = {
       const today = kstDate()
       return {
         level: d.pigeon.level,
+        isEgg: d.pigeon.level === 0,
+        breed: d.pigeon.breed ?? null,
+        breedName: d.pigeon.breed ? PIGEON_BREEDS[d.pigeon.breed].name : null,
+        generation: d.pigeon.generation ?? 1,
+        startedAt: d.pigeon.startedAt ?? kstIso(),
         maxLevel: MAX_LEVEL,
         levelName: null,
         currentFeed: d.pigeon.currentFeed,
@@ -595,9 +668,8 @@ export const mockPigeonApi = {
   daily: () =>
     respond<FeedResult>(() => {
       const d = db()
-      if (d.pigeon.level >= MAX_LEVEL) fail(409, 'PIGEON4093', '이미 최고 레벨이에요')
       if (d.feedLogs.some((l) => l.date === kstDate() && l.source === 'DAILY')) {
-        fail(409, 'PIGEON4091', '오늘은 이미 무료 먹이를 받았어요')
+        fail(409, 'PIGEON409', '오늘은 이미 무료 먹이를 받았어요')
       }
       return { feedGained: 1, ...grantFeed(1, 'DAILY') }
     }),
@@ -606,11 +678,10 @@ export const mockPigeonApi = {
     respond<FeedResult>(() => {
       const d = db()
       if (!adTransactionId) fail(400, 'COMMON400', '입력값이 올바르지 않아요')
-      if (d.pigeon.level >= MAX_LEVEL) fail(409, 'PIGEON4093', '이미 최고 레벨이에요')
       const todayAds = d.feedLogs.filter((l) => l.date === kstDate() && l.source === 'AD').length
-      if (todayAds >= AD_FEED_LIMIT) fail(429, 'PIGEON4291', '오늘 광고 보상을 모두 받았어요')
+      if (todayAds >= AD_FEED_LIMIT) fail(429, 'PIGEON429', '오늘 광고 보상을 모두 받았어요')
       if (d.feedLogs.some((l) => l.adTransactionId === adTransactionId)) {
-        fail(409, 'PIGEON4092', '이미 처리한 광고 시청이에요')
+        fail(409, 'PIGEON409_2', '이미 처리한 광고 시청이에요')
       }
       const granted = grantFeed(1, 'AD', adTransactionId)
       return { feedGained: 1, adFeedCount: todayAds + 1, adFeedLimit: AD_FEED_LIMIT, ...granted }
@@ -621,10 +692,33 @@ export const mockPigeonApi = {
     respond<FeedPigeonResult>(() => {
       const d = db()
       if (!Number.isInteger(amount) || amount < 1) fail(400, 'COMMON400', '입력값이 올바르지 않아요')
-      if (d.pigeon.level >= MAX_LEVEL) fail(409, 'PIGEON4093', '이미 최고 레벨이에요')
-      if ((d.pigeon.feedBalance ?? 0) < amount) fail(409, 'PIGEON4094', '먹이가 부족해요')
+      if (d.pigeon.level >= MAX_LEVEL) fail(409, 'PIGEON409_3', '최고 레벨이에요. 졸업시키면 새 알을 키울 수 있어요')
+      if ((d.pigeon.feedBalance ?? 0) < amount) fail(409, 'PIGEON409_4', '먹이가 부족해요')
       return feedPigeon(amount)
     }),
+
+  /** Lv.10 졸업 → 앨범에 남기고 새 알 (보유 먹이는 이어짐) */
+  graduate: () =>
+    respond<GraduateResult>(() => {
+      const d = db()
+      if (d.pigeon.level < MAX_LEVEL || !d.pigeon.breed) fail(409, 'PIGEON409_5', 'Lv.10이 되어야 졸업할 수 있어요')
+      const generation = d.pigeon.generation ?? 1
+      const startedAt = d.pigeon.startedAt ?? kstIso()
+      const graduated: AlbumItem = {
+        generation,
+        breed: d.pigeon.breed,
+        breedName: PIGEON_BREEDS[d.pigeon.breed].name,
+        startedAt,
+        graduatedAt: kstIso(),
+        days: Math.max(1, Math.round((Date.now() - Date.parse(startedAt)) / 86_400_000) + 1),
+        rewardCouponCount: d.history.filter((h) => (h.generation ?? 1) === generation && h.reward.type === 'COUPON').length,
+      }
+      d.graduates = [graduated, ...(d.graduates ?? [])]
+      d.pigeon = { level: 0, currentFeed: 0, feedBalance: d.pigeon.feedBalance, breed: null, generation: generation + 1, startedAt: kstIso() }
+      return { graduated, pigeon: null as unknown as Pigeon }
+    }).then(async (r) => ({ ...r, pigeon: await mockPigeonApi.get() })),
+
+  album: () => respond<{ graduates: AlbumItem[] }>(() => ({ graduates: db().graduates ?? [] })),
 
   history: (page = 0, size = 20) =>
     respond<HistoryPage>(() => {
@@ -738,7 +832,7 @@ export const mockCouponApi = {
       const uc = db().userCoupons.find((u) => u.redeemCode === redeemCode.trim().toUpperCase())
       if (!uc) fail(404, 'COUPON4042', '코드에 해당하는 쿠폰이 없어요')
       const c = db().coupons.find((x) => x.couponId === uc.couponId)!
-      if (c.storeId !== MOCK_OWNER_STORE_ID) fail(403, 'COUPON4032', '다른 가게 쿠폰이에요')
+      if (c.storeId !== ownerStoreId) fail(403, 'COUPON4032', '다른 가게 쿠폰이에요')
       if (uc.status === 'USED') fail(409, 'COUPON4092', '이미 사용된 쿠폰이에요')
       if (effectiveStatus(uc) === 'EXPIRED') fail(410, 'COUPON4102', '기한이 지난 쿠폰이에요')
 

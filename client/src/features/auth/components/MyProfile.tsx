@@ -22,6 +22,7 @@ export function MyProfile() {
   const [nickname, setNickname] = useState(me?.nickname ?? '')
   const [nickStatus, setNickStatus] = useState<Status>(null)
   const [nickBusy, setNickBusy] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
   const [password, setPassword] = useState('')
   const [pwStatus, setPwStatus] = useState<Status>(null)
   const [pwBusy, setPwBusy] = useState(false)
@@ -61,7 +62,8 @@ export function MyProfile() {
   const savePassword = async () => {
     setPwBusy(true)
     try {
-      await updatePassword(password)
+      await updatePassword(currentPassword, password)
+      setCurrentPassword('')
       setPassword('')
       setPwStatus({ text: '수정되었어요' })
     } catch (e) {
@@ -96,12 +98,25 @@ export function MyProfile() {
         />
       </Field>
 
+      <Field label="현재 비밀번호">
+        <PasswordInput
+          value={currentPassword}
+          autoComplete="current-password"
+          maxLength={64}
+          onChange={(e) => {
+            setCurrentPassword(e.target.value)
+            setPwStatus(null)
+          }}
+          placeholder="지금 쓰는 비밀번호 입력"
+        />
+      </Field>
+
       <Field
-        label="비밀번호"
+        label="새 비밀번호"
         status={pwShort ? `${PASSWORD_MIN}자 이상 입력해주세요` : pwStatus?.text}
         error={pwShort || pwStatus?.error}
         action={
-          <FieldButton onClick={savePassword} disabled={password.length < PASSWORD_MIN || pwBusy}>
+          <FieldButton onClick={savePassword} disabled={!currentPassword || password.length < PASSWORD_MIN || pwBusy}>
             {pwBusy ? '수정 중' : '수정'}
           </FieldButton>
         }

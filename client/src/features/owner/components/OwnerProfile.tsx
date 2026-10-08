@@ -11,7 +11,8 @@ import { squareThumbnail } from '@/shared/lib/image'
 import { AddressSearch } from '@/shared/ui/AddressSearch'
 import { PlayIcon } from '@/shared/ui/icons'
 import { StoreAvatar } from '@/shared/ui/StoreAvatar'
-import { updateNickname } from '@/features/auth/api'
+import { fetchMe, updateNickname } from '@/features/auth/api'
+import { mockFor } from '@/mocks/db'
 import { useAuthStore, useMe } from '@/stores/authStore'
 import { toast } from '@/stores/toastStore'
 import { storeEditOf, updateMyStore } from '../api'
@@ -39,7 +40,9 @@ export function OwnerProfile() {
     try {
       await updateMyStore(storeId, patch, image)
       // 사장님은 상호가 곧 닉네임 (Figma 로그인 "닉네임/상호") → 가게명을 바꾸면 회원 닉네임도 같이
-      if (patch.name && me?.role === 'OWNER') setMember(await updateNickname(patch.name))
+      // (서버는 가게 수정 때 닉네임도 같이 바꿔 줌 → 회원 정보만 다시 받음)
+      if (patch.name && me?.role === 'OWNER') setMember(mockFor('storeEdit') ? await updateNickname(patch.name) : await fetchMe())
+      queryClient.invalidateQueries({ queryKey: ['myStore'] })
       await queryClient.invalidateQueries({ queryKey: ['stores'] })
       queryClient.invalidateQueries({ queryKey: ['shortforms'] })
       setEditing(null)

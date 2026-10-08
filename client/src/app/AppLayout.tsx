@@ -19,6 +19,7 @@ const MENU: MenuItem[] = [
   { to: '/coupons', label: '내 쿠폰함', icon: '🎟', image: pigeonCouponBox },
   { to: '/quest', label: '내 비둘기·퀘스트', icon: '🕊', image: pigeonQuest },
   { to: '/quest/history', label: '성장 기록', icon: '📈', image: pigeonGrowth },
+  { to: '/quest/album', label: '비둘기 앨범', icon: '🎓', image: pigeonQuest },
   { to: '/scraps', label: '스크랩한 영상', icon: '🔖', image: OWNER_ILLUST.videoDownload },
 ]
 
