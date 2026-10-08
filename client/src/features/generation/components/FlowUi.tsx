@@ -34,7 +34,8 @@ export function StepWaiting({
 
   return (
     <Screen hero={<Hero sub={failed ? '영상을 만들지 못했어요' : sub} />} next={failed ? { label: '다시 시도', onClick: onRetry } : undefined} prev={failed ? undefined : { label: '취소', onClick: onCancel, wide: true }}>
-      <div className="relative mx-auto mt-2 size-[220px] overflow-hidden rounded-3xl bg-[#f0efe9]">
+      {/* 일하는 비둘기 3장 (개발 → 디자인 → 서버, 2026-10-09 사용자 제공)을 차례로 */}
+      <div className="relative mx-auto mt-2 size-[220px] overflow-hidden rounded-3xl bg-white ring-1 ring-q-line">
         {WORKING.map((src, i) => (
           <img key={src} src={src} alt="" className={`absolute inset-0 size-full object-cover transition-opacity duration-700 ${i === pigeon ? 'opacity-100' : 'opacity-0'}`} />
         ))}
