@@ -30,9 +30,10 @@ public class SecurityConfig {
             "/api/members/signup", "/api/members/login",
     };
 
-    /** 주민은 로그인 없이 지도·가게 정보를 볼 수 있다. */
+    /** 로그인 없이 조회할 수 있는 GET 경로 */
     private static final String[] PUBLIC_GET_PATHS = {
             "/api/stores", "/api/stores/**",
+            "/api/shortforms", "/api/shortforms/**",
     };
 
     @Value("${cors.allowed-origins}")

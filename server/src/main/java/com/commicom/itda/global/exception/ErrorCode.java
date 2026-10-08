@@ -26,7 +26,15 @@ public enum ErrorCode {
     MEMBER_EMAIL_DUPLICATED(HttpStatus.CONFLICT, "MEMBER409", "이미 가입된 이메일이에요"),
 
     // 가게
-    STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE404", "가게를 찾을 수 없어요");
+    STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE404", "가게를 찾을 수 없어요"),
+
+    // 숏폼
+    SHORTFORM_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTFORM404", "숏폼을 찾을 수 없어요"),
+
+    // 생성
+    GENERATION_NOT_FOUND(HttpStatus.NOT_FOUND, "GENERATION404", "생성 요청을 찾을 수 없어요"),
+    GENERATION_FORBIDDEN(HttpStatus.FORBIDDEN, "GENERATION403", "해당 생성 요청에 접근할 수 없어요"),
+    GENERATION_CONFLICT(HttpStatus.CONFLICT, "GENERATION409", "이미 생성 중인 요청이 있어요");
 
     private final HttpStatus status;
     private final String code;
