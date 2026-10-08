@@ -11,11 +11,8 @@ public record ShortformDetailResponse(
         String storeName,
         String storeCategory,
         String storeCategoryName,
-        String videoUrl,
-        String thumbnailUrl,
+        String imageUrl,
         String title,
-        String script,
-        int duration,
         LocalDateTime createdAt
 ) {
 
@@ -27,11 +24,8 @@ public record ShortformDetailResponse(
                 store.getName(),
                 store.getCategory().name(),
                 store.getCategory().getDescription(),
-                shortform.getVideoUrl(),
-                shortform.getThumbnailUrl(),
+                shortform.getImageUrl(),
                 shortform.getTitle(),
-                shortform.getScript(),
-                shortform.getDuration(),
                 shortform.getCreatedAt()
         );
     }

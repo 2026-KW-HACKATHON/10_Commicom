@@ -65,6 +65,7 @@ public class Generation extends BaseTimeEntity {
 
     public void fail(String errorMessage) {
         this.status = GenerationStatus.FAILED;
-        this.errorMessage = errorMessage;
+        this.errorMessage = errorMessage != null && errorMessage.length() > 490
+                ? errorMessage.substring(0, 490) + "..." : errorMessage;
     }
 }

@@ -56,10 +56,11 @@ dependencies {
     // API 문서
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0'
 
-    // AI (Bedrock Converse) / AWS (S3, Polly)
+    // AI (Bedrock Converse + Image) / AWS (S3, Polly)
     implementation 'org.springframework.ai:spring-ai-starter-model-bedrock-converse'
     implementation 'software.amazon.awssdk:s3'
     implementation 'software.amazon.awssdk:polly'
+    implementation 'software.amazon.awssdk:bedrockruntime'
 
     // 네이버 장소 스크래핑
     implementation 'org.jsoup:jsoup:1.21.2'
