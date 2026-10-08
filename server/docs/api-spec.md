@@ -738,6 +738,10 @@ Response 예시 (200)
 > 게시물은 AI가 가게 정보로 만드는 가게 홍보 게시물입니다. 앱 화면에서는 "게시물", API·코드 이름은 그대로 `shortform`을 씁니다.
 > 생성 흐름은 AI 이미지(Bedrock SDXL)로 바뀌었습니다 (dev `Feat: Replace video pipeline with AI image feed`). 게시물 응답은 **`imageUrl`(게시물 사진)·`title`·`createdAt`** 이고, 아래 표의 `videoUrl`·`thumbnailUrl`·`script`·`duration`은 더 이상 오지 않습니다. 피드 목록에는 PRO 우선 노출 `promoted`가 더 붙습니다.
 > 생성 요청은 `storeId`, `menuInfo`에 더해 참고할 사진 `menuImageUrl`(선택)을 받고, 생성 상태 응답에도 `imageUrl`이 옵니다.
+> **게시물 사진 여러 장 (옆으로 넘겨 보기)**: 게시물 = AI 사진 1장 + 사장님 사진 최대 4장. 피드·상세 응답에 `imageUrls`(첫 장 = `imageUrl`, 최대 5장)가 붙습니다.
+> 1. `POST /api/stores/{storeId}/photos` (multipart `photos` 여러 개, **사장님 본인 가게만** — 아니면 `STORE403_2`) → S3 주소 목록
+> 2. `POST /api/generation`에 `photoUrls`(최대 4개, 넘으면 `COMMON400`)로 보냄. 이 가게 사진 폴더(`stores/{storeId}/`)에 올라간 주소만 저장하고 나머지는 버림
+> 3. DB: [`docs/sql/2026-10-09-shortform-photo.sql`](sql/2026-10-09-shortform-photo.sql) (`shortform_photo` 테이블)
 > 생성 흐름: 생성 요청(`POST /api/generation`) → 비동기 처리 → 상태 폴링(`GET /api/generation/{id}`) → 완료 후 게시물 조회
 
 ### 게시물 피드 조회
