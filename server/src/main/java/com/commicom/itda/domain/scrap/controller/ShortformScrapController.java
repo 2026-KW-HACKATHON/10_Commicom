@@ -30,7 +30,7 @@ public class ShortformScrapController {
 
     private final ShortformScrapService shortformScrapService;
 
-    @Operation(summary = "숏폼 스크랩 추가", description = "숏폼 영상을 스크랩에 추가한다. 이미 스크랩했으면 SCRAP409_2.")
+    @Operation(summary = "게시물 스크랩 추가", description = "게시물을 스크랩에 추가한다. 이미 스크랩했으면 SCRAP409_2.")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<ScrapShortformResponse> addScrap(
@@ -39,7 +39,7 @@ public class ShortformScrapController {
         return ApiResponse.of(SuccessStatus.CREATED, shortformScrapService.addScrap(memberId, request.shortformId()));
     }
 
-    @Operation(summary = "숏폼 스크랩 취소", description = "스크랩하지 않은 숏폼이면 SCRAP404_2.")
+    @Operation(summary = "게시물 스크랩 취소", description = "스크랩하지 않은 게시물이면 SCRAP404_2.")
     @DeleteMapping("/{shortformId}")
     public ApiResponse<Void> removeScrap(
             @Parameter(hidden = true) @AuthenticationPrincipal Long memberId,
@@ -48,7 +48,7 @@ public class ShortformScrapController {
         return ApiResponse.onSuccess(null);
     }
 
-    @Operation(summary = "내 숏폼 스크랩 목록 조회", description = "내가 스크랩한 숏폼을 스크랩한 순서(최신순)로 반환한다.")
+    @Operation(summary = "내 게시물 스크랩 목록 조회", description = "내가 스크랩한 게시물을 스크랩한 순서(최신순)로 반환한다.")
     @GetMapping
     public ApiResponse<ScrapShortformListResponse> getMyScraps(
             @Parameter(hidden = true) @AuthenticationPrincipal Long memberId) {

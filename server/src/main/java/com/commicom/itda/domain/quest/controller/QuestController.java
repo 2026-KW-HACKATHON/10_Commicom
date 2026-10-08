@@ -44,7 +44,7 @@ public class QuestController {
     }
 
     @Operation(summary = "기본 퀘스트 진행 기록",
-            description = "숏폼을 보거나(SHORTFORM_VIEW, targetId=shortformId) 가게 상세를 열면(STORE_VIEW, targetId=storeId) 호출. 같은 대상은 한 번만 센다")
+            description = "게시물을 보거나(SHORTFORM_VIEW, targetId=shortformId) 가게 상세를 열면(STORE_VIEW, targetId=storeId) 호출. 같은 대상은 한 번만 센다")
     @PostMapping("/events")
     public ApiResponse<QuestEventResponse> recordEvent(
             @Parameter(hidden = true) @AuthenticationPrincipal Long memberId,

@@ -34,7 +34,7 @@ public class QuestSeeder implements ApplicationRunner {
         List<Quest> quests = new ArrayList<>();
         if (questRepository.count() == 0) {
             quests.add(Quest.visit("동네 가게 3곳 방문하기", 3, 2));
-            quests.add(Quest.basic("숏폼 5개 보기", 5, 1, QuestEventType.SHORTFORM_VIEW));
+            quests.add(Quest.basic("게시물 5개 보기", 5, 1, QuestEventType.SHORTFORM_VIEW));
             quests.add(Quest.basic("지도에서 가게 3곳 둘러보기", 3, 1, QuestEventType.STORE_VIEW));
         }
         Set<String> existing = questRepository.findAll().stream()

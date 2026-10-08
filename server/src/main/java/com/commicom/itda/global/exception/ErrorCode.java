@@ -82,7 +82,7 @@ public enum ErrorCode {
     PRO_NOT_ACTIVE(HttpStatus.CONFLICT, "PRO409_2", "이용 중인 PRO 구독이 없어요"),
 
     // 숏폼
-    SHORTFORM_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTFORM404", "숏폼을 찾을 수 없어요"),
+    SHORTFORM_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTFORM404", "게시물을 찾을 수 없어요"),
 
     // 생성
     GENERATION_NOT_FOUND(HttpStatus.NOT_FOUND, "GENERATION404", "생성 요청을 찾을 수 없어요"),
@@ -92,8 +92,8 @@ public enum ErrorCode {
     // 스크랩
     SCRAP_ALREADY_EXISTS(HttpStatus.CONFLICT, "SCRAP409", "이미 스크랩한 가게예요"),
     SCRAP_NOT_FOUND(HttpStatus.NOT_FOUND, "SCRAP404", "스크랩하지 않은 가게예요"),
-    SCRAP_SHORTFORM_ALREADY_EXISTS(HttpStatus.CONFLICT, "SCRAP409_2", "이미 스크랩한 영상이에요"),
-    SCRAP_SHORTFORM_NOT_FOUND(HttpStatus.NOT_FOUND, "SCRAP404_2", "스크랩하지 않은 영상이에요");
+    SCRAP_SHORTFORM_ALREADY_EXISTS(HttpStatus.CONFLICT, "SCRAP409_2", "이미 스크랩한 게시물이에요"),
+    SCRAP_SHORTFORM_NOT_FOUND(HttpStatus.NOT_FOUND, "SCRAP404_2", "스크랩하지 않은 게시물이에요");
 
     private final HttpStatus status;
     private final String code;

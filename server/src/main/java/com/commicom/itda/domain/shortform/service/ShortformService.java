@@ -42,7 +42,7 @@ public class ShortformService {
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
             shortformPage = shortformRepository.findAllByStore(store, pageable);
         } else {
-            // PRO 혜택 "숏폼 우선 노출": PRO 가게 영상이 먼저 (정렬은 쿼리에 있음)
+            // PRO 혜택 "피드 우선 노출": PRO 가게 게시물이 먼저 (정렬은 쿼리에 있음)
             shortformPage = shortformRepository.findFeedProFirst(now, PageRequest.of(page, size));
         }
 

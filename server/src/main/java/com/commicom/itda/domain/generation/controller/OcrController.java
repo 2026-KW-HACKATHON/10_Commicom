@@ -25,7 +25,7 @@ public class OcrController {
     @Operation(
             summary = "메뉴판 OCR",
             description = "메뉴판 이미지를 업로드하면 텍스트를 추출해 반환한다. " +
-                          "결과를 숏폼 생성 요청의 menuInfo 필드에 넣어 사용한다."
+                          "결과를 게시물 생성 요청의 menuInfo 필드에 넣어 사용한다."
     )
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<Map<String, String>> extractMenuText(
