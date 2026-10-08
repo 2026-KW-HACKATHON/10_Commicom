@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -34,7 +35,7 @@ public class GenerationPipelineService {
      */
     @Async(AsyncConfig.VIDEO_GENERATION_EXECUTOR)
     @Transactional
-    public void execute(Long generationId, String menuInfo, String referenceImageUrl) {
+    public void execute(Long generationId, String menuInfo, String referenceImageUrl, List<String> photoUrls) {
         Generation generation = generationRepository.findById(generationId).orElse(null);
         if (generation == null) {
             log.error("Generation {} 을 찾을 수 없음", generationId);
@@ -71,6 +72,7 @@ public class GenerationPipelineService {
                     .store(store)
                     .imageUrl(imageUrl)
                     .title(cleanStoreName)
+                    .photoUrls(photoUrls)
                     .build();
             shortformRepository.save(shortform);
 

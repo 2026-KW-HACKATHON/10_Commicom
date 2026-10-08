@@ -6,7 +6,7 @@ import working3 from '@/assets/generation/pigeon-working-3.jpg'
 /** 숏폼 만들기·영상 수정 공통 화면 조각 */
 
 const WORKING = [working1, working2, working3]
-const STAGES = ['가게 정보를 모으고 있어요', '홍보 대본을 쓰고 있어요', '목소리와 영상을 합치고 있어요']
+const STAGES = ['가게 정보를 모으고 있어요', '홍보 문구를 쓰고 있어요', '사진과 글을 다듬고 있어요']
 
 /* ── 생성 대기 (Figma 9:518) ── */
 export function StepWaiting({
@@ -14,7 +14,7 @@ export function StepWaiting({
   failed,
   onCancel,
   onRetry,
-  sub = '잠시 기다리시면\n내 가게 홍보 영상이 완성돼요!',
+  sub = '잠시 기다리시면\n내 가게 홍보 게시물이 완성돼요!',
   note = '보통 수십 초 걸려요. 이 화면을 닫아도 만들기는 계속돼요.',
 }: {
   startedAt: number
@@ -33,7 +33,7 @@ export function StepWaiting({
   const pigeon = Math.floor(elapsed / 2500) % WORKING.length
 
   return (
-    <Screen hero={<Hero sub={failed ? '영상을 만들지 못했어요' : sub} />} next={failed ? { label: '다시 시도', onClick: onRetry } : undefined} prev={failed ? undefined : { label: '취소', onClick: onCancel, wide: true }}>
+    <Screen hero={<Hero sub={failed ? '게시물을 만들지 못했어요' : sub} />} next={failed ? { label: '다시 시도', onClick: onRetry } : undefined} prev={failed ? undefined : { label: '취소', onClick: onCancel, wide: true }}>
       {/* 일하는 비둘기 3장 (개발 → 디자인 → 서버, 2026-10-09 사용자 제공)을 차례로 */}
       <div className="relative mx-auto mt-2 size-[220px] overflow-hidden rounded-3xl bg-white ring-1 ring-q-line">
         {WORKING.map((src, i) => (

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import pigeonCrying from '@/assets/generation/pigeon-crying.jpg'
 import pigeonUpload from '@/assets/generation/pigeon-upload.jpg'
 import pigeonUploaded from '@/assets/generation/pigeon-uploaded.png'
-import { FramedVideo } from '@/features/feed/components/FramedVideo'
+import { PostCarousel } from '@/features/feed/components/PostCarousel'
 import { useStoreShortforms } from '@/features/feed/hooks'
 import type { Shortform } from '@/features/feed/schema'
 import { useMyStoreId } from '@/features/owner/hooks'
@@ -43,15 +43,15 @@ export function ReviseShortformFlow({ shortformId }: { shortformId: number }) {
           <CloseIcon />
         </button>
         <p className="flex items-center gap-1.5 text-[17px] font-bold text-ink">
-          영상 수정 <span className="rounded-full bg-green-6 px-1.5 text-[10px] leading-4 text-white">PRO</span>
+          게시물 수정 <span className="rounded-full bg-green-6 px-1.5 text-[10px] leading-4 text-white">PRO</span>
         </p>
         <span className="size-[44px]" />
       </header>
 
-      {isLoading && <p className="py-20 text-center text-sm text-q-muted">영상을 불러오는 중...</p>}
+      {isLoading && <p className="py-20 text-center text-sm text-q-muted">게시물을 불러오는 중...</p>}
       {videos && !original && !found && (
-        <Screen prev={{ label: '내 영상으로', onClick: backToList }}>
-          <p className="py-20 text-center text-sm text-q-muted">수정할 영상을 찾을 수 없어요</p>
+        <Screen prev={{ label: '내 게시물로', onClick: backToList }}>
+          <p className="py-20 text-center text-sm text-q-muted">수정할 게시물을 찾을 수 없어요</p>
         </Screen>
       )}
       {original && <Revise original={original} onExit={backToList} />}
@@ -70,7 +70,11 @@ function Revise({ original, onExit }: { original: Shortform; onExit: () => void 
 
   const generate = useMutation({
     mutationFn: () =>
-      postGeneration({ storeId: original.storeId, revision: { shortformId: original.shortformId, target, request: text.trim() } }),
+      postGeneration({
+        storeId: original.storeId,
+        photoUrls: original.images?.slice(1),
+        revision: { shortformId: original.shortformId, target, request: text.trim() },
+      }),
     onSuccess: (g) => {
       setGenerationId(g.generationId)
       setStartedAt(Date.now())
@@ -128,7 +132,7 @@ function Revise({ original, onExit }: { original: Shortform; onExit: () => void 
           <p className="mt-4 text-center text-xs leading-relaxed text-q-muted">
             새 버전으로 바꾸기 전까지
             <br />
-            지금 영상은 손님에게 그대로 보여요
+            지금 게시물은 손님에게 그대로 보여요
           </p>
         </Screen>
       )}
@@ -139,7 +143,7 @@ function Revise({ original, onExit }: { original: Shortform; onExit: () => void 
           prev={{ onClick: () => setStep('pick') }}
           next={{ label: generate.isPending ? '요청 중...' : '수정 요청', onClick: () => generate.mutate(), disabled: !text.trim() || generate.isPending }}
         >
-          <p className="mb-2 text-xs font-bold text-q-muted">{target === 'VIDEO' ? '영상' : '대본 및 자막'} 수정</p>
+          <p className="mb-2 text-xs font-bold text-q-muted">{target === 'VIDEO' ? '사진' : '글·문구'} 수정</p>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -157,11 +161,11 @@ function Revise({ original, onExit }: { original: Shortform; onExit: () => void 
       {step === 'generate' && generation.data?.status !== 'COMPLETED' && (
         <StepWaiting
           startedAt={startedAt}
-          failed={generation.data?.status === 'FAILED' ? (generation.data.errorMessage ?? '영상을 만들지 못했어요') : null}
+          failed={generation.data?.status === 'FAILED' ? (generation.data.errorMessage ?? '게시물을 만들지 못했어요') : null}
           onCancel={() => setModal('cancel')}
           onRetry={() => setStep('input')}
           sub={'요청하신 내용으로\n새 버전을 만들고 있어요!'}
-          note="그동안 지금 영상은 손님 피드에 그대로 보여요."
+          note="그동안 지금 게시물은 손님 피드에 그대로 보여요."
         />
       )}
 
@@ -171,22 +175,21 @@ function Revise({ original, onExit }: { original: Shortform; onExit: () => void 
           next={{ label: '이걸로 교체', onClick: () => setModal('replace'), disabled: !detail.data }}
         >
           <p className="mb-2 text-center text-[13px] font-bold text-green-4">새 버전이 완성됐어요</p>
-          <div className="relative mx-auto aspect-[9/16] w-full max-w-[260px] overflow-hidden rounded-3xl bg-green-1 shadow-[0_10px_30px_rgba(8,104,22,0.18)]">
+          <div className="relative mx-auto aspect-[4/5] w-full max-w-[260px] overflow-hidden rounded-3xl bg-green-1 shadow-[0_10px_30px_rgba(8,104,22,0.18)]">
             {detail.data ? (
-              <FramedVideo videoUrl={detail.data.videoUrl} posterUrl={detail.data.thumbnailUrl} frame={detail.data.frame} />
+              <PostCarousel images={detail.data.imageUrls ?? (detail.data.imageUrl ? [detail.data.imageUrl] : [])} alt={detail.data.title} frame={detail.data.frame} />
             ) : (
-              <p className="flex h-full items-center justify-center text-sm text-q-muted">영상을 불러오는 중...</p>
+              <p className="flex h-full items-center justify-center text-sm text-q-muted">게시물을 불러오는 중...</p>
             )}
           </div>
           {detail.data && (
             <div className="mx-auto mt-4 max-w-[300px]">
               <p className="text-[16px] font-bold text-ink">{detail.data.title}</p>
-              <p className="mt-1 line-clamp-3 text-[13px] leading-relaxed text-q-muted">{detail.data.script}</p>
             </div>
           )}
           {replace.isError && <ErrorText>{errorMessage(replace.error)}</ErrorText>}
           <button type="button" onClick={() => setModal('discard')} className="mx-auto mt-4 block text-[13px] text-q-muted underline">
-            그만두고 지금 영상 유지하기
+            그만두고 지금 게시물 유지하기
           </button>
         </Screen>
       )}
@@ -194,10 +197,10 @@ function Revise({ original, onExit }: { original: Shortform; onExit: () => void 
       {step === 'done' && (
         <div className="flex flex-1 flex-col items-center px-6 pb-[max(20px,env(safe-area-inset-bottom))]">
           <p className="mt-10 text-[22px] font-bold text-green-4">교체 완료!</p>
-          <p className="mt-1 text-sm text-q-muted">이제 손님 숏폼 피드에 새 버전이 보여요</p>
+          <p className="mt-1 text-sm text-q-muted">이제 손님 피드에 새 버전이 보여요</p>
           <img src={pigeonUploaded} alt="" className="mt-8 h-[220px] w-auto animate-[rise-center_.5s_ease-out] object-contain" />
           <button type="button" onClick={onExit} className="mt-auto h-[52px] w-full rounded-xl bg-green-4 text-base font-bold text-white">
-            내 영상으로 가기
+            내 게시물로 가기
           </button>
         </div>
       )}
@@ -205,7 +208,7 @@ function Revise({ original, onExit }: { original: Shortform; onExit: () => void 
       {modal === 'cancel' && (
         <Dialog
           title="수정을 취소할까요?"
-          text="지금 영상은 그대로 유지돼요"
+          text="지금 게시물은 그대로 유지돼요"
           image={pigeonCrying}
           primary={{ label: '계속 기다릴래요', onClick: () => setModal(null) }}
           secondary={{
@@ -221,7 +224,7 @@ function Revise({ original, onExit }: { original: Shortform; onExit: () => void 
       {modal === 'replace' && (
         <Dialog
           title="이 버전으로 바꿀까요?"
-          text="지금 손님에게 보이는 영상이 새 버전으로 바뀌어요"
+          text="지금 손님에게 보이는 게시물이 새 버전으로 바뀌어요"
           image={pigeonUpload}
           primary={{ label: replace.isPending ? '바꾸는 중...' : '네 바꿀래요', onClick: () => replace.mutate() }}
           secondary={{ label: '아니요', onClick: () => setModal(null) }}
@@ -230,7 +233,7 @@ function Revise({ original, onExit }: { original: Shortform; onExit: () => void 
       {modal === 'discard' && (
         <Dialog
           title="새 버전을 버릴까요?"
-          text="지금 영상은 그대로 유지돼요"
+          text="지금 게시물은 그대로 유지돼요"
           image={pigeonCrying}
           primary={{ label: '아니요', onClick: () => setModal(null) }}
           secondary={{ label: discard.isPending ? '정리 중...' : '네 버릴래요', onClick: () => discard.mutate() }}
@@ -256,7 +259,7 @@ function OriginalCard({ video }: { video: Shortform }) {
         )}
       </span>
       <span className="min-w-0">
-        <span className="text-[11px] font-bold text-q-green">지금 공개 중인 영상</span>
+        <span className="text-[11px] font-bold text-q-green">지금 공개 중인 게시물</span>
         <span className="mt-0.5 line-clamp-2 block text-[14px] font-bold text-q-text">{video.description || video.storeName}</span>
       </span>
     </div>

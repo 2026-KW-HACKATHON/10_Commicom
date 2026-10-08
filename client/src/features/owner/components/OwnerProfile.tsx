@@ -9,9 +9,10 @@ import { Dialog } from '@/features/generation/components/Dialog'
 import { errorMessage } from '@/shared/lib/error'
 import { squareThumbnail } from '@/shared/lib/image'
 import { AddressSearch } from '@/shared/ui/AddressSearch'
-import { PlayIcon } from '@/shared/ui/icons'
+import { PhotoIcon } from '@/shared/ui/icons'
 import { StoreAvatar } from '@/shared/ui/StoreAvatar'
-import { updateNickname } from '@/features/auth/api'
+import { fetchMe, updateNickname } from '@/features/auth/api'
+import { mockFor } from '@/mocks/db'
 import { useAuthStore, useMe } from '@/stores/authStore'
 import { toast } from '@/stores/toastStore'
 import { storeEditOf, updateMyStore } from '../api'
@@ -39,7 +40,9 @@ export function OwnerProfile() {
     try {
       await updateMyStore(storeId, patch, image)
       // 사장님은 상호가 곧 닉네임 (Figma 로그인 "닉네임/상호") → 가게명을 바꾸면 회원 닉네임도 같이
-      if (patch.name && me?.role === 'OWNER') setMember(await updateNickname(patch.name))
+      // (서버는 가게 수정 때 닉네임도 같이 바꿔 줌 → 회원 정보만 다시 받음)
+      if (patch.name && me?.role === 'OWNER') setMember(mockFor('storeEdit') ? await updateNickname(patch.name) : await fetchMe())
+      queryClient.invalidateQueries({ queryKey: ['myStore'] })
       await queryClient.invalidateQueries({ queryKey: ['stores'] })
       queryClient.invalidateQueries({ queryKey: ['shortforms'] })
       setEditing(null)
@@ -106,24 +109,24 @@ export function OwnerProfile() {
 
       <section className="mt-8">
         <div className="flex items-center justify-between px-5">
-          <h2 className="text-[13px] font-bold text-ink">내 영상</h2>
+          <h2 className="text-[13px] font-bold text-ink">내 게시물</h2>
           {videos && videos.length > 0 && (
-            <Link to="/owner/videos" className="text-xs font-medium text-green-4">
+            <Link to="/owner/create" className="text-xs font-medium text-green-4">
               관리하기 ›
             </Link>
           )}
         </div>
         {videos && videos.length === 0 ? (
-          <p className="py-14 text-center text-[14px] text-green-4">업로드한 영상이 없습니다</p>
+          <p className="py-14 text-center text-[14px] text-green-4">업로드한 게시물이 없습니다</p>
         ) : (
           <ul className="mt-3 grid grid-cols-3 gap-px bg-white">
             {videos?.map((v) => (
               <li key={v.shortformId}>
-                <Link to="/owner/videos" className="relative block aspect-[9/13] overflow-hidden bg-[#dde5e2]">
+                <Link to="/owner/create" className="relative block aspect-[9/13] overflow-hidden bg-[#dde5e2]">
                   <Thumb video={v} />
-                  <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded bg-white/90 pl-px text-q-text">
+                  <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded bg-white/90 text-q-text">
                     <span className="scale-[0.3]">
-                      <PlayIcon />
+                      <PhotoIcon />
                     </span>
                   </span>
                 </Link>

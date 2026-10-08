@@ -3,7 +3,7 @@ import pigeonWalk from '@/assets/map/pigeon-walk.png'
 import pigeonGps from '@/assets/quest/pigeon-gps.png'
 import { OWNER_ILLUST } from '@/features/owner/illustrations'
 import { useMyCoupons } from '@/features/coupon/hooks'
-import { useQuests } from '../hooks'
+import { usePigeonAccess, useQuests } from '../hooks'
 import { questTemplate, type Quest } from '../schema'
 import { PigeonCard } from './PigeonCard'
 import { FeedIcon, ProgressBar, SectionTitle } from './QuestUi'
@@ -54,13 +54,23 @@ export function QuestHome() {
   )
 }
 
+// 기본 퀘스트는 제목으로 구분 — 예전 제목(숏폼 5개 보기)으로 저장된 서버 데이터도 같이 받음
 const BASIC_HINT: Record<string, string> = {
-  '숏폼 5개 보기': '숏폼 탭에서 진행돼요',
-  '지도에서 가게 3곳 둘러보기': '지도 탭에서 진행돼요',
+  '게시물 5개 보기': '게시물을 2초 이상 보면 1개씩 쌓여요',
+  '숏폼 5개 보기': '게시물을 2초 이상 보면 1개씩 쌓여요',
+  '지도에서 가게 3곳 둘러보기': '지도에서 가게를 눌러 둘러보면 쌓여요',
+}
+
+/** 기본 퀘스트를 누르면 진행하는 화면으로 */
+const BASIC_PATH: Record<string, string> = {
+  '게시물 5개 보기': '/',
+  '숏폼 5개 보기': '/',
+  '지도에서 가게 3곳 둘러보기': '/map',
 }
 
 /** 템플릿이 아닌 퀘스트의 비둘기 그림 (기본 퀘스트는 제목으로 구분) */
 const BASIC_IMAGE: Record<string, string> = {
+  '게시물 5개 보기': OWNER_ILLUST.videoDownload,
   '숏폼 5개 보기': OWNER_ILLUST.videoDownload,
   '지도에서 가게 3곳 둘러보기': pigeonWalk,
 }
@@ -73,14 +83,20 @@ function questImage(quest: Quest) {
 }
 
 function QuestCard({ quest }: { quest: Quest }) {
+  const { needsLogin } = usePigeonAccess()
   const done = quest.status === 'COMPLETED'
   const isVisit = quest.type === 'VISIT'
   const tpl = questTemplate(quest.templateKey)
-  const desc = tpl
-    ? `동네 ${tpl.place} ${quest.targetCount}곳 방문하기 · 참여 가게 ${quest.storeIds?.length ?? 0}곳`
-    : isVisit
-      ? '퀘스트 가게에서 GPS + QR로 방문 인증'
-      : (BASIC_HINT[quest.title] ?? '앱 기본 퀘스트')
+  const desc =
+    needsLogin && !done
+      ? isVisit
+        ? '로그인하고 방문 인증하기'
+        : '로그인하고 진행하기'
+      : tpl
+        ? `동네 ${tpl.place} ${quest.targetCount}곳 방문하기 · 참여 가게 ${quest.storeIds?.length ?? 0}곳`
+        : isVisit
+          ? '퀘스트 가게에서 GPS + QR로 방문 인증'
+          : (BASIC_HINT[quest.title] ?? '앱 기본 퀘스트')
   const body = (
     <>
       <span aria-hidden className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-q-mint">
@@ -109,9 +125,15 @@ function QuestCard({ quest }: { quest: Quest }) {
   )
 
   const className = 'flex items-center gap-3 rounded-2xl border border-q-line bg-white py-3 pr-4 pl-3'
-  if (done || !isVisit) return <div className={`${className} ${done ? 'opacity-60' : ''}`}>{body}</div>
+  // 방문 퀘스트는 인증 화면, 기본 퀘스트는 진행하는 탭(숏폼·지도)으로
+  const path = isVisit ? `/quest/${quest.questId}/visit` : BASIC_PATH[quest.title]
+  if (done || !path) return <div className={`${className} ${done ? 'opacity-60' : ''}`}>{body}</div>
+  // 로그인 전엔 진행 기록이 안 남으니 로그인부터 (로그인 후 그 화면으로 돌아옴)
   return (
-    <Link to={`/quest/${quest.questId}/visit`} className={`${className} border-q-green`}>
+    <Link
+      to={needsLogin ? `/login?next=${encodeURIComponent(path)}` : path}
+      className={`${className} border-q-green`}
+    >
       {body}
     </Link>
   )

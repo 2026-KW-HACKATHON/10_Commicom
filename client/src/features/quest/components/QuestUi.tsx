@@ -97,17 +97,20 @@ export function CelebrationScreen({
   const imageSize = compact ? 'size-[132px]' : 'size-[200px]'
   return (
     <div role="dialog" aria-modal className="fixed inset-0 z-50 flex justify-center bg-black/20">
-      <div className={`flex h-full w-full max-w-[430px] flex-col overflow-y-auto bg-white px-8 ${compact ? 'pt-[max(32px,env(safe-area-inset-top))]' : 'pt-[max(56px,env(safe-area-inset-top))]'} pb-10`}>
-        <div className={`relative mx-auto w-full max-w-[300px] ${compact ? 'mb-4' : 'mb-7'}`}>
-          {CONFETTI.map((c) => (
-            <span key={c} className={`absolute size-1.5 rounded-full ${c}`} />
-          ))}
-          <img src={image} alt="" className={`mx-auto ${imageSize} object-contain drop-shadow-md`} />
+      <div className="flex h-full w-full max-w-[430px] flex-col overflow-y-auto bg-white px-8 pt-[max(24px,env(safe-area-inset-top))] pb-[max(24px,env(safe-area-inset-bottom))]">
+        {/* 내용이 화면보다 짧으면 세로 가운데, 길면(레벨업 카드 뽑기 등) 위에서부터 스크롤 */}
+        <div className="my-auto w-full">
+          <div className={`relative mx-auto w-full max-w-[300px] ${compact ? 'mb-4' : 'mb-7'}`}>
+            {CONFETTI.map((c) => (
+              <span key={c} className={`absolute size-1.5 rounded-full ${c}`} />
+            ))}
+            <img src={image} alt="" className={`mx-auto ${imageSize} object-contain drop-shadow-md`} />
+          </div>
+          <h1 className="text-center text-[24px] font-bold text-q-green">{title}</h1>
+          <div className="mt-1.5 text-center text-sm text-q-sub">{subtitle}</div>
+          {children && <div className={compact ? 'mt-4' : 'mt-6'}>{children}</div>}
+          <div className="mt-7 flex flex-col gap-2.5">{actions}</div>
         </div>
-        <h1 className="text-center text-[24px] font-bold text-q-green">{title}</h1>
-        <div className="mt-1.5 text-center text-sm text-q-sub">{subtitle}</div>
-        {children && <div className={compact ? 'mt-4' : 'mt-6'}>{children}</div>}
-        <div className="mt-7 flex flex-col gap-2.5">{actions}</div>
       </div>
     </div>
   )

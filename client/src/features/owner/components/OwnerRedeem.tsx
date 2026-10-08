@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useRedeemCoupon, useSettlement } from '@/features/coupon/hooks'
 import { discountText, minOrderText, type RedeemResult } from '@/features/coupon/schema'
 import { PrimaryButton } from '@/features/quest/components/QuestUi'
-import { USE_MOCK } from '@/mocks/db'
+import { mockFor } from '@/mocks/db'
 import { errorMessage } from '@/shared/lib/error'
 import { useMyStoreId } from '../hooks'
 import { OWNER_ILLUST } from '../illustrations'
@@ -94,7 +94,8 @@ export function OwnerRedeem() {
         <PrimaryButton className="mt-5" disabled={code.length !== CODE_LENGTH || redeem.isPending} onClick={submit}>
           {redeem.isPending ? '확인 중...' : '사용 처리하기'}
         </PrimaryButton>
-        {USE_MOCK && (
+        {/* 목업·로컬 개발 서버 모두 샘플 주민이 광운 카페 쿠폰 QK7M2P 를 가지고 있음 */}
+        {(mockFor('coupon') || import.meta.env.DEV) && (
           <button type="button" onClick={() => setCode('QK7M2P')} className="mx-auto mt-2 block text-xs text-q-muted underline">
             테스트용 손님 코드 QK7M2P 넣기
           </button>

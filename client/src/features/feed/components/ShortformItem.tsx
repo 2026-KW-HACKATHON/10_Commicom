@@ -1,224 +1,121 @@
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MAP_CATEGORIES } from '@/features/map/schema'
 import { shareLink } from '@/shared/lib/share'
-import { BookmarkIcon, LocationIcon, PlayIcon, ShareIcon, SoundIcon, TicketSmallIcon } from '@/shared/ui/icons'
+import { BookmarkIcon, LocationIcon, ShareIcon, TicketSmallIcon } from '@/shared/ui/icons'
 import { toast } from '@/stores/toastStore'
-import { useScrapStore } from '../hooks'
+import { useCanScrap, useIsScrapped, useToggleScrap } from '../hooks'
 import type { Shortform } from '../schema'
-import { useSpeedPress } from '../useSpeedPress'
+import { PostCarousel } from './PostCarousel'
 
 interface Props {
   item: Shortform
-  active: boolean
-  muted: boolean
-  onToggleMute: () => void
   couponCount: number
   onOpenCoupons: () => void
 }
 
-/** 숏폼 한 장 (Figma 3:203) — 영상 + 가게 정보 + 오른쪽 버튼 + 진행 바 */
-export function ShortformItem({ item, active, muted, onToggleMute, couponCount, onOpenCoupons }: Props) {
+/**
+ * 피드 게시물 한 장 — 사장님이 AI로 만든 사진을 인스타그램 게시물처럼:
+ * 가게 프로필 → 사진 → 버튼(스크랩·위치·공유·쿠폰) → 소개 글·메뉴·올린 날짜. 한 화면에 한 장씩 (위아래로 넘기기는 ShortformFeed)
+ */
+export function ShortformItem({ item, couponCount, onOpenCoupons }: Props) {
   const navigate = useNavigate()
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const [paused, setPaused] = useState(false)
-  const [progress, setProgress] = useState(0)
   const [menusOpen, setMenusOpen] = useState(false)
-  const pressRef = useRef<HTMLButtonElement>(null)
-  const { speed, unlock, consumeClick, pressHandlers } = useSpeedPress(pressRef, videoRef, active)
-  const scrapped = useScrapStore((s) => s.ids.includes(item.shortformId))
-  const toggleScrap = useScrapStore((s) => s.toggle)
-
-  // 화면에 보이는 영상만 재생, 지나간 영상은 처음으로
-  useEffect(() => {
-    const v = videoRef.current
-    if (!v) return
-    if (active) {
-      v.play().catch(() => setPaused(true))
-    } else {
-      v.pause()
-      v.currentTime = 0
-    }
-  }, [active])
-
-  useEffect(() => {
-    if (videoRef.current) videoRef.current.muted = muted
-  }, [muted])
-
-  const togglePlay = () => {
-    const v = videoRef.current
-    if (!v) return
-    if (v.paused) v.play().then(() => setPaused(false)).catch(() => {})
-    else {
-      v.pause()
-      setPaused(true)
-    }
-  }
-
-  const seek = (e: PointerEvent<HTMLDivElement>) => {
-    const v = videoRef.current
-    if (!v || !v.duration) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    v.currentTime = ((e.clientX - rect.left) / rect.width) * v.duration
-  }
-
+  const scrapped = useIsScrapped(item.shortformId)
+  const canScrap = useCanScrap()
+  const toggleScrap = useToggleScrap()
   const icon = MAP_CATEGORIES.find((c) => (c.codes as readonly string[]).includes(item.category))?.icon
-  const frame = item.frame
+
+  const onScrap = () => {
+    if (!canScrap) {
+      // 로그인 전엔 저장할 곳이 없으니 로그인부터 (로그인 후 이 게시물로 돌아옴)
+      toast('로그인하면 스크랩할 수 있어요')
+      navigate(`/login?next=${encodeURIComponent(`/?start=${item.shortformId}`)}`)
+      return
+    }
+    toggleScrap.mutate({ item, scrapped })
+    toast(scrapped ? '스크랩을 취소했어요' : '스크랩했어요 · 메뉴 > 스크랩한 게시물에서 볼 수 있어요')
+  }
 
   return (
-    <section className="relative h-full w-full overflow-hidden bg-black" aria-label={`${item.storeName} 홍보 영상`}>
-      {/* 배경: 같은 장면을 크게 흐려 깔기 (가로 영상이어도 화면이 꽉 차 보이게) */}
-      {item.posterUrl && (
-        <img
-          src={item.posterUrl}
-          alt=""
-          aria-hidden
-          className="absolute left-1/2 max-w-none -translate-x-1/2 scale-110 opacity-70 blur-2xl brightness-75"
-          style={frame ? { height: `${100 / frame.height}%`, top: `${(-100 * frame.top) / frame.height}%` } : { height: '100%', top: 0 }}
-        />
-      )}
-
-      {/* 영상: 검은 띠가 박힌 영상은 실제 그림 구간만 잘라서 화면 가운데에 */}
-      {/* 누르면 재생/일시정지, 꾹 누르면 2배속, 꾹 누른 채 아래로 내리면 2배속 고정 */}
-      <button
-        ref={pressRef}
-        type="button"
-        aria-label={paused ? '재생' : '일시정지'}
-        onClick={() => !consumeClick() && togglePlay()}
-        {...pressHandlers}
-        className="absolute inset-0 flex items-center select-none [-webkit-touch-callout:none]"
-      >
-        {frame ? (
-          // 원본이 9:16이라고 보고, 실제 그림 구간(frame.height) 비율로 상자를 만든 뒤 영상을 위로 당겨 잘라 보여줌
-          <span className="relative block w-full overflow-hidden" style={{ aspectRatio: `${9 / 16 / frame.height}` }}>
-            <video
-              ref={videoRef}
-              src={item.videoUrl}
-              poster={item.posterUrl ?? undefined}
-              muted={muted}
-              loop
-              playsInline
-              preload={active ? 'auto' : 'metadata'}
-              onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime / (e.currentTarget.duration || 1))}
-              onPlay={() => setPaused(false)}
-              className="absolute left-0 w-full max-w-none object-fill"
-              style={{ height: `${100 / frame.height}%`, top: `${(-100 * frame.top) / frame.height}%` } as CSSProperties}
-            />
-          </span>
-        ) : (
-          <video
-            ref={videoRef}
-            src={item.videoUrl}
-            poster={item.posterUrl ?? undefined}
-            muted={muted}
-            loop
-            playsInline
-            preload={active ? 'auto' : 'metadata'}
-            onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime / (e.currentTarget.duration || 1))}
-            onPlay={() => setPaused(false)}
-            className="size-full object-cover"
-          />
-        )}
-      </button>
-
-      {active && speed !== 'normal' && (
-        <div className="absolute top-[124px] left-1/2 z-10 -translate-x-1/2">
-          {speed === 'hold' ? (
-            <p className="flex items-center gap-1.5 rounded-full bg-black/55 px-3.5 py-1.5 text-xs font-bold whitespace-nowrap text-white backdrop-blur-md">
-              <span className="tracking-[-0.2em]">▶▶</span> 2배속
-              <span className="font-medium opacity-75">· 아래로 내리면 고정</span>
-            </p>
-          ) : (
-            <button
-              type="button"
-              onClick={unlock}
-              className="flex items-center gap-1.5 rounded-full bg-green-6/90 px-3.5 py-1.5 text-xs font-bold whitespace-nowrap text-white shadow-lg backdrop-blur-md"
-            >
-              <span className="tracking-[-0.2em]">▶▶</span> 2배속 고정
-              <span className="rounded-full bg-white/25 px-1.5 py-px font-medium">해제 ✕</span>
-            </button>
-          )}
-        </div>
-      )}
-
-      {paused && (
-        <span aria-hidden className="pointer-events-none absolute top-1/2 left-1/2 flex size-[72px] -translate-1/2 items-center justify-center rounded-full bg-black/35 pl-1.5 text-white/95 backdrop-blur-sm">
-          <PlayIcon />
-        </span>
-      )}
-
-      {/* 위·아래 그늘 (글자·버튼이 잘 보이게) */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/45 to-transparent" />
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-96 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-
-      {/* 오른쪽 버튼 */}
-      {/* 하단 탭 바가 영상 위에 떠 있으므로 그 높이(--nav-h, 바가 줄면 같이 줄어듦)만큼 위로 */}
-      <div className="absolute right-3 bottom-[calc(var(--nav-h,0px)+120px)] flex transition-[bottom] duration-300 flex-col items-center gap-4 text-white">
-        {couponCount > 0 && (
-          <SideButton label={`쿠폰 ${couponCount}`} onClick={onOpenCoupons} accent>
-            <TicketSmallIcon />
-          </SideButton>
-        )}
-        <SideButton
-          label={scrapped ? '스크랩됨' : '스크랩'}
-          onClick={() => {
-            toggleScrap(item.shortformId)
-            toast(scrapped ? '스크랩을 취소했어요' : '스크랩했어요 · 메뉴 > 스크랩한 영상에서 볼 수 있어요')
-          }}
-          pressed={scrapped}
+    <article className="flex h-full flex-col bg-white" aria-label={`${item.storeName} 홍보 게시물`}>
+      {/* 가게 프로필 */}
+      <header className="flex shrink-0 items-center gap-2.5 px-4 py-2.5">
+        <Link
+          to={`/map/stores/${item.storeId}`}
+          aria-label={`${item.storeName} 프로필`}
+          className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-2 ring-green-4 ring-offset-2"
         >
+          {icon ? <img src={icon} alt="" className="size-8 object-contain" /> : null}
+        </Link>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <Link to={`/map/stores/${item.storeId}`} className="truncate text-[15px] font-bold text-ink">
+              {item.storeName}
+            </Link>
+            {/* PRO 가게(우선 노출)는 손님에게도 알 수 있게 표시 */}
+            {item.promoted && <span className="shrink-0 rounded-full bg-point-yellow px-1.5 py-px text-[10px] font-bold text-ink">추천</span>}
+          </div>
+          <Link to={`/map?storeId=${item.storeId}`} className="block truncate text-[12px] text-q-muted">
+            {item.categoryName && <span className="font-medium text-green-4">{item.categoryName} · </span>}
+            {item.address}
+          </Link>
+        </div>
+        <Link to={`/map/stores/${item.storeId}`} className="shrink-0 rounded-full border border-q-line px-3 py-1.5 text-[12px] font-bold text-green-6">
+          가게 보기
+        </Link>
+      </header>
+
+      {/* 사진: 남는 높이를 모두 써서 화면을 채움 */}
+      <div className="relative min-h-0 flex-1 overflow-hidden bg-q-mint">
+        <PostPhoto item={item} icon={icon} />
+      </div>
+
+      {/* 버튼 */}
+      <div className="flex shrink-0 items-center px-1.5 pt-1">
+        <ActionButton label={scrapped ? '스크랩됨' : '스크랩'} onClick={onScrap} pressed={scrapped}>
           <BookmarkIcon filled={scrapped} />
-        </SideButton>
+        </ActionButton>
         {/* 길 안내(내비)는 없어서 지도에서 가게 위치만 보여줌 */}
-        <SideButton label="위치 보기" onClick={() => navigate(`/map?storeId=${item.storeId}`)}>
+        <ActionButton label="위치 보기" onClick={() => navigate(`/map?storeId=${item.storeId}`)}>
           <LocationIcon />
-        </SideButton>
-        <SideButton
+        </ActionButton>
+        <ActionButton
           label="공유"
           onClick={() =>
             shareLink({
               title: `${item.storeName} | 잇다`,
-              text: `우리 동네 ${item.storeName} 영상 보러 가기${item.description ? ` - ${item.description}` : ''}`,
+              text: `우리 동네 ${item.storeName} 게시물 보러 가기${item.description ? ` - ${item.description}` : ''}`,
               path: `/map/stores/${item.storeId}/shortform?start=${item.shortformId}`,
             })
           }
         >
           <ShareIcon />
-        </SideButton>
-        <SideButton label={muted ? '소리 켜기' : '소리 끄기'} onClick={onToggleMute}>
-          <SoundIcon muted={muted} />
-        </SideButton>
+        </ActionButton>
+        {couponCount > 0 && (
+          <button
+            type="button"
+            onClick={onOpenCoupons}
+            className="mr-2.5 ml-auto flex h-9 items-center gap-1.5 rounded-full bg-point-red px-3.5 text-[13px] font-bold text-white active:scale-95"
+          >
+            <span className="scale-[0.8]">
+              <TicketSmallIcon />
+            </span>
+            쿠폰 {couponCount}장
+          </button>
+        )}
       </div>
 
-      {/* 가게 정보 */}
-      <div className="absolute inset-x-0 bottom-0 px-4 pb-[calc(var(--nav-h,0px)+12px)] text-white transition-[padding] duration-300">
-        <div className="flex items-center gap-2.5 pr-14">
-          <Link
-            to={`/map/stores/${item.storeId}`}
-            aria-label={`${item.storeName} 프로필`}
-            className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-green-4 bg-white"
-          >
-            {icon ? <img src={icon} alt="" className="size-9 object-contain" /> : null}
-          </Link>
-          <div className="min-w-0">
-            <Link to={`/map/stores/${item.storeId}`} className="block truncate text-[17px] font-bold drop-shadow">
-              {item.storeName}
-            </Link>
-            <div className="mt-0.5 flex items-center gap-1.5 text-[11px]">
-              {/* PRO 가게(우선 노출)는 손님에게도 알 수 있게 표시 */}
-              {item.promoted && <span className="shrink-0 rounded-full bg-point-yellow px-1.5 py-px font-bold text-ink">추천</span>}
-              <span className="shrink-0 rounded-full bg-green-4 px-1.5 py-px font-bold">{item.categoryName}</span>
-              <Link to={`/map?storeId=${item.storeId}`} className="truncate opacity-90">
-                📍 {item.address}
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {item.description && <p className="mt-2.5 pr-14 text-[14px] leading-snug drop-shadow">{item.description}</p>}
-
+      {/* 소개 글 */}
+      <div className="shrink-0 px-4 pb-3">
+        {item.description && (
+          <p className="line-clamp-2 text-[14px] leading-snug text-ink">
+            <span className="mr-1.5 font-bold">{item.storeName}</span>
+            {item.description}
+          </p>
+        )}
         {item.menus.length > 0 && (
-          <button type="button" onClick={() => setMenusOpen((v) => !v)} className="mt-1.5 block w-full pr-14 text-left text-[13px] opacity-90">
+          <button type="button" onClick={() => setMenusOpen((v) => !v)} className="mt-1 block w-full text-left text-[13px] text-q-sub">
             {menusOpen ? (
               <span className="flex flex-col gap-0.5">
                 {item.menus.map((m) => (
@@ -226,45 +123,58 @@ export function ShortformItem({ item, active, muted, onToggleMute, couponCount, 
                 ))}
               </span>
             ) : (
-              <span className="block truncate">{item.menus.join('   ')}</span>
+              <span className="flex gap-1">
+                <span className="min-w-0 truncate">{item.menus.join('  ·  ')}</span>
+                <span className="shrink-0 text-q-muted">더 보기</span>
+              </span>
             )}
           </button>
         )}
-
-        {/* 영상 진행 바: 누른 위치로 이동 */}
-        <div role="slider" aria-label="재생 위치" aria-valuenow={Math.round(progress * 100)} onPointerDown={seek} className="mt-3 -mb-1 cursor-pointer py-1.5">
-          <div className="h-[3px] overflow-hidden rounded-full bg-white/30">
-            <div className="h-full rounded-full bg-white transition-[width] duration-200 ease-linear" style={{ width: `${progress * 100}%` }} />
-          </div>
-        </div>
+        {item.createdAt && <p className="mt-1 text-[11px] text-q-muted">{timeAgo(item.createdAt)}</p>}
       </div>
-    </section>
+    </article>
   )
 }
 
-function SideButton({
-  label,
-  onClick,
-  children,
-  pressed,
-  accent = false,
-}: {
-  label: string
-  onClick: () => void
-  children: ReactNode
-  pressed?: boolean
-  accent?: boolean
-}) {
+/** 게시물 사진 (여러 장이면 옆으로 넘김). 없거나 못 불러오면 업종 그림으로 채움 */
+function PostPhoto({ item, icon }: { item: Shortform; icon?: string }) {
   return (
-    <button type="button" onClick={onClick} aria-pressed={pressed} aria-label={label} className="flex flex-col items-center gap-1">
-      <span
-        className={`flex size-11 items-center justify-center rounded-full backdrop-blur-md transition-transform active:scale-90 ${
-          accent ? 'bg-point-red/90' : pressed ? 'bg-green-4/90' : 'bg-black/25'
-        }`}
-      >
-        {children}
-      </span>
-      <span className="text-[11px] font-bold drop-shadow">{label}</span>
+    <PostCarousel
+      images={item.images?.length ? item.images : item.posterUrl ? [item.posterUrl] : []}
+      alt={item.description || `${item.storeName} 사진`}
+      frame={item.frame}
+      fallback={
+        <div className="flex size-full flex-col items-center justify-center bg-gradient-to-br from-q-mint to-[#d7ebe0] text-center">
+          {icon && <img src={icon} alt="" className="h-[120px] w-auto object-contain opacity-90" />}
+          <p className="mt-3 text-[15px] font-bold text-green-6">{item.storeName}</p>
+          <p className="mt-0.5 text-[12px] text-q-muted">사진을 준비하고 있어요</p>
+        </div>
+      }
+    />
+  )
+}
+
+function ActionButton({ label, onClick, children, pressed }: { label: string; onClick: () => void; children: ReactNode; pressed?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={pressed}
+      aria-label={label}
+      className={`flex size-11 items-center justify-center transition-transform active:scale-90 ${pressed ? 'text-green-4' : 'text-ink'}`}
+    >
+      <span className="scale-90">{children}</span>
     </button>
   )
+}
+
+/** 올린 날짜: 방금 전 · N분 전 · N시간 전 · N일 전 · M월 D일 */
+function timeAgo(iso: string) {
+  const sec = (Date.now() - Date.parse(iso)) / 1000
+  if (!Number.isFinite(sec) || sec < 60) return '방금 전'
+  if (sec < 3600) return `${Math.floor(sec / 60)}분 전`
+  if (sec < 86400) return `${Math.floor(sec / 3600)}시간 전`
+  if (sec < 7 * 86400) return `${Math.floor(sec / 86400)}일 전`
+  const d = new Date(iso)
+  return `${d.getMonth() + 1}월 ${d.getDate()}일`
 }

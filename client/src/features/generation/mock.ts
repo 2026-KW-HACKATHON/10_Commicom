@@ -8,10 +8,8 @@ import type { GenerationCreated, GenerationRequest, GenerationState, MenuItem, S
  * 생성은 요청 후 약 2초 PENDING → 약 9초까지 PROCESSING → COMPLETED 로 흘러감.
  */
 const SAMPLE = {
-  videoUrl: '/samples/shortform-sample.mp4',
-  thumbnailUrl: '/samples/shortform-sample-poster.jpg',
+  imageUrl: '/samples/shortform-sample-poster.jpg',
   frame: { top: 656 / 1920, height: 607 / 1920 },
-  duration: 25,
 }
 
 interface Job {
@@ -89,8 +87,8 @@ function makeDraft(job: Job) {
       storeCategory: store.category,
       storeCategoryName: store.categoryName,
       ...SAMPLE,
-      title,
-      script: `${base?.script ?? title} (수정 요청 반영: ${revision.request})`,
+      imageUrls: [SAMPLE.imageUrl, ...(job.request.photoUrls ?? [])],
+      title: `${title} (수정 요청 반영: ${revision.request})`,
       createdAt: now(),
     })
     return shortformId
@@ -104,8 +102,8 @@ function makeDraft(job: Job) {
     storeCategory: store.category,
     storeCategoryName: store.categoryName,
     ...SAMPLE,
-    title: appeal ? appeal.slice(0, 24) : `동네 사람들이 사랑하는 ${store.name}`,
-    script: `${store.address}에 자리한 ${store.name}.${menuText ? ` 대표 메뉴 ${menuText}로` : ''} 오늘도 동네 손님을 기다립니다.${appeal ? ` ${appeal}` : ''}`,
+    imageUrls: [SAMPLE.imageUrl, ...(job.request.photoUrls ?? [])],
+    title: `${appeal || `동네 사람들이 사랑하는 ${store.name}`}${menuText ? ` · 대표 메뉴 ${menuText}` : ''}`,
     createdAt: now(),
   })
   return shortformId
@@ -115,14 +113,14 @@ export const mockShortformApi = {
   async get(shortformId: number): Promise<ShortformDetail> {
     await wait(200)
     const d = drafts.get(shortformId)
-    if (!d) throw new ApiError('SHORTFORM404', '숏폼을 찾을 수 없어요')
+    if (!d) throw new ApiError('SHORTFORM404', '게시물을 찾을 수 없어요')
     return { ...d }
   },
   /** 목업 전용: 업로드하면 손님 숏폼 피드 맨 앞에 보이게 */
   async publish(shortformId: number) {
     await wait(500)
     const d = drafts.get(shortformId)
-    if (!d) throw new ApiError('SHORTFORM404', '숏폼을 찾을 수 없어요')
+    if (!d) throw new ApiError('SHORTFORM404', '게시물을 찾을 수 없어요')
     publishMockShortform(d)
   },
   async remove(shortformId: number) {
@@ -133,7 +131,7 @@ export const mockShortformApi = {
   async replace(oldId: number, newId: number) {
     await wait(500)
     const d = drafts.get(newId)
-    if (!d) throw new ApiError('SHORTFORM404', '숏폼을 찾을 수 없어요')
+    if (!d) throw new ApiError('SHORTFORM404', '게시물을 찾을 수 없어요')
     replaceMockShortform(oldId, d)
     drafts.delete(newId)
   },

@@ -19,6 +19,14 @@ public record StoreSummaryResponse(
 ) {
 
     public static StoreSummaryResponse from(Store store) {
+        return from(store, store.isQuestStore(), store.getAvailableCouponCount());
+    }
+
+    /**
+     * isQuestStore: 퀘스트 가게 등록 기간 중인지 (QuestSubscription 기준)
+     * availableCouponCount: 지금 받을 수 있는 쿠폰 수 (Coupon 기준)
+     */
+    public static StoreSummaryResponse from(Store store, boolean isQuestStore, int availableCouponCount) {
         return new StoreSummaryResponse(
                 store.getId(),
                 store.getName(),
@@ -29,7 +37,7 @@ public record StoreSummaryResponse(
                 store.getLongitude(),
                 store.getThumbnailUrl(),
                 store.isStepFree(),
-                store.isQuestStore(),
-                store.getAvailableCouponCount());
+                isQuestStore,
+                availableCouponCount);
     }
 }

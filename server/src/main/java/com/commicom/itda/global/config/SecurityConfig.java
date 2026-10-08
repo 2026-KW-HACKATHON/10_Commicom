@@ -28,13 +28,16 @@ public class SecurityConfig {
             "/h2-console/**",
             "/error",
             "/api/members/signup", "/api/members/login",
+            "/api/members/email-verifications", "/api/members/email-verifications/confirm",
     };
 
     /** 로그인 없이 조회할 수 있는 GET 경로 */
     private static final String[] PUBLIC_GET_PATHS = {
             "/api/stores", "/api/stores/**",
             "/api/shortforms", "/api/shortforms/**",
+            "/api/quests",
             "/api/members/*/profile",
+            "/api/members/check-email", "/api/members/check-nickname",
     };
 
     @Value("${cors.allowed-origins}")
@@ -55,6 +58,8 @@ public class SecurityConfig {
                         .accessDeniedHandler(securityErrorResponder))
                 .addFilterBefore(new JwtAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, "/api/stores/me", "/api/stores/*/quest-templates", "/api/stores/*/quest-qr",
+                                "/api/stores/*/coupons", "/api/stores/*/coupon-settlements", "/api/stores/*/pro").authenticated()
                         .requestMatchers(PUBLIC_PATHS).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET_PATHS).permitAll()
                         .anyRequest().authenticated());

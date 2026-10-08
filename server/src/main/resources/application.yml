@@ -19,6 +19,19 @@ spring:
       max-file-size: 20MB
       max-request-size: 20MB
 
+  # 회원가입 인증 메일 (SMTP). MAIL_HOST 가 비어 있으면 메일을 보내지 않고 로그에만 남김
+  # 예) Gmail: MAIL_HOST=smtp.gmail.com, MAIL_PORT=587, MAIL_USERNAME=주소, MAIL_PASSWORD=앱 비밀번호(16자리)
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+
   ai:
     bedrock:
       aws:
@@ -47,6 +60,18 @@ aws:
 video:
   ffmpeg-path: ${FFMPEG_PATH:ffmpeg}
   work-dir: ${VIDEO_WORK_DIR:./tmp/video}
+
+email-verification:
+  # 보내는 사람 주소 (비우면 MAIL_USERNAME)
+  from: ${MAIL_FROM:${MAIL_USERNAME:}}
+  # 메일 서버가 없을 때 인증번호를 응답(devCode)에 담을지 — 운영에선 false
+  expose-code: false
+
+quest:
+  # 방문 인증 GPS 반경 검사를 건너뜀 (개발·시연용, 운영은 false)
+  gps-bypass: ${QUEST_GPS_BYPASS:false}
+  # 가게 방문 QR 값을 만드는 비밀값 (없으면 JWT 비밀값 사용)
+  qr-secret: ${QUEST_QR_SECRET:${jwt.secret}}
 
 unsplash:
   access-key: ${UNSPLASH_ACCESS_KEY}

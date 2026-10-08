@@ -1,14 +1,16 @@
 import { untilText } from '@/features/coupon/schema'
-import { usePigeonHistory } from '../hooks'
+import { usePigeonAccess, usePigeonHistory } from '../hooks'
 import { pigeonImage, type HistoryItem } from '../schema'
 import { FeedIcon } from './QuestUi'
 
 /** 성장 기록 — 레벨업 이력과 뽑기 결과 (3-4) */
 export function PigeonHistory() {
+  const { needsLogin } = usePigeonAccess()
   const { data, isLoading, isError } = usePigeonHistory()
 
   return (
     <div className="h-full overflow-y-auto px-5 pt-4 pb-8">
+      {needsLogin && <p className="py-10 text-center text-sm text-q-muted">로그인하면 성장 기록을 볼 수 있어요</p>}
       {isLoading && <div className="h-40 animate-pulse rounded-2xl bg-q-panel" />}
       {isError && <p className="py-10 text-center text-sm text-q-muted">성장 기록을 불러오지 못했어요</p>}
       {data && data.history.length === 0 && (

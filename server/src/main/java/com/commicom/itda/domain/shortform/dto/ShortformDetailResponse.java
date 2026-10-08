@@ -4,6 +4,7 @@ import com.commicom.itda.domain.shortform.entity.Shortform;
 import com.commicom.itda.domain.store.entity.Store;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record ShortformDetailResponse(
         Long shortformId,
@@ -12,6 +13,8 @@ public record ShortformDetailResponse(
         String storeCategory,
         String storeCategoryName,
         String imageUrl,
+        /** 옆으로 넘겨 볼 사진 전체 (첫 장 = imageUrl, 최대 5장) */
+        List<String> imageUrls,
         String title,
         LocalDateTime createdAt
 ) {
@@ -25,6 +28,7 @@ public record ShortformDetailResponse(
                 store.getCategory().name(),
                 store.getCategory().getDescription(),
                 shortform.getImageUrl(),
+                shortform.getImageUrls(),
                 shortform.getTitle(),
                 shortform.getCreatedAt()
         );

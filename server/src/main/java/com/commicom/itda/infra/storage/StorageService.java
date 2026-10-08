@@ -74,6 +74,11 @@ public class StorageService {
         return toUrl(key);
     }
 
+    /** 이 서버가 folder 아래에 올린 파일의 주소인지 (다른 곳 주소를 저장하지 않게) */
+    public boolean isUploadedUnder(String url, String folder) {
+        return url != null && url.startsWith(toUrl(folder + "/")) && !url.contains("..");
+    }
+
     private String toUrl(String key) {
         return "https://" + cloudFrontDomain + "/" + key;
     }

@@ -14,12 +14,11 @@ import {
   OwnerProfilePage,
   OwnerQuestsPage,
   OwnerRedeemPage,
-  OwnerSettlementPage,
   OwnerVideosPage,
   ProPage,
   QuestStorePage,
 } from '@/pages/OwnerPage'
-import { PigeonHistoryPage, QuestPage, QuestScanPage, QuestVisitPage } from '@/pages/QuestPage'
+import { PigeonAlbumPage, PigeonHistoryPage, QuestPage, QuestScanPage, QuestVisitPage } from '@/pages/QuestPage'
 
 export const router = createBrowserRouter([
   // 처음 실행: 손님 / 사장님 선택
@@ -35,16 +34,18 @@ export const router = createBrowserRouter([
     // 손님 모드
     element: <AppLayout />,
     children: [
-      { path: '/', element: <FeedPage />, handle: { immersive: true, overlayNav: true } },
+      // 게시물 피드: 흰 바탕 인스타그램식이라 상단 바·탭 바를 사진 위에 띄우지 않음
+      { path: '/', element: <FeedPage />, handle: { title: '피드', fixedNav: true } },
       // 지도를 크게: 상단 바 없이 버튼만 지도 위에 띄움
       { path: '/map', element: <MapPage />, handle: { immersive: true } },
       // 지도에서 진입하는 하위 화면: /map 하위라 지도 탭이 활성 상태로 유지됨
-      { path: '/map/stores/:storeId/shortform', element: <StoreShortformPage />, handle: { immersive: true, overlayNav: true } },
+      { path: '/map/stores/:storeId/shortform', element: <StoreShortformPage />, handle: { title: '홍보 게시물', fixedNav: true } },
       { path: '/map/stores/:storeId', element: <StoreProfilePage />, handle: { title: '가게 프로필' } },
       // 상단 바 없이 ≡ · + 버튼만 띄우고 그 사이에 동네 이름
       { path: '/quest', element: <QuestPage />, handle: { immersive: true } },
       // 퀘스트 하위 화면: /quest 하위라 퀘스트 탭이 활성 상태로 유지됨
       { path: '/quest/history', element: <PigeonHistoryPage />, handle: { title: '성장 기록' } },
+      { path: '/quest/album', element: <PigeonAlbumPage />, handle: { title: '비둘기 앨범' } },
       { path: '/quest/scan', element: <QuestScanPage />, handle: { title: '방문 인증' } },
       { path: '/quest/:questId/visit', element: <QuestVisitPage />, handle: { title: '방문 인증' } },
       { path: '/coupons', element: <CouponPage />, handle: { title: '내 쿠폰함' } },
@@ -60,15 +61,19 @@ export const router = createBrowserRouter([
     path: '/owner',
     element: <OwnerLayout />,
     children: [
-      { index: true, element: <OwnerHomePage />, handle: { title: '우리 가게' } },
-      { path: 'quests', element: <OwnerQuestsPage />, handle: { title: '퀘스트 등록' } },
-      { path: 'coupons', element: <OwnerCouponsPage />, handle: { title: '쿠폰 관리' } },
+      // 우상단 + 는 할 일이 있는 탭에만: 쿠폰 = 쿠폰 발행. 피드 만들기는 제작 탭으로
+      { index: true, element: <OwnerHomePage />, handle: { title: '우리 가게', action: null } },
+      { path: 'quests', element: <OwnerQuestsPage />, handle: { title: '퀘스트 등록', action: null } },
+      // 쿠폰 관리 / 정산 (?view=settlement)
+      { path: 'coupons', element: <OwnerCouponsPage />, handle: { title: '쿠폰', action: { label: '쿠폰 발행', to: '/owner/coupons/new' } } },
       { path: 'coupons/new', element: <CouponCreatePage />, handle: { title: '쿠폰 발행' } },
-      { path: 'redeem', element: <OwnerRedeemPage />, handle: { title: '쿠폰 사용 처리' } },
-      { path: 'settlement', element: <OwnerSettlementPage />, handle: { title: '쿠폰 정산' } },
+      { path: 'redeem', element: <OwnerRedeemPage />, handle: { title: '쿠폰 사용 처리', action: null } },
+      { path: 'create', element: <OwnerVideosPage />, handle: { title: '게시물 제작', action: null } },
       { path: 'quest-store', element: <QuestStorePage />, handle: { title: '퀘스트 가게' } },
       { path: 'pro', element: <ProPage />, handle: { title: '잇다 PRO' } },
-      { path: 'videos', element: <OwnerVideosPage />, handle: { title: '내 영상' } },
+      // 예전 주소 호환 (정산은 쿠폰 탭 안으로, 내 영상은 제작 탭으로)
+      { path: 'settlement', element: <Navigate to="/owner/coupons?view=settlement" replace /> },
+      { path: 'videos', element: <Navigate to="/owner/create" replace /> },
       { path: 'profile', element: <OwnerProfilePage />, handle: { title: '프로필' } },
     ],
   },

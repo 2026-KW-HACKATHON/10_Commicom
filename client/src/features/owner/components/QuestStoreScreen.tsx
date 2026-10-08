@@ -7,7 +7,8 @@ import { useQuestQr, useQuestSubscription, useSubscribeQuestStore } from '@/feat
 import { visitQrUrl } from '@/features/quest/schema'
 import { errorMessage } from '@/shared/lib/error'
 import { Sheet } from '@/shared/ui/Sheet'
-import { useMyStoreId, useMyStoreName } from '../hooks'
+import { toast } from '@/stores/toastStore'
+import { useMyStoreId, useMyStoreName, useStoreManageAccess } from '../hooks'
 import { OWNER_ILLUST } from '../illustrations'
 import { OwnerCard, OwnerScreen } from './OwnerUi'
 
@@ -17,13 +18,23 @@ const BENEFITS = [
   { icon: '🕊', title: '단골이 생겨요', text: '방문할 때마다 손님 비둘기가 자라서 다시 올 이유가 생겨요' },
 ]
 
+/** 등록 전에 알아 둘 것 */
+const TERMS = [
+  ['이용 기간', '등록한 날부터 30일'],
+  ['요금', '미정 · 해커톤 모의 결제'],
+  ['기간이 끝나면', '지도·퀘스트에서 빠지고 다시 등록할 수 있어요'],
+]
+
 const STEPS = ['계산대에 방문 인증 QR을 띄우거나 붙여 두세요', '손님이 가게 안에서 QR을 찍어요 (반경 100m 확인)', '손님은 먹이를 받고, 가게는 방문이 늘어요']
 
 /** 퀘스트 가게 등록(유료) + 방문 인증 QR (2-3 ~ 2-5) */
 export function QuestStoreScreen() {
   const storeId = useMyStoreId()
   const storeName = useMyStoreName()
-  const { data: sub, isLoading } = useQuestSubscription(storeId)
+  const access = useStoreManageAccess('quest')
+  const { data: serverSub, isLoading } = useQuestSubscription(storeId)
+  // 로그인 전엔 샘플 가게의 상태 대신 "등록 안 함"으로 (PRO 화면과 같게)
+  const sub = access.canManage ? serverSub : { storeId, status: 'NONE' as const, startedAt: null, expiresAt: null }
   const subscribe = useSubscribeQuestStore(storeId)
   const active = sub?.status === 'ACTIVE'
   const qr = useQuestQr(storeId, active)
@@ -32,7 +43,7 @@ export function QuestStoreScreen() {
   const [bigQr, setBigQr] = useState(false)
   const navigate = useNavigate()
 
-  if (isLoading || !sub) {
+  if (access.pending || isLoading || !sub) {
     return (
       <OwnerScreen>
         <div className="h-60 animate-pulse rounded-2xl bg-white" />
@@ -41,9 +52,9 @@ export function QuestStoreScreen() {
   }
 
   return (
-    <OwnerScreen>
+    <>
       {active ? (
-        <>
+        <OwnerScreen>
           <OwnerCard>
             <div className="flex items-center gap-3">
               <img src={OWNER_ILLUST.qr} alt="" className="h-16 w-auto object-contain" />
@@ -97,41 +108,74 @@ export function QuestStoreScreen() {
           </OwnerCard>
 
           <HowItWorks />
-        </>
+        </OwnerScreen>
       ) : (
-        <>
-          <section className="rounded-3xl bg-gradient-to-br from-q-green to-q-green-dark px-6 pt-6 pb-5 text-white">
-            <p className="text-xs font-bold opacity-80">{sub.status === 'EXPIRED' ? '이용 기간이 끝났어요' : '우리 가게를'}</p>
-            <h2 className="mt-1 text-[24px] leading-snug font-bold">
-              손님이 찾아오는
-              <br />
-              퀘스트 가게로
-            </h2>
-            <img src={OWNER_ILLUST.qr} alt="" className="-mt-6 -mb-3 ml-auto h-[130px] w-auto object-contain drop-shadow-lg" />
-          </section>
+        // 등록 전: 위 내용은 스크롤, 등록 버튼은 탭 바 바로 위에 고정
+        <div className="flex h-full flex-col bg-q-panel">
+          <div className="flex-1 overflow-y-auto px-5 pt-4 pb-4">
+            {/* min-h-full + 소개 박스 flex-1: 화면이 길면 소개 박스가 늘어나 빈 공간 없이 채움 */}
+            <div className="flex min-h-full flex-col">
+              <section className="flex min-h-[230px] flex-1 flex-col rounded-3xl bg-gradient-to-br from-q-green to-q-green-dark px-6 pt-6 pb-5 text-white">
+                <p className="text-xs font-bold opacity-80">{sub.status === 'EXPIRED' ? '이용 기간이 끝났어요' : '우리 가게를'}</p>
+                <h2 className="mt-1 text-[26px] leading-snug font-bold">
+                  손님이 찾아오는
+                  <br />
+                  퀘스트 가게로
+                </h2>
+                <p className="mt-2 text-[13px] leading-relaxed opacity-85">
+                  동네 손님이 퀘스트를 하러
+                  <br />
+                  {storeName}에 직접 찾아와요
+                </p>
+                <img src={OWNER_ILLUST.qr} alt="" className="mt-auto -mb-3 ml-auto h-[140px] w-auto object-contain drop-shadow-lg" />
+              </section>
 
-          <ul className="mt-3 flex flex-col gap-2">
-            {BENEFITS.map((b) => (
-              <li key={b.title} className="flex gap-3 rounded-2xl bg-white px-4 py-3.5">
-                <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-full bg-q-mint text-lg">
-                  {b.icon}
-                </span>
-                <span>
-                  <span className="block text-[15px] font-bold text-q-text">{b.title}</span>
-                  <span className="text-[13px] text-q-muted">{b.text}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
+              <ul className="mt-3 flex flex-col gap-2">
+                {BENEFITS.map((b) => (
+                  <li key={b.title} className="flex items-center gap-3.5 rounded-2xl bg-white px-4 py-4">
+                    <span aria-hidden className="flex size-12 shrink-0 items-center justify-center rounded-full bg-q-mint text-xl">
+                      {b.icon}
+                    </span>
+                    <span>
+                      <span className="block text-[16px] font-bold text-q-text">{b.title}</span>
+                      <span className="text-[13px] text-q-muted">{b.text}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
 
-          <HowItWorks />
+              <HowItWorks />
 
-          <div className="sticky bottom-0 -mx-5 mt-4 bg-gradient-to-t from-q-panel via-q-panel to-transparent px-5 pt-4 pb-2">
-            <PrimaryButton onClick={() => setPaying(true)}>
-              {sub.status === 'EXPIRED' ? '다시 등록하기 (월 구독)' : '퀘스트 가게 등록하기 (월 구독)'}
+              <OwnerCard title="이용 안내" className="mt-3">
+                <dl className="flex flex-col gap-2 text-[13px]">
+                  {TERMS.map(([label, value]) => (
+                    <div key={label} className="flex gap-3">
+                      <dt className="w-[84px] shrink-0 text-q-muted">{label}</dt>
+                      <dd className="text-q-text">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </OwnerCard>
+            </div>
+          </div>
+
+          <div className="shrink-0 border-t border-q-line bg-white px-5 pt-3 pb-3">
+            <PrimaryButton
+              onClick={() => {
+                if (access.canManage) return setPaying(true)
+                // 로그인 전엔 결제 화면 대신 로그인부터 (로그인 후 이 화면으로 돌아옴)
+                toast('사장님 계정으로 로그인하면 퀘스트 가게로 등록할 수 있어요')
+                navigate('/login?next=/owner/quest-store')
+              }}
+            >
+              {!access.canManage
+                ? '로그인하고 퀘스트 가게 등록하기'
+                : sub.status === 'EXPIRED'
+                  ? '다시 등록하기 (월 구독)'
+                  : '퀘스트 가게 등록하기 (월 구독)'}
             </PrimaryButton>
           </div>
-        </>
+        </div>
       )}
 
       {paying && (
@@ -187,7 +231,7 @@ export function QuestStoreScreen() {
           </button>
         </div>
       )}
-    </OwnerScreen>
+    </>
   )
 }
 

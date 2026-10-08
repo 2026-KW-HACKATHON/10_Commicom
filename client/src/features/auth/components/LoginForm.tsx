@@ -13,7 +13,11 @@ export function LoginForm({ onSuccess, compact = false }: { onSuccess?: () => vo
   const submit = (e: FormEvent) => {
     e.preventDefault()
     if (!ready || login.isPending) return
-    login.mutate({ email, password }, { onSuccess })
+    // mutate의 onSuccess는 로그인되자마자 이 폼이 사라지면(설정 서랍) 실행되지 않아 결과를 직접 기다림
+    login
+      .mutateAsync({ email, password })
+      .then(() => onSuccess?.())
+      .catch(() => {}) // 에러는 login.error로 화면에 표시
   }
 
   const input = `w-full border-b-2 border-green-1 bg-transparent px-1 text-ink outline-none placeholder:text-gray-2 focus:border-green-4 ${compact ? 'h-9 text-[14px]' : 'h-11 text-[15px]'}`

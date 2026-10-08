@@ -10,14 +10,14 @@ const OPTIONS: { mode: AppMode; title: string; desc: string; points: string[]; i
     mode: 'USER',
     title: '손님으로 시작',
     desc: '우리 동네 가게를 구경하고 싶어요',
-    points: ['동네 가게 숏폼·지도', '퀘스트로 비둘기 키우기', '레벨업하고 쿠폰 받기'],
+    points: ['동네 가게 게시물·지도', '퀘스트로 비둘기 키우기', '레벨업하고 쿠폰 받기'],
     image: pigeonWalk,
   },
   {
     mode: 'OWNER',
     title: '사장님으로 시작',
     desc: '우리 가게를 알리고 싶어요',
-    points: ['AI 홍보 영상 만들기', '퀘스트 가게 등록', '쿠폰 발행·정산'],
+    points: ['AI 홍보 게시물 만들기', '퀘스트 가게 등록', '쿠폰 발행·정산'],
     image: pigeonGps,
   },
 ]

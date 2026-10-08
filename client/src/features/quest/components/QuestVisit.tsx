@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import pigeonGps from '@/assets/quest/pigeon-gps.png'
@@ -5,9 +6,9 @@ import pigeonTrophy from '@/assets/quest/pigeon-trophy.png'
 import pigeonVerified from '@/assets/quest/pigeon-verified.png'
 import { useMyLocation, useStores } from '@/features/map/hooks'
 import type { StoreSummary } from '@/features/map/schema'
-import { mockQrHint, USE_MOCK } from '@/mocks/db'
 import { ApiError } from '@/shared/api/client'
 import { errorMessage } from '@/shared/lib/error'
+import { fetchTestQrHint } from '../api'
 import { distanceMeters, getCurrentPosition, GPS_BYPASS } from '../geo'
 import { useVisit } from '../hooks'
 import { VISIT_RADIUS_M, withObjectParticle, type Quest, type VisitResult } from '../schema'
@@ -36,7 +37,14 @@ export function QuestVisit({ quest }: { quest: Quest }) {
   const me = location.status === 'ok' ? location.position : null
   const sorted = [...(stores ?? [])].sort((a, b) => distanceTo(me, a) - distanceTo(me, b))
   const store = sorted.find((s) => s.storeId === storeId) ?? sorted[0]
-  const hint = USE_MOCK && store ? mockQrHint(store.storeId) : null
+  // 테스트용 QR 값 (목업·로컬 서버에서만 나옴 — 운영에선 가게 QR을 찍어야 함)
+  const { data: hint } = useQuery({
+    queryKey: ['quest-test-qr', store?.storeId],
+    queryFn: () => fetchTestQrHint(store!.storeId),
+    enabled: !!store,
+    staleTime: 60_000,
+    retry: false,
+  })
 
   const finish = () => navigate('/quest', { replace: true })
   const afterVisited = () => (result?.quest.completed ? setStep('quest-done') : finish())
@@ -209,7 +217,7 @@ function RewardBox({ title, caption }: { title: string; caption: string }) {
 }
 
 function visitErrorMessage(e: unknown) {
-  if (e instanceof ApiError && e.code === 'QUEST4001') {
+  if (e instanceof ApiError && e.code === 'QUEST400') {
     const distanceM = (e.result as { distanceM?: number } | undefined)?.distanceM
     if (distanceM) return `매장에서 약 ${formatDistance(distanceM)} 떨어져 있어요. ${VISIT_RADIUS_M}m 안에서 인증해 주세요.`
   }

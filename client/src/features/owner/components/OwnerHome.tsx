@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 import { useOwnerCoupons, useSettlement } from '@/features/coupon/hooks'
 import { untilText } from '@/features/coupon/schema'
-import { useIsPro } from '@/features/pro/store'
+import { useIsPro } from '@/features/pro/hooks'
 import { useQuestSubscription } from '@/features/quest/hooks'
-import { resetMockDb, USE_MOCK } from '@/mocks/db'
-import { useMyStoreId, useMyStoreName } from '../hooks'
+import { HAS_MOCK, resetAllLocalData } from '@/mocks/db'
+import { useMyStoreId, useMyStoreName, useStoreManageAccess } from '../hooks'
 import { OWNER_ILLUST } from '../illustrations'
 import { currentMonth } from '../date'
 import { OwnerCard, OwnerScreen } from './OwnerUi'
@@ -14,10 +14,13 @@ export function OwnerHome() {
   const storeId = useMyStoreId()
   const storeName = useMyStoreName()
   const { data: sub } = useQuestSubscription(storeId)
-  const { data: coupons } = useOwnerCoupons(storeId)
-  const { data: settlement } = useSettlement(storeId, currentMonth())
+  // 로그인 전엔 쿠폰·정산을 부르지 않음 (서버가 로그인을 요구 → 0으로 보임)
+  const couponAccess = useStoreManageAccess('coupon').canManage
+  const { data: coupons } = useOwnerCoupons(storeId, undefined, couponAccess)
+  const { data: settlement } = useSettlement(storeId, currentMonth(), couponAccess)
   const isPro = useIsPro()
-  const questActive = sub?.status === 'ACTIVE'
+  // 로그인 전엔 샘플 가게 상태 대신 미등록으로 (퀘스트 가게 화면과 같게)
+  const questActive = useStoreManageAccess('quest').canManage && sub?.status === 'ACTIVE'
   const activeCoupons = coupons?.filter((c) => c.status === 'ACTIVE') ?? []
 
   return (
@@ -38,7 +41,7 @@ export function OwnerHome() {
           to="/owner/pro"
           label="잇다 PRO"
           value={isPro ? '이용 중' : '미구독'}
-          sub={isPro ? '혜택 이용 중' : '숏폼 우선 노출'}
+          sub={isPro ? '혜택 이용 중' : '피드 우선 노출'}
           on={isPro}
           image={OWNER_ILLUST.pro}
         />
@@ -55,7 +58,7 @@ export function OwnerHome() {
         </Link>
       )}
 
-      <OwnerCard title="이번 달 쿠폰" className="mt-3" aside={<Link to="/owner/settlement" className="text-xs font-medium text-q-green">정산 보기 ›</Link>}>
+      <OwnerCard title="이번 달 쿠폰" className="mt-3" aside={<Link to="/owner/coupons?view=settlement" className="text-xs font-medium text-q-green">정산 보기 ›</Link>}>
         <dl className="grid grid-cols-3 gap-2 text-center">
           <Stat label="발행 중" value={`${activeCoupons.length}종`} />
           <Stat label="사용" value={`${settlement?.usedCount ?? 0}건`} />
@@ -65,7 +68,7 @@ export function OwnerHome() {
 
       <OwnerCard title="바로가기" className="mt-3">
         <div className="grid grid-cols-5 gap-1">
-          <Shortcut to="/owner/videos" image={OWNER_ILLUST.videoEdit} label="내 영상" />
+          <Shortcut to="/owner/create" image={OWNER_ILLUST.videoEdit} label="게시물 제작" />
           <Shortcut to="/owner/redeem" image={OWNER_ILLUST.coupon} label="쿠폰 사용" />
           <Shortcut to="/owner/coupons/new" image={OWNER_ILLUST.couponNew} label="쿠폰 발행" />
           <Shortcut to="/owner/quest-store" image={OWNER_ILLUST.qr} label="방문 QR" />
@@ -73,19 +76,10 @@ export function OwnerHome() {
         </div>
       </OwnerCard>
 
-      {USE_MOCK && (
+      {HAS_MOCK && (
         <button
           type="button"
-          onClick={() => {
-            resetMockDb()
-            localStorage.removeItem('itda-pro')
-            localStorage.removeItem('itda-mock-published')
-            localStorage.removeItem('itda-mock-deleted')
-            localStorage.removeItem('itda-mock-store-edits')
-            localStorage.removeItem('itda-mock-members')
-            localStorage.removeItem('itda-auth')
-            window.location.reload()
-          }}
+          onClick={resetAllLocalData}
           className="mx-auto mt-8 block text-xs text-q-muted underline"
         >
           목업 데이터 처음 상태로 되돌리기

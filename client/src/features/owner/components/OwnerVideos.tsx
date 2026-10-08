@@ -2,14 +2,14 @@ import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import pigeonCrying from '@/assets/generation/pigeon-crying.jpg'
 import pigeonUpload from '@/assets/generation/pigeon-upload.jpg'
-import { FramedVideo } from '@/features/feed/components/FramedVideo'
+import { PostCarousel } from '@/features/feed/components/PostCarousel'
 import { useDeleteShortform, useStoreShortforms } from '@/features/feed/hooks'
 import type { Shortform } from '@/features/feed/schema'
 import { Dialog } from '@/features/generation/components/Dialog'
-import { useIsPro } from '@/features/pro/store'
+import { useIsPro } from '@/features/pro/hooks'
 import { errorMessage } from '@/shared/lib/error'
 import { toast } from '@/stores/toastStore'
-import { CloseIcon, PlayIcon, PlusIcon } from '@/shared/ui/icons'
+import { CloseIcon, PhotoIcon, PlusIcon } from '@/shared/ui/icons'
 import { useMyStoreId } from '../hooks'
 import { OWNER_ILLUST } from '../illustrations'
 import { OwnerScreen } from './OwnerUi'
@@ -24,23 +24,33 @@ export function OwnerVideos() {
 
   return (
     <OwnerScreen>
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="text-[13px] text-q-muted">손님 숏폼 피드에 공개 중</p>
-          <h2 className="text-[22px] font-bold text-q-text">
-            우리 가게 영상 <span className="text-q-green">{videos?.length ?? 0}</span>개
-          </h2>
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate('/create')}
-          className="flex h-10 items-center gap-1 rounded-full bg-green-6 pr-4 pl-3 text-[13px] font-bold text-white shadow-[0_4px_10px_rgba(8,104,22,0.3)] active:scale-[0.97]"
-        >
+      {/* 제작 탭의 주 동작 (예전엔 우상단 + 로만 만들 수 있었음) */}
+      <button
+        type="button"
+        onClick={() => navigate('/create')}
+        className="flex w-full items-center gap-3 overflow-hidden rounded-2xl bg-q-green py-2 pr-4 pl-3 text-left text-white active:scale-[0.99]"
+      >
+        <img src={OWNER_ILLUST.videoEdit} alt="" className="-my-1 h-[84px] w-auto object-contain drop-shadow" />
+        <span className="flex-1">
+          <span className="block text-[17px] font-bold">새 게시물 만들기</span>
+          <span className="block text-xs leading-relaxed break-keep opacity-85">
+            사진·메뉴판만 있으면
+            <br />
+            AI가 홍보 게시물을 만들어요
+          </span>
+        </span>
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/20">
           <span className="scale-[0.7]">
             <PlusIcon />
           </span>
-          새 영상
-        </button>
+        </span>
+      </button>
+
+      <div className="mt-5">
+        <p className="text-[13px] text-q-muted">손님 피드에 공개 중</p>
+        <h2 className="text-[20px] font-bold text-q-text">
+          우리 가게 게시물 <span className="text-q-green">{videos?.length ?? 0}</span>개
+        </h2>
       </div>
 
       {isLoading && (
@@ -50,19 +60,19 @@ export function OwnerVideos() {
           ))}
         </div>
       )}
-      {isError && <p className="py-10 text-center text-sm text-q-muted">영상을 불러오지 못했어요</p>}
+      {isError && <p className="py-10 text-center text-sm text-q-muted">게시물을 불러오지 못했어요</p>}
 
       {videos && videos.length === 0 && (
         <div className="mt-6 flex flex-col items-center rounded-2xl bg-white px-6 py-8 text-center">
           <img src={OWNER_ILLUST.videoEdit} alt="" className="h-[120px] w-auto object-contain" />
-          <p className="mt-3 text-[16px] font-bold text-q-text">아직 올린 영상이 없어요</p>
-          <p className="mt-1 text-[13px] leading-relaxed text-q-muted">지도 링크나 메뉴판만 있으면 홍보 영상을 만들어 드려요</p>
+          <p className="mt-3 text-[16px] font-bold text-q-text">아직 올린 게시물이 없어요</p>
+          <p className="mt-1 text-[13px] leading-relaxed text-q-muted">지도 링크나 메뉴판만 있으면 홍보 게시물을 만들어 드려요</p>
           <button
             type="button"
             onClick={() => navigate('/create')}
             className="mt-5 h-11 w-full rounded-xl bg-green-4 text-[15px] font-bold text-white"
           >
-            첫 영상 만들기
+            첫 게시물 만들기
           </button>
         </div>
       )}
@@ -77,9 +87,9 @@ export function OwnerVideos() {
                   {i === 0 && (
                     <span className="absolute top-2 left-2 rounded-full bg-point-orange px-2 py-0.5 text-[10px] font-bold text-white">NEW</span>
                   )}
-                  <span className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-black/35 pl-0.5 text-white backdrop-blur-sm">
+                  <span className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm">
                     <span className="scale-[0.4]">
-                      <PlayIcon />
+                      <PhotoIcon />
                     </span>
                   </span>
                   <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2.5 pt-6 pb-2 text-[11px] font-medium text-white/90">
@@ -107,7 +117,7 @@ function VideoDetail({ video, onClose }: { video: Shortform; onClose: () => void
   const [modal, setModal] = useState<'delete' | 'pro-edit' | 'pro-download' | null>(null)
 
   return (
-    <div role="dialog" aria-modal aria-label="영상 보기" className="fixed inset-0 z-40 flex items-end justify-center bg-black/50">
+    <div role="dialog" aria-modal aria-label="게시물 보기" className="fixed inset-0 z-40 flex items-end justify-center bg-black/50">
       <div className="max-h-full w-full max-w-[430px] animate-[rise_.3s_ease-out] overflow-y-auto rounded-t-3xl bg-white px-5 pt-4 pb-[max(20px,env(safe-area-inset-bottom))]">
         <div className="flex items-center justify-between">
           <p className="text-[13px] text-q-muted">
@@ -121,8 +131,8 @@ function VideoDetail({ video, onClose }: { video: Shortform; onClose: () => void
           </button>
         </div>
 
-        <div className="relative mx-auto mt-2 aspect-[9/16] w-full max-w-[240px] overflow-hidden rounded-3xl shadow-[0_10px_30px_rgba(8,104,22,0.18)]">
-          <FramedVideo videoUrl={video.videoUrl} posterUrl={video.posterUrl} frame={video.frame} />
+        <div className="relative mx-auto mt-2 aspect-[4/5] w-full max-w-[280px] overflow-hidden rounded-3xl shadow-[0_10px_30px_rgba(8,104,22,0.18)]">
+          <PostCarousel images={video.images ?? (video.posterUrl ? [video.posterUrl] : [])} alt={video.description || video.storeName} frame={video.frame} />
         </div>
 
         <p className="mt-4 text-[16px] font-bold text-q-text">{video.description || video.storeName}</p>
@@ -130,8 +140,8 @@ function VideoDetail({ video, onClose }: { video: Shortform; onClose: () => void
 
         <div className="mt-5 grid grid-cols-4 gap-2">
           <Action label="손님 화면" onClick={() => navigate(`/map/stores/${video.storeId}/shortform?start=${video.shortformId}`)}>
-            <span className="scale-[0.55] pl-0.5 text-q-green">
-              <PlayIcon />
+            <span className="scale-[0.55] text-q-green">
+              <PhotoIcon />
             </span>
           </Action>
           {/* PRO 기능: 재수정 · 다운로드 (PRO가 아니면 안내) */}
@@ -140,8 +150,8 @@ function VideoDetail({ video, onClose }: { video: Shortform; onClose: () => void
           </Action>
           {isPro ? (
             <a
-              href={video.videoUrl}
-              download={`${video.storeName}-숏폼.mp4`}
+              href={video.posterUrl ?? undefined}
+              download={`${video.storeName}-게시물${video.posterUrl?.match(/\.\w+(?=$|\?)/)?.[0] ?? ''}`}
               className="flex flex-col items-center gap-1 rounded-xl bg-q-panel py-3 text-[12px] font-bold text-q-text active:bg-q-mint"
             >
               <img src={OWNER_ILLUST.videoDownload} alt="" className="size-9 object-contain" />
@@ -160,8 +170,8 @@ function VideoDetail({ video, onClose }: { video: Shortform; onClose: () => void
 
       {modal === 'delete' && (
         <Dialog
-          title="이 영상을 삭제할까요?"
-          text="손님 숏폼 피드에서도 사라져요"
+          title="이 게시물을 삭제할까요?"
+          text="손님 피드에서도 사라져요"
           image={pigeonCrying}
           primary={{ label: '아니요', onClick: () => setModal(null) }}
           secondary={{
@@ -170,7 +180,7 @@ function VideoDetail({ video, onClose }: { video: Shortform; onClose: () => void
               remove.mutate(video.shortformId, {
                 onSuccess: () => {
                   onClose()
-                  toast('영상을 삭제했어요')
+                  toast('게시물을 삭제했어요')
                 },
                 onError: (e) => toast(errorMessage(e), 'error'),
               }),
@@ -179,11 +189,11 @@ function VideoDetail({ video, onClose }: { video: Shortform; onClose: () => void
       )}
       {(modal === 'pro-download' || modal === 'pro-edit') && (
         <Dialog
-          title={modal === 'pro-edit' ? '영상 수정은 PRO 기능이에요' : '다운로드는 PRO 기능이에요'}
+          title={modal === 'pro-edit' ? '게시물 수정은 PRO 기능이에요' : '다운로드는 PRO 기능이에요'}
           text={
             modal === 'pro-edit'
-              ? 'PRO를 구독하면 올린 영상도 대본·자막·영상을 원하는 대로 고쳐 새 버전으로 바꿀 수 있어요'
-              : 'PRO를 구독하면 완성된 영상을 원본 화질로 내려받아 다른 SNS에도 올릴 수 있어요'
+              ? 'PRO를 구독하면 올린 게시물도 사진·문구를 원하는 대로 고쳐 새 버전으로 바꿀 수 있어요'
+              : 'PRO를 구독하면 완성된 게시물 사진을 원본 화질로 내려받아 다른 SNS에도 올릴 수 있어요'
           }
           image={pigeonUpload}
           primary={{ label: 'PRO 알아보기', onClick: () => navigate('/owner/pro') }}

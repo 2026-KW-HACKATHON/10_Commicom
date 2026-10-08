@@ -22,8 +22,10 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ApiResponse<Void>> handleBusiness(BusinessException e) {
-        return fail(e.getErrorCode());
+    public ResponseEntity<ApiResponse<Object>> handleBusiness(BusinessException e) {
+        ErrorCode errorCode = e.getErrorCode();
+        return ResponseEntity.status(errorCode.getStatus())
+                .body(ApiResponse.onFailure(errorCode, errorCode.getMessage(), e.getResult()));
     }
 
     /** @Valid 요청 바디 검증 실패: result 에 필드별 메시지를 담는다. */

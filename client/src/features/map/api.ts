@@ -1,7 +1,22 @@
-import { mockStoreExtras, USE_MOCK } from '@/mocks/db'
+import { mockFor, mockStoreExtras, USE_MOCK } from '@/mocks/db'
 import { api, ApiError, request } from '@/shared/api/client'
-import { MOCK_STORE_DETAILS, MOCK_STORES } from './mock'
-import type { StoreDetail, StoreListResult } from './schema'
+import { MOCK_STORE_DETAILS, MOCK_STORES, withStoreEdit } from './mock'
+import type { StoreDetail, StoreListResult, StoreSummary } from './schema'
+
+/**
+ * 서버 가게에 아직 목업인 기능의 값을 덮어씀.
+ * - 퀘스트·쿠폰이 목업이면 퀘스트 가게 여부·받을 쿠폰 수도 목업 값으로 (서버 값은 서버 퀘스트·쿠폰 기준이라 안 맞음)
+ * - 가게 수정이 목업이면 사장님이 고친 이름·주소·사진
+ */
+function withMockParts<T extends StoreSummary>(s: T): T {
+  const extras = mockStoreExtras(s.storeId)
+  const merged = {
+    ...s,
+    ...(mockFor('quest') ? { isQuestStore: extras.isQuestStore } : {}),
+    ...(mockFor('coupon') ? { availableCouponCount: extras.availableCouponCount } : {}),
+  }
+  return mockFor('storeEdit') ? withStoreEdit(merged) : merged
+}
 
 /** GET /api/stores (questOnly: 지도 5-1 확장 쿼리) */
 export async function fetchStores(questOnly = false): Promise<StoreListResult> {
@@ -11,7 +26,10 @@ export async function fetchStores(questOnly = false): Promise<StoreListResult> {
     )
     return { count: stores.length, stores }
   }
-  return request(api.get('/api/stores', { params: questOnly ? { questOnly: true } : undefined }))
+  // 퀘스트가 목업이면 서버의 questOnly 필터 대신 목업 값으로 거름
+  const res = await request<StoreListResult>(api.get('/api/stores', { params: questOnly && !mockFor('quest') ? { questOnly: true } : undefined }))
+  const stores = res.stores.map(withMockParts).filter((s) => !questOnly || s.isQuestStore)
+  return { count: stores.length, stores }
 }
 
 /** GET /api/stores/{storeId} */
@@ -36,5 +54,6 @@ export async function fetchStoreDetail(storeId: number): Promise<StoreDetail> {
       accessibility: { stepFree: s.stepFree, elevator: d.elevator },
     }
   }
-  return request(api.get(`/api/stores/${storeId}`))
+  const detail = await request<StoreDetail>(api.get(`/api/stores/${storeId}`))
+  return mockFor('storeEdit') ? withStoreEdit(detail) : detail
 }

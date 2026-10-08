@@ -2,8 +2,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import pigeonWalk from '@/assets/map/pigeon-walk.png'
 import { useLogout } from '@/features/auth/hooks'
 import { canUseOwnerMode } from '@/features/auth/schema'
+import { OwnerStoreRegister } from '@/features/owner/components/OwnerStoreRegister'
+import { useMyStoreQuery } from '@/features/owner/hooks'
 import { OWNER_ILLUST } from '@/features/owner/illustrations'
-import { ChartNavIcon, FlagNavIcon, HomeNavIcon, ScanNavIcon, TicketNavIcon } from '@/shared/ui/icons'
+import { errorCode, errorMessage } from '@/shared/lib/error'
+import { CreateNavIcon, FlagNavIcon, HomeNavIcon, ScanNavIcon, TicketNavIcon } from '@/shared/ui/icons'
 import { useMe } from '@/stores/authStore'
 import { useModeStore } from '@/stores/modeStore'
 import { AppShell, type TabItem } from './AppShell'
@@ -12,14 +15,16 @@ import type { MenuItem } from './SettingsDrawer'
 const TABS: TabItem[] = [
   { to: '/owner', label: '홈', Icon: HomeNavIcon, end: true },
   { to: '/owner/quests', label: '퀘스트', Icon: FlagNavIcon },
-  { to: '/owner/coupons', label: '쿠폰', Icon: TicketNavIcon },
+  // 피드 제작이 주 동작이라 가운데 (예전엔 우상단 + 로만 만들 수 있었음)
+  { to: '/owner/create', label: '제작', Icon: CreateNavIcon },
   { to: '/owner/redeem', label: '사용 처리', Icon: ScanNavIcon },
-  { to: '/owner/settlement', label: '정산', Icon: ChartNavIcon },
+  // 쿠폰 관리 + 정산
+  { to: '/owner/coupons', label: '쿠폰', Icon: TicketNavIcon },
 ]
 
 const MENU: MenuItem[] = [
   { to: '/owner/profile', label: '가게 정보 · 프로필', icon: '🏪', image: pigeonWalk },
-  { to: '/owner/videos', label: '내 영상', icon: '🎬', image: OWNER_ILLUST.videoEdit },
+  { to: '/owner/create', label: '게시물 제작', icon: '📸', image: OWNER_ILLUST.videoEdit },
   { to: '/owner/quest-store', label: '퀘스트 가게 · 방문 QR', icon: '📍', image: OWNER_ILLUST.qr },
   { to: '/owner/coupons/new', label: '쿠폰 발행', icon: '🎟', image: OWNER_ILLUST.couponNew },
   { to: '/owner/redeem', label: '쿠폰 사용 처리', icon: '✅', image: OWNER_ILLUST.coupon },
@@ -32,7 +37,21 @@ const MENU: MenuItem[] = [
  */
 export function OwnerLayout() {
   const me = useMe()
+  const myStore = useMyStoreQuery()
   if (!canUseOwnerMode(me)) return <OwnerAccountNotice nickname={me?.nickname ?? ''} />
+  // 서버의 내 가게를 불러오는 동안엔 샘플 가게 화면이 잠깐 보이지 않게 기다림
+  if (myStore.isLoading) return <div className="mx-auto h-full max-w-[430px] animate-pulse bg-white" />
+  if (errorCode(myStore.error) === 'STORE404_2') return <OwnerStoreRegister />
+  if (myStore.isError) {
+    return (
+      <div className="mx-auto flex h-full max-w-[430px] flex-col items-center justify-center gap-3 bg-white px-6 text-center">
+        <p className="text-[15px] text-ink">{errorMessage(myStore.error, '내 가게 정보를 불러오지 못했어요')}</p>
+        <button type="button" onClick={() => myStore.refetch()} className="h-11 rounded-xl bg-green-4 px-5 text-[14px] font-bold text-white">
+          다시 불러오기
+        </button>
+      </div>
+    )
+  }
   return <AppShell tabs={TABS} menuItems={MENU} modeBadge="사장님" />
 }
 
