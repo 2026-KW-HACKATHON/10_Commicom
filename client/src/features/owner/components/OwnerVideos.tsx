@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import pigeonCrying from '@/assets/generation/pigeon-crying.jpg'
 import pigeonUpload from '@/assets/generation/pigeon-upload.jpg'
-import { PostImage } from '@/features/feed/components/PostImage'
+import { PostCarousel } from '@/features/feed/components/PostCarousel'
 import { useDeleteShortform, useStoreShortforms } from '@/features/feed/hooks'
 import type { Shortform } from '@/features/feed/schema'
 import { Dialog } from '@/features/generation/components/Dialog'
@@ -132,7 +132,7 @@ function VideoDetail({ video, onClose }: { video: Shortform; onClose: () => void
         </div>
 
         <div className="relative mx-auto mt-2 aspect-[4/5] w-full max-w-[280px] overflow-hidden rounded-3xl shadow-[0_10px_30px_rgba(8,104,22,0.18)]">
-          <PostImage url={video.posterUrl} alt={video.description || video.storeName} frame={video.frame} />
+          <PostCarousel images={video.images ?? (video.posterUrl ? [video.posterUrl] : [])} alt={video.description || video.storeName} frame={video.frame} />
         </div>
 
         <p className="mt-4 text-[16px] font-bold text-q-text">{video.description || video.storeName}</p>

@@ -6,7 +6,7 @@ import { BookmarkIcon, LocationIcon, ShareIcon, TicketSmallIcon } from '@/shared
 import { toast } from '@/stores/toastStore'
 import { useCanScrap, useIsScrapped, useToggleScrap } from '../hooks'
 import type { Shortform } from '../schema'
-import { PostImage } from './PostImage'
+import { PostCarousel } from './PostCarousel'
 
 interface Props {
   item: Shortform
@@ -136,11 +136,11 @@ export function ShortformItem({ item, couponCount, onOpenCoupons }: Props) {
   )
 }
 
-/** 게시물 사진. 없거나 못 불러오면 업종 그림으로 채움 */
+/** 게시물 사진 (여러 장이면 옆으로 넘김). 없거나 못 불러오면 업종 그림으로 채움 */
 function PostPhoto({ item, icon }: { item: Shortform; icon?: string }) {
   return (
-    <PostImage
-      url={item.posterUrl}
+    <PostCarousel
+      images={item.images?.length ? item.images : item.posterUrl ? [item.posterUrl] : []}
       alt={item.description || `${item.storeName} 사진`}
       frame={item.frame}
       fallback={

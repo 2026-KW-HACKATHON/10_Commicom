@@ -18,10 +18,25 @@ function toMenuInfo(body: GenerationRequest) {
   return lines.join('\n') || undefined
 }
 
-/** POST /api/generation { storeId, menuInfo } */
-export function postGeneration(body: GenerationRequest): Promise<GenerationCreated> {
-  if (USE_MOCK) return mockGenerationApi.create(body)
-  return request(api.post('/api/generation', { storeId: body.storeId, menuInfo: toMenuInfo(body) }))
+/** 게시물 한 개의 사장님 사진은 4장까지 (AI 사진과 합쳐 5장) */
+export const MAX_POST_PHOTOS = 4
+
+/** POST /api/stores/{storeId}/photos (multipart photos) — 게시물에 넣을 사진을 올리고 주소를 받음 (사장님 본인 가게만) */
+export function uploadStorePhotos(storeId: number, files: File[]): Promise<string[]> {
+  const form = new FormData()
+  files.forEach((f) => form.append('photos', f))
+  return request(api.post(`/api/stores/${storeId}/photos`, form, { timeout: 60_000 }))
+}
+
+/** POST /api/generation { storeId, menuInfo, photoUrls } — 사장님 사진은 먼저 올리고 주소로 보냄 */
+export async function postGeneration(body: GenerationRequest): Promise<GenerationCreated> {
+  const photos = (body.photos ?? []).slice(0, MAX_POST_PHOTOS)
+  if (USE_MOCK) {
+    // 목업: 올리지 않고 이 기기에서만 보이는 주소로
+    return mockGenerationApi.create({ ...body, photoUrls: body.photoUrls ?? photos.map((f) => URL.createObjectURL(f)) })
+  }
+  const photoUrls = photos.length ? await uploadStorePhotos(body.storeId, photos) : (body.photoUrls ?? [])
+  return request(api.post('/api/generation', { storeId: body.storeId, menuInfo: toMenuInfo(body), photoUrls: photoUrls.slice(0, MAX_POST_PHOTOS) }))
 }
 
 /** GET /api/generation/{generationId} — COMPLETED/FAILED 될 때까지 폴링 */

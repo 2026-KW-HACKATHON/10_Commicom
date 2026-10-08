@@ -5,7 +5,7 @@ import pigeonCrying from '@/assets/generation/pigeon-crying.jpg'
 import pigeonUpload from '@/assets/generation/pigeon-upload.jpg'
 import pigeonUploaded from '@/assets/generation/pigeon-uploaded.png'
 import working2 from '@/assets/generation/pigeon-working-2.jpg'
-import { PostImage } from '@/features/feed/components/PostImage'
+import { PostCarousel } from '@/features/feed/components/PostCarousel'
 import { useMyStore, useMyStoreId } from '@/features/owner/hooks'
 import { useIsPro } from '@/features/pro/hooks'
 import { errorMessage } from '@/shared/lib/error'
@@ -16,6 +16,7 @@ import {
   extractMenus,
   fetchGeneration,
   fetchShortformDetail,
+  MAX_POST_PHOTOS,
   postGeneration,
   publishShortform,
 } from '../api'
@@ -39,6 +40,8 @@ export function CreateShortformFlow() {
   const [step, setStep] = useState<Step>('source')
   const [mapUrl, setMapUrl] = useState('')
   const [files, setFiles] = useState<File[]>([])
+  // 게시물에 같이 넣을 음식·가게 사진 (메뉴 읽기엔 안 씀)
+  const [photos, setPhotos] = useState<File[]>([])
   const [menus, setMenus] = useState<MenuItem[]>([])
   const [appeal, setAppeal] = useState('')
   const [generationId, setGenerationId] = useState<number | null>(null)
@@ -81,7 +84,7 @@ export function CreateShortformFlow() {
   const remove = useMutation({ mutationFn: () => deleteShortform(shortformId!), onSuccess: () => navigate('/owner', { replace: true }) })
 
   const close = () => {
-    const dirty = step !== 'source' || mapUrl || files.length > 0
+    const dirty = step !== 'source' || mapUrl || files.length > 0 || photos.length > 0
     if (step === 'done' || !dirty || window.confirm('게시물 만들기를 그만둘까요?\n입력한 내용은 저장되지 않아요.')) navigate('/owner', { replace: true })
   }
 
@@ -90,10 +93,17 @@ export function CreateShortformFlow() {
     if (menus.length === 0) extract.mutate()
   }
   const startGenerate = () =>
-    generate.mutate({ storeId, mapUrl: mapUrl.trim() || undefined, menus: menus.filter((m) => m.name.trim()), appeal: appeal.trim() || undefined })
+    generate.mutate({
+      storeId,
+      mapUrl: mapUrl.trim() || undefined,
+      menus: menus.filter((m) => m.name.trim()),
+      appeal: appeal.trim() || undefined,
+      // 게시물 사진: AI 사진 뒤에 음식·가게 사진 먼저, 그다음 메뉴판 (합쳐 4장까지)
+      photos: [...photos, ...files].slice(0, MAX_POST_PHOTOS),
+    })
   const startRevision = () =>
     shortformId &&
-    generate.mutate({ storeId, revision: { shortformId, target: editTarget, request: editRequest.trim() } })
+    generate.mutate({ storeId, photoUrls: detail.data?.imageUrls?.slice(1), revision: { shortformId, target: editTarget, request: editRequest.trim() } })
 
   const inputStep = step === 'source' ? 1 : step === 'menus' ? 2 : step === 'appeal' ? 3 : 0
 
@@ -124,6 +134,8 @@ export function CreateShortformFlow() {
           setMapUrl={setMapUrl}
           files={files}
           setFiles={setFiles}
+          photos={photos}
+          setPhotos={setPhotos}
           onPrev={close}
           onNext={goMenus}
         />
@@ -186,7 +198,7 @@ export function CreateShortformFlow() {
         >
           <div className="relative mx-auto mt-2 aspect-[4/5] w-full max-w-[300px] overflow-hidden rounded-3xl bg-green-1 shadow-[0_10px_30px_rgba(8,104,22,0.18)]">
             {detail.data ? (
-              <PostImage url={detail.data.imageUrl} alt={detail.data.title} frame={detail.data.frame} />
+              <PostCarousel images={detail.data.imageUrls ?? (detail.data.imageUrl ? [detail.data.imageUrl] : [])} alt={detail.data.title} frame={detail.data.frame} />
             ) : (
               <p className="flex h-full items-center justify-center text-sm text-q-muted">게시물을 불러오는 중...</p>
             )}
@@ -316,6 +328,8 @@ function StepSource({
   setMapUrl,
   files,
   setFiles,
+  photos,
+  setPhotos,
   onPrev,
   onNext,
 }: {
@@ -323,10 +337,11 @@ function StepSource({
   setMapUrl: (v: string) => void
   files: File[]
   setFiles: (f: File[]) => void
+  photos: File[]
+  setPhotos: (f: File[]) => void
   onPrev: () => void
   onNext: () => void
 }) {
-  const fileRef = useRef<HTMLInputElement>(null)
   const urlInvalid = mapUrl.trim() !== '' && !isMapUrl(mapUrl)
   const ready = (mapUrl.trim() !== '' && !urlInvalid) || files.length > 0
 
@@ -352,45 +367,57 @@ function StepSource({
         <p className="mt-1.5 text-xs text-gray-2">네이버 지도, 카카오맵 어느 쪽 링크든 괜찮아요</p>
       )}
 
-      <div className="mt-7">
-        <span className="text-[13px] font-bold text-ink">메뉴판 사진</span>
-        <div className="mt-1 flex items-center gap-2 border-b-2 border-green-4 pb-1.5">
-          <span className="flex-1 truncate text-[15px] text-gray-2">{files.length ? `${files.length}장 선택됨` : '사진을 선택해주세요'}</span>
-          <button type="button" onClick={() => fileRef.current?.click()} className="h-10 rounded-lg bg-green-4 px-5 text-sm font-bold text-white">
-            추가
-          </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            multiple
-            hidden
-            onChange={(e) => {
-              setFiles([...files, ...Array.from(e.target.files ?? [])])
-              e.target.value = ''
-            }}
-          />
-        </div>
-        <ul className="mt-2 flex flex-col gap-1.5">
-          {files.map((f, i) => (
-            <li key={`${f.name}-${i}`} className="flex h-11 items-center overflow-hidden rounded-lg bg-q-panel">
-              <span className="flex-1 truncate px-3 text-sm text-ink">{f.name}</span>
-              <button
-                type="button"
-                aria-label={`${f.name} 빼기`}
-                onClick={() => setFiles(files.filter((_, j) => j !== i))}
-                className="flex h-full w-11 items-center justify-center bg-green-1 text-xl text-white"
-              >
-                −
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <p className="mt-6 rounded-xl bg-q-panel px-4 py-3 text-xs leading-relaxed text-q-muted">
-        둘 중 하나만 있어도 돼요. 링크와 사진을 함께 올리면 메뉴를 더 정확하게 읽어요.
+      <PhotoPicker label="메뉴판 사진" files={files} setFiles={setFiles} className="mt-7" />
+      <PhotoPicker label="음식·가게 사진 (선택)" files={photos} setFiles={setPhotos} className="mt-6" />
+      <p className="mt-2 text-xs leading-relaxed break-keep text-gray-2">
+        게시물에는 AI가 만든 사진 1장 뒤에 올린 사진이 {MAX_POST_PHOTOS}장까지 붙어 옆으로 넘겨 볼 수 있어요 (음식·가게 사진 먼저)
+      </p>
+      <p className="mt-6 rounded-xl bg-q-panel px-4 py-3 text-xs leading-relaxed break-keep text-q-muted">
+        지도 링크나 메뉴판 사진 중 하나만 있어도 돼요. 둘 다 올리면 메뉴를 더 정확하게 읽어요.
       </p>
     </Screen>
+  )
+}
+
+/** 사진 여러 장 고르기 (메뉴판 / 음식·가게 사진 공용) */
+function PhotoPicker({ label, files, setFiles, className = '' }: { label: string; files: File[]; setFiles: (f: File[]) => void; className?: string }) {
+  const fileRef = useRef<HTMLInputElement>(null)
+  return (
+    <div className={className}>
+      <span className="text-[13px] font-bold text-ink">{label}</span>
+      <div className="mt-1 flex items-center gap-2 border-b-2 border-green-4 pb-1.5">
+        <span className="flex-1 truncate text-[15px] text-gray-2">{files.length ? `${files.length}장 선택됨` : '사진을 선택해주세요'}</span>
+        <button type="button" onClick={() => fileRef.current?.click()} className="h-10 rounded-lg bg-green-4 px-5 text-sm font-bold text-white">
+          추가
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onChange={(e) => {
+            setFiles([...files, ...Array.from(e.target.files ?? [])])
+            e.target.value = ''
+          }}
+        />
+      </div>
+      <ul className="mt-2 flex flex-col gap-1.5">
+        {files.map((f, i) => (
+          <li key={`${f.name}-${i}`} className="flex h-11 items-center overflow-hidden rounded-lg bg-q-panel">
+            <span className="flex-1 truncate px-3 text-sm text-ink">{f.name}</span>
+            <button
+              type="button"
+              aria-label={`${f.name} 빼기`}
+              onClick={() => setFiles(files.filter((_, j) => j !== i))}
+              className="flex h-full w-11 items-center justify-center bg-green-1 text-xl text-white"
+            >
+              −
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
 

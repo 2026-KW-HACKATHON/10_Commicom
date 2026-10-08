@@ -24,8 +24,10 @@ interface ServerShortform {
   shortformId: number
   storeId: number
   storeName: string
-  /** AI 생성 게시물 사진 */
+  /** AI 생성 게시물 사진 (첫 장) */
   imageUrl: string | null
+  /** 옆으로 넘겨 볼 사진 전체 */
+  imageUrls?: string[]
   title: string
   createdAt: string
   /** PRO 가게 영상 (서버가 피드 앞쪽에 둠) */
@@ -49,6 +51,7 @@ function toShortform(s: ServerShortform, stores: StoreSummary[]): Shortform {
     menus: [],
     description: s.title,
     posterUrl: s.imageUrl,
+    images: s.imageUrls,
     createdAt: s.createdAt,
     promoted: s.promoted,
   }

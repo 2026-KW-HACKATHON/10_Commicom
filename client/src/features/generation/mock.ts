@@ -87,6 +87,7 @@ function makeDraft(job: Job) {
       storeCategory: store.category,
       storeCategoryName: store.categoryName,
       ...SAMPLE,
+      imageUrls: [SAMPLE.imageUrl, ...(job.request.photoUrls ?? [])],
       title: `${title} (수정 요청 반영: ${revision.request})`,
       createdAt: now(),
     })
@@ -101,6 +102,7 @@ function makeDraft(job: Job) {
     storeCategory: store.category,
     storeCategoryName: store.categoryName,
     ...SAMPLE,
+    imageUrls: [SAMPLE.imageUrl, ...(job.request.photoUrls ?? [])],
     title: `${appeal || `동네 사람들이 사랑하는 ${store.name}`}${menuText ? ` · 대표 메뉴 ${menuText}` : ''}`,
     createdAt: now(),
   })

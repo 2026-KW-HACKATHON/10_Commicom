@@ -17,6 +17,10 @@ export interface GenerationRequest {
   mapUrl?: string
   menus?: MenuItem[]
   appeal?: string
+  /** 게시물에 같이 넣을 사장님 사진 (메뉴판·음식·가게, 최대 4장) — 보내기 전에 서버에 올림 */
+  photos?: File[]
+  /** 이미 올린 사장님 사진 주소 (재수정 때 원래 게시물 사진을 그대로) */
+  photoUrls?: string[]
   /** 재수정(PRO): 무엇을 어떻게 고칠지 */
   revision?: { shortformId: number; target: 'VIDEO' | 'SCRIPT'; request: string }
 }
@@ -42,8 +46,10 @@ export interface ShortformDetail {
   storeName: string
   storeCategory: string
   storeCategoryName: string
-  /** AI 생성 게시물 사진 */
+  /** AI 생성 게시물 사진 (첫 장) */
   imageUrl: string | null
+  /** 옆으로 넘겨 볼 사진 전체 (AI 사진 + 사장님 사진) */
+  imageUrls?: string[]
   title: string
   createdAt: string
   /** 목업 전용: 샘플 사진의 실제 그림 구간 (feed/schema 의 frame 과 같음) */

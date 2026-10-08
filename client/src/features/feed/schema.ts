@@ -15,8 +15,10 @@ export interface Shortform {
   description: string
   /** 목업 샘플 영상 (서버 게시물은 사진만 있음) */
   videoUrl?: string
-  /** 게시물 사진 (서버 imageUrl) */
+  /** 게시물 사진 (서버 imageUrl) — 첫 장 */
   posterUrl: string | null
+  /** 옆으로 넘겨 볼 사진 전체 (첫 장 = posterUrl, AI 사진 1장 + 사장님 사진 최대 4장). 없으면 posterUrl 한 장 */
+  images?: string[]
   /**
    * 영상 파일 안에서 실제 그림이 있는 세로 구간(0~1). 위아래 검은 띠가 박힌 영상을 잘라 보여줄 때 사용.
    * 없으면 전체를 그대로 보여줌.
