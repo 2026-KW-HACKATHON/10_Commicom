@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MAP_CATEGORIES } from '@/features/map/schema'
-import { BookmarkIcon, LocationIcon, PlayIcon, SoundIcon, TicketSmallIcon } from '@/shared/ui/icons'
+import { shareLink } from '@/shared/lib/share'
+import { BookmarkIcon, LocationIcon, PlayIcon, ShareIcon, SoundIcon, TicketSmallIcon } from '@/shared/ui/icons'
+import { toast } from '@/stores/toastStore'
 import { useScrapStore } from '../hooks'
 import type { Shortform } from '../schema'
 import { useSpeedPress } from '../useSpeedPress'
@@ -157,12 +159,31 @@ export function ShortformItem({ item, active, muted, onToggleMute, couponCount, 
             <TicketSmallIcon />
           </SideButton>
         )}
-        <SideButton label={scrapped ? '스크랩됨' : '스크랩'} onClick={() => toggleScrap(item.shortformId)} pressed={scrapped}>
+        <SideButton
+          label={scrapped ? '스크랩됨' : '스크랩'}
+          onClick={() => {
+            toggleScrap(item.shortformId)
+            toast(scrapped ? '스크랩을 취소했어요' : '스크랩했어요 · 메뉴 > 스크랩한 영상에서 볼 수 있어요')
+          }}
+          pressed={scrapped}
+        >
           <BookmarkIcon filled={scrapped} />
         </SideButton>
         {/* 길 안내(내비)는 없어서 지도에서 가게 위치만 보여줌 */}
         <SideButton label="위치 보기" onClick={() => navigate(`/map?storeId=${item.storeId}`)}>
           <LocationIcon />
+        </SideButton>
+        <SideButton
+          label="공유"
+          onClick={() =>
+            shareLink({
+              title: `${item.storeName} | 잇다`,
+              text: `우리 동네 ${item.storeName} 영상 보러 가기${item.description ? ` - ${item.description}` : ''}`,
+              path: `/map/stores/${item.storeId}/shortform?start=${item.shortformId}`,
+            })
+          }
+        >
+          <ShareIcon />
         </SideButton>
         <SideButton label={muted ? '소리 켜기' : '소리 끄기'} onClick={onToggleMute}>
           <SoundIcon muted={muted} />
