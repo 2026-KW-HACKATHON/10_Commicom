@@ -12,6 +12,7 @@ public record GenerationStatusResponse(
         String status,
         @JsonInclude(JsonInclude.Include.ALWAYS) Long shortformId,
         @JsonInclude(JsonInclude.Include.ALWAYS) String errorMessage,
+        @JsonInclude(JsonInclude.Include.ALWAYS) String imageUrl,
         LocalDateTime requestedAt
 ) {
 
@@ -23,6 +24,7 @@ public record GenerationStatusResponse(
                 generation.getStatus().name(),
                 generation.getShortform() != null ? generation.getShortform().getId() : null,
                 generation.getErrorMessage(),
+                generation.getShortform() != null ? generation.getShortform().getImageUrl() : null,
                 generation.getCreatedAt()
         );
     }

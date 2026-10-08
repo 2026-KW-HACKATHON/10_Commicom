@@ -10,10 +10,8 @@ public record ScrapShortformResponse(
         Long shortformId,
         Long storeId,
         String storeName,
-        String videoUrl,
-        String thumbnailUrl,
+        String imageUrl,
         String title,
-        int duration,
         LocalDateTime createdAt,
         LocalDateTime scrappedAt
 ) {
@@ -25,10 +23,8 @@ public record ScrapShortformResponse(
                 shortform.getId(),
                 shortform.getStore().getId(),
                 shortform.getStore().getName(),
-                shortform.getVideoUrl(),
-                shortform.getThumbnailUrl(),
+                shortform.getImageUrl(),
                 shortform.getTitle(),
-                shortform.getDuration(),
                 shortform.getCreatedAt(),
                 scrap.getCreatedAt()
         );

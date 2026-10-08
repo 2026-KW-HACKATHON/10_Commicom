@@ -36,6 +36,8 @@ spring:
     bedrock:
       aws:
         region: ${AWS_REGION:ap-northeast-2}
+        access-key: ${AWS_ACCESS_KEY_ID}
+        secret-key: ${AWS_SECRET_ACCESS_KEY}
       converse:
         chat:
           options:
@@ -70,6 +72,12 @@ quest:
   gps-bypass: ${QUEST_GPS_BYPASS:false}
   # 가게 방문 QR 값을 만드는 비밀값 (없으면 JWT 비밀값 사용)
   qr-secret: ${QUEST_QR_SECRET:${jwt.secret}}
+
+unsplash:
+  access-key: ${UNSPLASH_ACCESS_KEY}
+
+runway:
+  api-key: ${RUNWAYML_API_SECRET:${RUNWAY_API_KEY:}}
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}

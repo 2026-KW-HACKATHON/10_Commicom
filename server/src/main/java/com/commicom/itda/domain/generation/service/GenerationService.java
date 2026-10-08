@@ -15,6 +15,8 @@ import com.commicom.itda.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 
@@ -47,8 +49,16 @@ public class GenerationService {
                 .build();
         generationRepository.save(generation);
 
-        // 비동기 파이프라인 실행 (트랜잭션 커밋 후 시작됨)
-        pipelineService.execute(generation.getId(), request.menuInfo());
+        // 트랜잭션 커밋 완료 후에 비동기 파이프라인 실행 (커밋 전엔 DB에서 못 찾음)
+        Long generationId = generation.getId();
+        String menuInfo = request.menuInfo();
+        String menuImageUrl = request.menuImageUrl();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                pipelineService.execute(generationId, menuInfo, menuImageUrl);
+            }
+        });
 
         return GenerationResponse.from(generation);
     }

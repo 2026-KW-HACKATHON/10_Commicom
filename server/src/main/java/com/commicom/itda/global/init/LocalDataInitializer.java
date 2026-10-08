@@ -174,19 +174,13 @@ public class LocalDataInitializer implements ApplicationRunner {
         shortformRepository.saveAll(List.of(
                 Shortform.builder()
                         .store(stores.get(0))
-                        .videoUrl("https://example.com/sample-video-1.mp4")
-                        .thumbnailUrl("https://example.com/sample-thumb-1.jpg")
-                        .title("월계 분식 게시물 소개")
-                        .script("안녕하세요! 월계동 대표 분식집입니다. 떡볶이와 김밥이 맛있어요.")
-                        .duration(30)
+                        .imageUrl("https://example.com/sample-image-1.png")
+                        .title("월계 분식")
                         .build(),
                 Shortform.builder()
                         .store(stores.get(1))
-                        .videoUrl("https://example.com/sample-video-2.mp4")
-                        .thumbnailUrl("https://example.com/sample-thumb-2.jpg")
-                        .title("광운 카페 게시물 소개")
-                        .script("학생 할인 있는 핸드드립 카페! 광운대 앞 아늑한 공간에서 만나요.")
-                        .duration(25)
+                        .imageUrl("https://example.com/sample-image-2.png")
+                        .title("광운 카페")
                         .build()
         ));
     }

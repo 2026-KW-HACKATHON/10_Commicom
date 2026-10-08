@@ -28,29 +28,17 @@ public class Shortform extends BaseTimeEntity {
     @JoinColumn(nullable = false)
     private Store store;
 
+    /** AI 생성 이미지 URL */
     @Column(nullable = false)
-    private String videoUrl;
-
-    private String thumbnailUrl;
+    private String imageUrl;
 
     @Column(nullable = false, length = 200)
     private String title;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String script;
-
-    /** 영상 길이 (초 단위) */
-    @Column(nullable = false)
-    private int duration;
-
     @Builder
-    private Shortform(Store store, String videoUrl, String thumbnailUrl,
-                      String title, String script, int duration) {
+    private Shortform(Store store, String imageUrl, String title) {
         this.store = store;
-        this.videoUrl = videoUrl;
-        this.thumbnailUrl = thumbnailUrl;
+        this.imageUrl = imageUrl;
         this.title = title;
-        this.script = script;
-        this.duration = duration;
     }
 }
