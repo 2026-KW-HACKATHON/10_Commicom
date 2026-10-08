@@ -83,11 +83,14 @@ public enum ErrorCode {
 
     // 숏폼
     SHORTFORM_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTFORM404", "게시물을 찾을 수 없어요"),
+    SHORTFORM_FORBIDDEN(HttpStatus.FORBIDDEN, "SHORTFORM403", "내 가게 게시물이 아니에요"),
+    SHORTFORM_REPLACE_INVALID(HttpStatus.BAD_REQUEST, "SHORTFORM400", "같은 가게의 다른 게시물로만 바꿀 수 있어요"),
 
     // 생성
     GENERATION_NOT_FOUND(HttpStatus.NOT_FOUND, "GENERATION404", "생성 요청을 찾을 수 없어요"),
     GENERATION_FORBIDDEN(HttpStatus.FORBIDDEN, "GENERATION403", "해당 생성 요청에 접근할 수 없어요"),
     GENERATION_CONFLICT(HttpStatus.CONFLICT, "GENERATION409", "이미 생성 중인 요청이 있어요"),
+    GENERATION_NOT_CANCELABLE(HttpStatus.CONFLICT, "GENERATION409_2", "이미 끝난 생성은 취소할 수 없어요"),
 
     // 스크랩
     SCRAP_ALREADY_EXISTS(HttpStatus.CONFLICT, "SCRAP409", "이미 스크랩한 가게예요"),

@@ -21,6 +21,8 @@ public interface ShortformScrapRepository extends JpaRepository<ShortformScrap, 
 
     void deleteAllByMember(Member member);
 
+    List<ShortformScrap> findAllByShortform(Shortform shortform);
+
     /** 숏폼을 지울 때 그 숏폼의 스크랩도 함께 지움 */
     void deleteAllByShortform(Shortform shortform);
 }

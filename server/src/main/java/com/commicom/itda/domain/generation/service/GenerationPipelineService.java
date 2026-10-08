@@ -24,10 +24,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class GenerationPipelineService {
 
+    private static final String CANCELED_MESSAGE = "사장님이 생성을 취소했어요";
+
     private final GenerationRepository generationRepository;
     private final ShortformRepository shortformRepository;
     private final BedrockImageService bedrockImageService;
     private final StorageService storageService;
+    private final GenerationCancelRegistry cancelRegistry;
 
     /**
      * AI 이미지 생성 파이프라인을 비동기로 실행한다.
@@ -42,6 +45,11 @@ public class GenerationPipelineService {
             return;
         }
 
+        if (cancelRegistry.isCanceled(generationId)) {
+            generation.fail(CANCELED_MESSAGE);
+            cancelRegistry.clear(generationId);
+            return;
+        }
         generation.startProcessing();
         Store store = generation.getStore();
         log.info("[생성 {}] 시작 - {}", generationId, store.getName());
@@ -55,6 +63,13 @@ public class GenerationPipelineService {
                     menuInfo,
                     referenceImageUrl);
             log.info("[생성 {}] AI 이미지 생성 완료 ({}KB)", generationId, imageBytes.length / 1024);
+
+            // 이미지를 만드는 동안 취소했으면 올리지도 저장하지도 않음
+            if (cancelRegistry.isCanceled(generationId)) {
+                log.info("[생성 {}] 사장님이 취소함", generationId);
+                generation.fail(CANCELED_MESSAGE);
+                return;
+            }
 
             // S3 업로드
             tempFile = File.createTempFile("ai-image-", ".png");
@@ -73,6 +88,8 @@ public class GenerationPipelineService {
                     .imageUrl(imageUrl)
                     .title(cleanStoreName)
                     .photoUrls(photoUrls)
+                    // 사장님이 결과를 보고 [업로드]해야 손님 피드에 보임
+                    .published(false)
                     .build();
             shortformRepository.save(shortform);
 
@@ -84,6 +101,7 @@ public class GenerationPipelineService {
             generation.fail(e.getMessage());
         } finally {
             if (tempFile != null) tempFile.delete();
+            cancelRegistry.clear(generationId);
         }
     }
 }

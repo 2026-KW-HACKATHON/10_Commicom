@@ -70,6 +70,7 @@ public class ShortformScrapService {
 
     private Shortform findShortform(Long shortformId) {
         return shortformRepository.findById(shortformId)
+                .filter(Shortform::isPublished)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SHORTFORM_NOT_FOUND));
     }
 }

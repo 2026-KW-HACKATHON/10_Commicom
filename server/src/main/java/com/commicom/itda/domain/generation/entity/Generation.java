@@ -63,6 +63,11 @@ public class Generation extends BaseTimeEntity {
         this.shortform = shortform;
     }
 
+    /** 게시물을 지울 때 연결만 끊음 (생성 기록은 남김) */
+    public void detachShortform() {
+        this.shortform = null;
+    }
+
     public void fail(String errorMessage) {
         this.status = GenerationStatus.FAILED;
         this.errorMessage = errorMessage != null && errorMessage.length() > 490

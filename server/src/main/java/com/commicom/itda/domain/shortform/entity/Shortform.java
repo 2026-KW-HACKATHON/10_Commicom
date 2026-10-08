@@ -49,17 +49,31 @@ public class Shortform extends BaseTimeEntity {
     @Column(name = "url", nullable = false, length = 1000)
     private List<String> photoUrls = new ArrayList<>();
 
+    /** 손님 피드에 보이는지. AI 생성 직후엔 false → 사장님이 [업로드]하면 true */
+    @Column(nullable = false)
+    private boolean published;
+
     /** 게시물 한 개의 사진은 AI 사진 1장 + 사장님 사진 4장까지 */
     public static final int MAX_PHOTOS = 4;
 
     @Builder
-    private Shortform(Store store, String imageUrl, String title, List<String> photoUrls) {
+    private Shortform(Store store, String imageUrl, String title, List<String> photoUrls, Boolean published) {
         this.store = store;
         this.imageUrl = imageUrl;
         this.title = title;
+        // 따로 정하지 않으면 공개 (샘플 데이터 등). AI 생성 결과는 false 로 만듦
+        this.published = published == null || published;
         if (photoUrls != null) {
             this.photoUrls = new ArrayList<>(photoUrls.stream().limit(MAX_PHOTOS).toList());
         }
+    }
+
+    public void publish() {
+        this.published = true;
+    }
+
+    public boolean isOwnedBy(Long memberId) {
+        return store.isOwnedBy(memberId);
     }
 
     /** 게시물에서 옆으로 넘겨 볼 사진 전체: AI 사진이 첫 장 */

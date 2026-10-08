@@ -48,4 +48,14 @@ public class GenerationController {
             @PathVariable Long generationId) {
         return ApiResponse.onSuccess(generationService.getStatus(memberId, generationId));
     }
+
+    @Operation(summary = "AI 게시물 생성 취소",
+            description = "만드는 중(PENDING·PROCESSING)일 때만. 결과를 저장하지 않고 FAILED(사장님이 생성을 취소했어요)로 끝난다. 끝난 생성이면 GENERATION409_2")
+    @PostMapping("/{generationId}/cancel")
+    public ApiResponse<Void> cancel(
+            @Parameter(hidden = true) @AuthenticationPrincipal Long memberId,
+            @PathVariable Long generationId) {
+        generationService.cancel(memberId, generationId);
+        return ApiResponse.onSuccess(null);
+    }
 }

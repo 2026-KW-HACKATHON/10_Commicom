@@ -30,16 +30,23 @@ public class GenerationService {
     private final MemberRepository memberRepository;
     private final GenerationPipelineService pipelineService;
     private final StorageService storageService;
+    private final GenerationCancelRegistry cancelRegistry;
 
     @Transactional
     public GenerationResponse requestGeneration(Long memberId, GenerationRequest request) {
         Store store = storeRepository.findById(request.storeId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+        // 내 가게 게시물만 만들 수 있음
+        if (!store.isOwnedBy(memberId)) {
+            throw new BusinessException(ErrorCode.STORE_FORBIDDEN);
+        }
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-        boolean hasActiveRequest = generationRepository.existsByStoreAndStatusIn(
-                store, List.of(GenerationStatus.PENDING, GenerationStatus.PROCESSING));
+        // 사장님이 취소한 요청은 아직 끝나지 않았어도 새로 만들 수 있게 빼고 셈
+        boolean hasActiveRequest = generationRepository.findAllByStoreAndStatusIn(
+                        store, List.of(GenerationStatus.PENDING, GenerationStatus.PROCESSING)).stream()
+                .anyMatch(g -> !cancelRegistry.isCanceled(g.getId()));
         if (hasActiveRequest) {
             throw new BusinessException(ErrorCode.GENERATION_CONFLICT);
         }
@@ -78,5 +85,19 @@ public class GenerationService {
         }
 
         return GenerationStatusResponse.from(generation);
+    }
+
+    /** 생성 취소 (요청한 사람만). 끝나기 전이면 결과를 저장하지 않고 FAILED(취소)로 끝남 */
+    @Transactional(readOnly = true)
+    public void cancel(Long memberId, Long generationId) {
+        Generation generation = generationRepository.findById(generationId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.GENERATION_NOT_FOUND));
+        if (!generation.getRequestedBy().getId().equals(memberId)) {
+            throw new BusinessException(ErrorCode.GENERATION_FORBIDDEN);
+        }
+        if (generation.getStatus() != GenerationStatus.PENDING && generation.getStatus() != GenerationStatus.PROCESSING) {
+            throw new BusinessException(ErrorCode.GENERATION_NOT_CANCELABLE);
+        }
+        cancelRegistry.cancel(generationId);
     }
 }
