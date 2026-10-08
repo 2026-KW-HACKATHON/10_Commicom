@@ -1,13 +1,17 @@
 package com.commicom.itda.domain.store.entity;
 
+import com.commicom.itda.domain.member.entity.Member;
 import com.commicom.itda.global.entity.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -65,10 +69,17 @@ public class Store extends BaseTimeEntity {
     @Column(nullable = false)
     private int availableCouponCount = 0;
 
+    /** 가게 사장님 (사장님 1명당 가게 1곳). 샘플 가게나 탈퇴한 사장님의 가게는 null */
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", unique = true)
+    private Member owner;
+
     @Builder
     private Store(String name, StoreCategory category, String address, Double latitude, Double longitude,
                   String phone, String businessHours, String description, String thumbnailUrl,
-                  boolean stepFree, boolean elevator, boolean isQuestStore, int availableCouponCount) {
+                  boolean stepFree, boolean elevator, boolean isQuestStore, int availableCouponCount,
+                  Member owner) {
+        this.owner = owner;
         this.name = name;
         this.category = category;
         this.address = address;
@@ -82,5 +93,27 @@ public class Store extends BaseTimeEntity {
         this.elevator = elevator;
         this.isQuestStore = isQuestStore;
         this.availableCouponCount = availableCouponCount;
+    }
+
+    public boolean isOwnedBy(Long memberId) {
+        return owner != null && owner.getId().equals(memberId);
+    }
+
+    /** 사장님 정보 수정: null 인 항목은 그대로 둔다 */
+    public void update(String name, StoreCategory category, String address, Double latitude, Double longitude) {
+        if (name != null) this.name = name;
+        if (category != null) this.category = category;
+        if (address != null) this.address = address;
+        if (latitude != null) this.latitude = latitude;
+        if (longitude != null) this.longitude = longitude;
+    }
+
+    public void updateThumbnailUrl(String thumbnailUrl) {
+        this.thumbnailUrl = thumbnailUrl;
+    }
+
+    /** 사장님 탈퇴: 가게(숏폼·생성 기록)는 남기고 연결만 끊는다 */
+    public void detachOwner() {
+        this.owner = null;
     }
 }
