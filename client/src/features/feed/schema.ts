@@ -28,6 +28,14 @@ export interface Shortform {
   promoted?: boolean
 }
 
+/** GET /api/shortforms?page&size 결과 (명세: 0부터 시작하는 페이지) */
 export interface ShortformListResult {
+  totalCount: number
+  page: number
+  size: number
+  hasNext: boolean
   shortforms: Shortform[]
 }
+
+/** 피드 한 번에 받는 영상 수 — 끝에서 두 번째 영상쯤에서 다음 묶음을 미리 받음 */
+export const FEED_PAGE_SIZE = 5
