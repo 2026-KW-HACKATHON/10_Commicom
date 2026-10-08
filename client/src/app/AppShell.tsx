@@ -19,6 +19,8 @@ export interface RouteHandle {
   immersive?: boolean
   /** 숏폼: 하단 탭 바도 투명하게 영상 위에 띄워 화면을 넓게 */
   overlayNav?: boolean
+  /** 한 장씩 넘기는 피드: 스크롤해도 탭 바를 줄이지 않음 (줄면 내용 높이가 바뀌어 넘김 위치가 어긋남) */
+  fixedNav?: boolean
   /** 탭 화면 우상단 + 버튼. 없으면(undefined) 숏폼 만들기, null 이면 버튼 없음 */
   action?: { label: string; to: string } | null
 }
@@ -95,7 +97,7 @@ export function AppShell({
       {/* --nav-h: 영상 위에 떠 있는 탭 바 높이 (바가 줄면 그만큼 영상 위 글자·버튼도 내려감) */}
       <main
         className="relative min-h-0 flex-1"
-        onScrollCapture={onScrollCapture}
+        onScrollCapture={handle?.fixedNav ? undefined : onScrollCapture}
         style={{
           '--nav-h': overlayNav ? `calc(${shrunk ? 52 : 76}px + max(16px, env(safe-area-inset-bottom)))` : '0px',
         } as CSSProperties}

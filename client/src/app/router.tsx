@@ -34,11 +34,12 @@ export const router = createBrowserRouter([
     // 손님 모드
     element: <AppLayout />,
     children: [
-      { path: '/', element: <FeedPage />, handle: { immersive: true, overlayNav: true } },
+      // 게시물 피드: 흰 바탕 인스타그램식이라 상단 바·탭 바를 사진 위에 띄우지 않음
+      { path: '/', element: <FeedPage />, handle: { title: '피드', fixedNav: true } },
       // 지도를 크게: 상단 바 없이 버튼만 지도 위에 띄움
       { path: '/map', element: <MapPage />, handle: { immersive: true } },
       // 지도에서 진입하는 하위 화면: /map 하위라 지도 탭이 활성 상태로 유지됨
-      { path: '/map/stores/:storeId/shortform', element: <StoreShortformPage />, handle: { immersive: true, overlayNav: true } },
+      { path: '/map/stores/:storeId/shortform', element: <StoreShortformPage />, handle: { title: '홍보 게시물', fixedNav: true } },
       { path: '/map/stores/:storeId', element: <StoreProfilePage />, handle: { title: '가게 프로필' } },
       // 상단 바 없이 ≡ · + 버튼만 띄우고 그 사이에 동네 이름
       { path: '/quest', element: <QuestPage />, handle: { immersive: true } },
