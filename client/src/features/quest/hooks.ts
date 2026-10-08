@@ -1,17 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  deleteJoinQuestTemplate,
   fetchPigeon,
   fetchPigeonHistory,
   fetchQuestQr,
   fetchQuests,
   fetchQuestSubscription,
+  fetchQuestTemplates,
   postAdFeed,
   postDailyFeed,
   postFeedPigeon,
+  postJoinQuestTemplate,
   postQuestSubscription,
   postVisit,
 } from './api'
-import type { VisitRequest } from './schema'
+import type { QuestTemplateKey, VisitRequest } from './schema'
 
 export const questKeys = {
   quests: ['quests'] as const,
@@ -19,6 +22,7 @@ export const questKeys = {
   history: ['pigeon', 'history'] as const,
   subscription: (storeId: number) => ['quest-subscription', storeId] as const,
   qr: (storeId: number) => ['quest-qr', storeId] as const,
+  templates: (storeId: number) => ['quest-templates', storeId] as const,
 }
 
 export function useQuests() {
@@ -89,6 +93,27 @@ export function useSubscribeQuestStore(storeId: number) {
       qc.invalidateQueries({ queryKey: questKeys.subscription(storeId) })
       qc.invalidateQueries({ queryKey: questKeys.qr(storeId) })
       qc.invalidateQueries({ queryKey: ['stores'] })
+    },
+  })
+}
+
+export function useQuestTemplates(storeId: number) {
+  return useQuery({
+    queryKey: questKeys.templates(storeId),
+    queryFn: () => fetchQuestTemplates(storeId),
+    select: (d) => d.templates,
+  })
+}
+
+/** 참여/취소 후 사장님 목록과 손님 퀘스트 목록을 함께 새로고침 */
+export function useToggleQuestTemplate(storeId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ key, join }: { key: QuestTemplateKey; join: boolean }) =>
+      join ? postJoinQuestTemplate(storeId, key) : deleteJoinQuestTemplate(storeId, key),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: questKeys.templates(storeId) })
+      qc.invalidateQueries({ queryKey: questKeys.quests })
     },
   })
 }

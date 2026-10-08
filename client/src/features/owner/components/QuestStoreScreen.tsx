@@ -1,7 +1,8 @@
 import { QRCodeSVG } from 'qrcode.react'
 import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { untilText } from '@/features/coupon/schema'
-import { CelebrationScreen, PrimaryButton } from '@/features/quest/components/QuestUi'
+import { CelebrationScreen, OutlineButton, PrimaryButton } from '@/features/quest/components/QuestUi'
 import { useQuestQr, useQuestSubscription, useSubscribeQuestStore } from '@/features/quest/hooks'
 import { visitQrUrl } from '@/features/quest/schema'
 import { errorMessage } from '@/shared/lib/error'
@@ -29,6 +30,7 @@ export function QuestStoreScreen() {
   const [paying, setPaying] = useState(false)
   const [welcome, setWelcome] = useState(false)
   const [bigQr, setBigQr] = useState(false)
+  const navigate = useNavigate()
 
   if (isLoading || !sub) {
     return (
@@ -54,6 +56,14 @@ export function QuestStoreScreen() {
               <span className="rounded-full bg-q-mint px-2.5 py-1 text-xs font-bold text-q-green">등록됨</span>
             </div>
           </OwnerCard>
+
+          <Link to="/owner/quests" className="mt-3 flex items-center justify-between rounded-2xl bg-q-green px-5 py-4 text-white">
+            <span>
+              <span className="block text-[15px] font-bold">참여할 퀘스트 고르기</span>
+              <span className="text-xs opacity-85">한식·카페 등 퀘스트에 참여해야 손님에게 보여요</span>
+            </span>
+            <span className="text-xl">›</span>
+          </Link>
 
           <OwnerCard title="오늘의 방문 인증 QR" className="mt-3" aside={<span className="text-xs text-q-muted">매일 자정 바뀜</span>}>
             {qr.isLoading && <div className="mx-auto size-[220px] animate-pulse rounded-2xl bg-q-panel" />}
@@ -154,7 +164,12 @@ export function QuestStoreScreen() {
           image={OWNER_ILLUST.qr}
           title="퀘스트 가게 등록 완료!"
           subtitle={`이제 ${storeName}에서 손님이 방문 인증을 할 수 있어요`}
-          actions={<PrimaryButton onClick={() => setWelcome(false)}>방문 인증 QR 받기</PrimaryButton>}
+          actions={
+            <>
+              <PrimaryButton onClick={() => navigate('/owner/quests')}>참여할 퀘스트 고르기</PrimaryButton>
+              <OutlineButton onClick={() => setWelcome(false)}>방문 인증 QR 받기</OutlineButton>
+            </>
+          }
         />
       )}
 

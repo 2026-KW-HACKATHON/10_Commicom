@@ -40,6 +40,8 @@ export function AppShell({
   // 탭 루트가 아닌 하위 화면(예: 지도 → 홍보 영상)이면 우상단을 뒤로가기로
   const showBack = !tabs.some((tab) => tab.to === pathname)
   const mode = useModeStore((s) => s.mode)
+  // 탭이 많으면(사장님 5개) 선택된 탭도 아이콘 위·글자 아래로
+  const compact = tabs.length >= 5
 
   // 처음 실행이면 손님/사장님 선택부터 (QR로 들어온 경우 고른 뒤 돌아오도록 next)
   if (!mode) return <Navigate to={`/welcome?next=${encodeURIComponent(pathname + search)}`} replace />
@@ -84,7 +86,7 @@ export function AppShell({
               className={({ isActive }) =>
                 `flex h-[50px] items-center justify-center gap-1.5 rounded-full text-[13px] font-bold whitespace-nowrap transition-colors ${
                   isActive
-                    ? 'bg-green-6 text-white shadow-[0_4px_10px_rgba(8,104,22,0.3)]'
+                    ? `bg-green-6 text-white shadow-[0_4px_10px_rgba(8,104,22,0.3)] ${compact ? 'flex-col gap-0.5' : ''}`
                     : 'flex-col gap-0.5 text-green-6/55 hover:text-green-6'
                 }`
               }
@@ -94,7 +96,7 @@ export function AppShell({
                   <span className={`flex items-center ${isActive ? 'scale-[0.8]' : 'scale-[0.72]'}`}>
                     <Icon />
                   </span>
-                  <span className={isActive ? '' : 'text-[11px] leading-none'}>{label}</span>
+                  <span className={isActive && !compact ? '' : 'text-[11px] leading-none'}>{label}</span>
                 </>
               )}
             </NavLink>
