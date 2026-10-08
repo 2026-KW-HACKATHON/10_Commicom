@@ -736,7 +736,8 @@ Response 예시 (200)
 ## Shortform
 
 > 게시물은 AI가 가게 정보로 만드는 가게 홍보 게시물입니다. 앱 화면에서는 "게시물", API·코드 이름은 그대로 `shortform`을 씁니다.
-> 지금 생성 흐름은 나레이션 스크립트 → TTS·영상 합성으로 영상 파일(`videoUrl`)을 만듭니다. 사진 게시물로 바꾸는 작업은 생성 담당과 정할 예정입니다.
+> 생성 흐름은 AI 이미지(Bedrock SDXL)로 바뀌었습니다 (dev `Feat: Replace video pipeline with AI image feed`). 게시물 응답은 **`imageUrl`(게시물 사진)·`title`·`createdAt`** 이고, 아래 표의 `videoUrl`·`thumbnailUrl`·`script`·`duration`은 더 이상 오지 않습니다. 피드 목록에는 PRO 우선 노출 `promoted`가 더 붙습니다.
+> 생성 요청은 `storeId`, `menuInfo`에 더해 참고할 사진 `menuImageUrl`(선택)을 받고, 생성 상태 응답에도 `imageUrl`이 옵니다.
 > 생성 흐름: 생성 요청(`POST /api/generation`) → 비동기 처리 → 상태 폴링(`GET /api/generation/{id}`) → 완료 후 게시물 조회
 
 ### 게시물 피드 조회
@@ -1073,7 +1074,7 @@ Response 예시 (200)
 
 | API | Method · Path | 설명 |
 | --- | --- | --- |
-| 게시물 스크랩 추가 | `POST /api/scraps/shortforms` | Body `shortformId` (Long, 필수). 응답 `scrapId, shortformId, storeId, storeName, videoUrl, thumbnailUrl, title, duration, createdAt(영상 생성 일시), scrappedAt` (201) |
+| 게시물 스크랩 추가 | `POST /api/scraps/shortforms` | Body `shortformId` (Long, 필수). 응답 `scrapId, shortformId, storeId, storeName, imageUrl, title, createdAt(게시물 생성 일시), scrappedAt` (201) |
 | 게시물 스크랩 취소 | `DELETE /api/scraps/shortforms/{shortformId}` | `result` 생략 |
 | 내 게시물 스크랩 목록 | `GET /api/scraps/shortforms` | `count`, `shortforms[]` (추가 응답과 같은 모양). 스크랩한 순서 최신순 |
 
