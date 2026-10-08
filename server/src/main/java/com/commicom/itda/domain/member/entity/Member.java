@@ -36,11 +36,21 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = false, length = 20)
     private Role role;
 
+    private String profileImageUrl;
+
     @Builder
     private Member(String email, String password, String nickname, Role role) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.role = role;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updateProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }

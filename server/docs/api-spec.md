@@ -58,8 +58,8 @@
 | API Path | `/api/members/signup` |
 | Header | `Content-Type: application/json` |
 | Request | Body<br>`email` (필수): 이메일 형식<br>`password` (필수): 8~64자<br>`nickname` (필수): 30자 이하<br>`role` (필수): `RESIDENT`(주민) 또는 `OWNER`(사장님) |
-| Response | `memberId` (Long)<br>`email` (String)<br>`nickname` (String)<br>`role` (String)<br>`roleName` (String) |
-| 로직 간단 설명 | 이메일 중복을 확인한 뒤 비밀번호를 BCrypt로 암호화해 회원을 저장한다. `ADMIN`으로는 가입할 수 없다. 가입만 하고 토큰은 발급하지 않으므로 이어서 로그인 API를 호출한다.<br><br>**result 필드**<br>`memberId`: 생성된 회원 ID<br>`email`: 가입한 이메일<br>`nickname`: 닉네임<br>`role`: 회원 유형 코드 (`RESIDENT` / `OWNER` / `ADMIN`)<br>`roleName`: 회원 유형 한글 이름 (주민 / 사장님 / 관리자) |
+| Response | `memberId` (Long)<br>`email` (String)<br>`nickname` (String)<br>`role` (String)<br>`roleName` (String)<br>`profileImageUrl` (String \| null) |
+| 로직 간단 설명 | 이메일 중복을 확인한 뒤 비밀번호를 BCrypt로 암호화해 회원을 저장한다. `ADMIN`으로는 가입할 수 없다. 가입만 하고 토큰은 발급하지 않으므로 이어서 로그인 API를 호출한다.<br><br>**result 필드**<br>`memberId`: 생성된 회원 ID<br>`email`: 가입한 이메일<br>`nickname`: 닉네임<br>`role`: 회원 유형 코드 (`RESIDENT` / `OWNER` / `ADMIN`)<br>`roleName`: 회원 유형 한글 이름 (주민 / 사장님 / 관리자)<br>`profileImageUrl`: 프로필 이미지 URL (없으면 `null`) |
 | 상태코드 | COMMON201: 회원가입 성공<br>COMMON400: 입력값 검증 실패 (`result`에 필드별 메시지)<br>MEMBER400: 가입할 수 없는 회원 유형 (`ADMIN`)<br>MEMBER409: 이미 가입된 이메일 |
 
 Request 예시
@@ -154,8 +154,8 @@ Response 예시 (200)
 | API Path | `/api/members/me` |
 | Header | `Authorization: Bearer {accessToken}` (필수) |
 | Request | 없음 |
-| Response | `memberId` (Long)<br>`email` (String)<br>`nickname` (String)<br>`role` (String)<br>`roleName` (String) |
-| 로직 간단 설명 | 토큰에 담긴 회원 ID로 로그인한 회원의 정보를 조회한다. 앱 시작 시 로그인 상태 확인용으로 쓸 수 있다.<br><br>**result 필드**<br>`memberId`: 회원 ID<br>`email`: 이메일<br>`nickname`: 닉네임<br>`role`: 회원 유형 코드 (`RESIDENT` / `OWNER` / `ADMIN`)<br>`roleName`: 회원 유형 한글 이름 (주민 / 사장님 / 관리자) |
+| Response | `memberId` (Long)<br>`email` (String)<br>`nickname` (String)<br>`role` (String)<br>`roleName` (String)<br>`profileImageUrl` (String \| null) |
+| 로직 간단 설명 | 토큰에 담긴 회원 ID로 로그인한 회원의 정보를 조회한다. 앱 시작 시 로그인 상태 확인용으로 쓸 수 있다.<br><br>**result 필드**<br>`memberId`: 회원 ID<br>`email`: 이메일<br>`nickname`: 닉네임<br>`role`: 회원 유형 코드 (`RESIDENT` / `OWNER` / `ADMIN`)<br>`roleName`: 회원 유형 한글 이름 (주민 / 사장님 / 관리자)<br>`profileImageUrl`: 프로필 이미지 URL (없으면 `null`) |
 | 상태코드 | COMMON200: 내 정보 조회 성공<br>COMMON401: 토큰 없음·잘못됨·만료<br>MEMBER404: 탈퇴 등으로 회원이 존재하지 않음 |
 
 Response 예시 (200)
@@ -182,6 +182,111 @@ Response 예시 (401)
   "isSuccess": false,
   "code": "COMMON401",
   "message": "로그인이 필요해요"
+}
+```
+
+### 회원 프로필 조회
+
+| 항목 | 내용 |
+| --- | --- |
+| API명 | 회원 프로필 조회 |
+| HTTP Method | `GET` |
+| API Path | `/api/members/{memberId}/profile` |
+| Header | 없음 |
+| Request | Path `memberId` (필수, Long) |
+| Response | `memberId` (Long)<br>`nickname` (String)<br>`role` (String)<br>`roleName` (String)<br>`profileImageUrl` (String \| null) |
+| 로직 간단 설명 | 다른 회원의 공개 프로필을 조회한다. 이메일을 포함하지 않는다. 클라이언트는 응답의 `memberId`와 내 `memberId`를 비교해 본인 프로필 여부를 판단하고, 본인이면 닉네임 수정·이미지 수정·탈퇴 버튼을 노출한다.<br><br>**result 필드**<br>`memberId`: 회원 ID<br>`nickname`: 닉네임<br>`role`: 회원 유형 코드<br>`roleName`: 회원 유형 한글 이름<br>`profileImageUrl`: 프로필 이미지 URL (없으면 `null`) |
+| 상태코드 | COMMON200: 조회 성공<br>MEMBER404: 존재하지 않는 회원 |
+
+Response 예시 (200)
+
+```json
+{
+  "isSuccess": true,
+  "code": "COMMON200",
+  "message": "성공적으로 요청을 처리했습니다.",
+  "result": {
+    "memberId": 1,
+    "nickname": "샘플사장님",
+    "role": "OWNER",
+    "roleName": "사장님",
+    "profileImageUrl": null
+  }
+}
+```
+
+### 닉네임 수정
+
+| 항목 | 내용 |
+| --- | --- |
+| API명 | 닉네임 수정 |
+| HTTP Method | `PATCH` |
+| API Path | `/api/members/me/nickname` |
+| Header | `Authorization: Bearer {accessToken}` (필수)<br>`Content-Type: application/json` |
+| Request | Body<br>`nickname` (필수): 30자 이하 |
+| Response | `memberId` (Long)<br>`email` (String)<br>`nickname` (String)<br>`role` (String)<br>`roleName` (String)<br>`profileImageUrl` (String \| null) |
+| 로직 간단 설명 | 로그인한 회원의 닉네임을 변경한다. 변경된 정보 전체를 반환한다.<br><br>**result 필드**<br>회원가입·내 정보 조회의 result 필드와 동일 |
+| 상태코드 | COMMON200: 수정 성공<br>COMMON400: 닉네임 미입력 또는 30자 초과<br>COMMON401: 토큰 없음·만료 |
+
+Request 예시
+
+```json
+{
+  "nickname": "새닉네임"
+}
+```
+
+Response 예시 (200)
+
+```json
+{
+  "isSuccess": true,
+  "code": "COMMON200",
+  "message": "성공적으로 요청을 처리했습니다.",
+  "result": {
+    "memberId": 1,
+    "email": "owner@test.com",
+    "nickname": "새닉네임",
+    "role": "OWNER",
+    "roleName": "사장님",
+    "profileImageUrl": null
+  }
+}
+```
+
+### 프로필 이미지 수정
+
+| 항목 | 내용 |
+| --- | --- |
+| API명 | 프로필 이미지 수정 |
+| HTTP Method | `PATCH` |
+| API Path | `/api/members/me/profile-image` |
+| Header | `Authorization: Bearer {accessToken}` (필수)<br>`Content-Type: multipart/form-data` |
+| Request | Form `image` (필수): 이미지 파일 (최대 20MB) |
+| Response | `memberId` (Long)<br>`email` (String)<br>`nickname` (String)<br>`role` (String)<br>`roleName` (String)<br>`profileImageUrl` (String) |
+| 로직 간단 설명 | 프로필 이미지를 업로드하고 URL을 저장한다. 파일은 S3에 업로드된 뒤 CloudFront URL로 반환된다. (현재 스토리지 구현 필요)<br><br>**result 필드**<br>회원가입·내 정보 조회의 result 필드와 동일. `profileImageUrl`에 업로드된 이미지 URL이 담긴다. |
+| 상태코드 | COMMON200: 수정 성공<br>COMMON400: 파일 미첨부<br>COMMON401: 토큰 없음·만료 |
+
+### 회원 탈퇴
+
+| 항목 | 내용 |
+| --- | --- |
+| API명 | 회원 탈퇴 |
+| HTTP Method | `DELETE` |
+| API Path | `/api/members/me` |
+| Header | `Authorization: Bearer {accessToken}` (필수) |
+| Request | 없음 |
+| Response | 없음 (`result` 생략) |
+| 로직 간단 설명 | 회원을 탈퇴한다. 회원이 보유한 스크랩 및 숏폼 생성 요청 데이터를 먼저 삭제한 뒤 회원 데이터를 삭제한다. 탈퇴 후에는 토큰이 만료되기 전까지 요청이 가능하므로 클라이언트에서 토큰을 즉시 제거해야 한다. |
+| 상태코드 | COMMON200: 탈퇴 성공<br>COMMON401: 토큰 없음·만료 |
+
+Response 예시 (200)
+
+```json
+{
+  "isSuccess": true,
+  "code": "COMMON200",
+  "message": "성공적으로 요청을 처리했습니다."
 }
 ```
 

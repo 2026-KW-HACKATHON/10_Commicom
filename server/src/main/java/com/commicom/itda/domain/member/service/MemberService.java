@@ -1,19 +1,25 @@
 package com.commicom.itda.domain.member.service;
 
+import com.commicom.itda.domain.generation.repository.GenerationRepository;
 import com.commicom.itda.domain.member.dto.LoginRequest;
 import com.commicom.itda.domain.member.dto.LoginResponse;
+import com.commicom.itda.domain.member.dto.MemberProfileResponse;
 import com.commicom.itda.domain.member.dto.MemberResponse;
+import com.commicom.itda.domain.member.dto.NicknameUpdateRequest;
 import com.commicom.itda.domain.member.dto.SignupRequest;
 import com.commicom.itda.domain.member.entity.Member;
 import com.commicom.itda.domain.member.entity.Role;
 import com.commicom.itda.domain.member.repository.MemberRepository;
+import com.commicom.itda.domain.scrap.repository.ScrapRepository;
 import com.commicom.itda.global.exception.BusinessException;
 import com.commicom.itda.global.exception.ErrorCode;
 import com.commicom.itda.global.security.JwtProvider;
+import com.commicom.itda.infra.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +29,9 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final ScrapRepository scrapRepository;
+    private final GenerationRepository generationRepository;
+    private final StorageService storageService;
 
     @Transactional
     public MemberResponse signup(SignupRequest request) {
@@ -54,5 +63,37 @@ public class MemberService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
         return MemberResponse.from(member);
+    }
+
+    public MemberProfileResponse getProfile(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        return MemberProfileResponse.from(member);
+    }
+
+    @Transactional
+    public MemberResponse updateNickname(Long memberId, NicknameUpdateRequest request) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        member.updateNickname(request.nickname());
+        return MemberResponse.from(member);
+    }
+
+    @Transactional
+    public MemberResponse updateProfileImage(Long memberId, MultipartFile image) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        String imageUrl = storageService.upload(image, "profiles");
+        member.updateProfileImageUrl(imageUrl);
+        return MemberResponse.from(member);
+    }
+
+    @Transactional
+    public void deleteMember(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        scrapRepository.deleteAllByMember(member);
+        generationRepository.deleteAllByRequestedBy(member);
+        memberRepository.delete(member);
     }
 }

@@ -34,6 +34,7 @@ public class SecurityConfig {
     private static final String[] PUBLIC_GET_PATHS = {
             "/api/stores", "/api/stores/**",
             "/api/shortforms", "/api/shortforms/**",
+            "/api/members/*/profile",
     };
 
     @Value("${cors.allowed-origins}")

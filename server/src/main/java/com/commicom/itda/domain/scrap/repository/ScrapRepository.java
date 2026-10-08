@@ -15,4 +15,6 @@ public interface ScrapRepository extends JpaRepository<Scrap, Long> {
     boolean existsByMemberAndStore(Member member, Store store);
 
     Optional<Scrap> findByMemberAndStore(Member member, Store store);
+
+    void deleteAllByMember(Member member);
 }
