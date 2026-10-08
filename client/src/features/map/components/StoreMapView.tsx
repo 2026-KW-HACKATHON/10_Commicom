@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Map, useKakaoLoader } from 'react-kakao-maps-sdk'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import pigeonWalk from '@/assets/map/pigeon-walk.png'
 import { StoreCouponSheet } from '@/features/coupon/components/StoreCouponSheet'
 import { useFilteredStores, useMyLocation, useStoreGroups, useStores } from '../hooks'
@@ -33,7 +33,10 @@ function KakaoStoreMap({ appkey }: { appkey: string }) {
 
   const [map, setMap] = useState<kakao.maps.Map | null>(null)
   const [viewVersion, setViewVersion] = useState(0)
-  const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null)
+  // 숏폼 "위치 보기"·주소에서 ?storeId= 로 들어오면 그 가게를 처음부터 선택 (내 위치 이동보다 우선)
+  const [params] = useSearchParams()
+  const focusStoreId = Number(params.get('storeId')) || null
+  const [selectedStoreId, setSelectedStoreId] = useState<number | null>(focusStoreId)
   const [openGroupKey, setOpenGroupKey] = useState<string | null>(null)
   const [category, setCategory] = useState<MapCategoryKey | null>(null)
   const [keyword, setKeyword] = useState('')
@@ -47,13 +50,23 @@ function KakaoStoreMap({ appkey }: { appkey: string }) {
 
   const panTo = (lat: number, lng: number) => map?.panTo(new kakao.maps.LatLng(lat, lng))
 
+  // 그 가게를 지도 가운데로
+  const focused = useRef(false)
+  useEffect(() => {
+    if (!map || !focusStoreId || focused.current || !stores) return
+    const target = stores.find((s) => s.storeId === focusStoreId)
+    if (!target) return
+    focused.current = true
+    map.setCenter(new kakao.maps.LatLng(target.latitude, target.longitude))
+  }, [map, focusStoreId, stores])
+
   // 처음 위치를 받으면 한 번만 내 위치로 이동
   const centeredOnMe = useRef(false)
   useEffect(() => {
-    if (!map || location.status !== 'ok' || centeredOnMe.current) return
+    if (!map || location.status !== 'ok' || centeredOnMe.current || focusStoreId) return
     centeredOnMe.current = true
     map.setCenter(new kakao.maps.LatLng(location.position.lat, location.position.lng))
-  }, [map, location])
+  }, [map, location, focusStoreId])
 
   const clearSelection = () => {
     setSelectedStoreId(null)
