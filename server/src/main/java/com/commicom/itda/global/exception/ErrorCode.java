@@ -91,7 +91,9 @@ public enum ErrorCode {
 
     // 스크랩
     SCRAP_ALREADY_EXISTS(HttpStatus.CONFLICT, "SCRAP409", "이미 스크랩한 가게예요"),
-    SCRAP_NOT_FOUND(HttpStatus.NOT_FOUND, "SCRAP404", "스크랩하지 않은 가게예요");
+    SCRAP_NOT_FOUND(HttpStatus.NOT_FOUND, "SCRAP404", "스크랩하지 않은 가게예요"),
+    SCRAP_SHORTFORM_ALREADY_EXISTS(HttpStatus.CONFLICT, "SCRAP409_2", "이미 스크랩한 영상이에요"),
+    SCRAP_SHORTFORM_NOT_FOUND(HttpStatus.NOT_FOUND, "SCRAP404_2", "스크랩하지 않은 영상이에요");
 
     private final HttpStatus status;
     private final String code;

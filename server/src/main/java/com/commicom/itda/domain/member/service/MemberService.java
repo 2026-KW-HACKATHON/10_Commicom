@@ -16,6 +16,7 @@ import com.commicom.itda.domain.member.repository.MemberRepository;
 import com.commicom.itda.domain.pigeon.service.PigeonService;
 import com.commicom.itda.domain.quest.service.QuestService;
 import com.commicom.itda.domain.scrap.repository.ScrapRepository;
+import com.commicom.itda.domain.scrap.repository.ShortformScrapRepository;
 import com.commicom.itda.domain.store.entity.Store;
 import com.commicom.itda.domain.store.repository.StoreRepository;
 import com.commicom.itda.global.exception.BusinessException;
@@ -37,6 +38,7 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final ScrapRepository scrapRepository;
+    private final ShortformScrapRepository shortformScrapRepository;
     private final GenerationRepository generationRepository;
     private final StoreRepository storeRepository;
     private final QuestService questService;
@@ -144,6 +146,7 @@ public class MemberService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
         scrapRepository.deleteAllByMember(member);
+        shortformScrapRepository.deleteAllByMember(member);
         generationRepository.deleteAllByRequestedBy(member);
         storeRepository.findByOwnerId(memberId).ifPresent(Store::detachOwner);
         questService.deleteAllOf(memberId);
