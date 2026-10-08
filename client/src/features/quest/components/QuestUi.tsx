@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
-import feedIcon from '@/assets/quest/feed.svg'
+import feedBowl from '@/assets/quest/feed-bowl.png'
+import feedSeed from '@/assets/quest/feed-seed.png'
 
 export function ProgressBar({
   value,
@@ -25,8 +26,14 @@ export function ProgressBar({
 }
 
 /** 먹이(곡식) 아이콘 */
+/** 먹이 1개 = 씨앗 한 알 */
 export function FeedIcon({ className = 'size-6' }: { className?: string }) {
-  return <img src={feedIcon} alt="" className={`object-contain ${className}`} />
+  return <img src={feedSeed} alt="" className={`object-contain ${className}`} />
+}
+
+/** 먹이 여러 개(2개·보유 먹이) = 먹이 그릇 */
+export function FeedBowlIcon({ className = 'size-10' }: { className?: string }) {
+  return <img src={feedBowl} alt="" className={`object-contain ${className}`} />
 }
 
 export function SectionTitle({ title, aside }: { title: string; aside?: ReactNode }) {

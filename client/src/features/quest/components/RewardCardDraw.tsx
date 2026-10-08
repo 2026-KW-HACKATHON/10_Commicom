@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { LEVEL_TABLE, type LevelUp } from '../schema'
-import { FeedIcon } from './QuestUi'
+import { FeedBowlIcon, FeedIcon } from './QuestUi'
 
 type Kind = 'FEED1' | 'FEED2' | 'COUPON'
 type Phase = 'intro' | 'flipping' | 'shuffling' | 'pick' | 'reveal-picked' | 'reveal-all'
@@ -187,10 +187,7 @@ function CardFront({
       )}
       {kind === 'FEED1' && <FeedIcon className="size-10" />}
       {kind === 'FEED2' && (
-        <span className="flex -space-x-3">
-          <FeedIcon className="size-9" />
-          <FeedIcon className="size-9" />
-        </span>
+        <FeedBowlIcon className="h-12 w-14" />
       )}
       {coupon && <span className="text-[34px] leading-none">🎟</span>}
       <span className={`mt-2 text-[14px] font-bold ${coupon ? 'text-point-red-dark' : 'text-q-text'}`}>

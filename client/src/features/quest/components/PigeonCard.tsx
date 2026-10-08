@@ -5,7 +5,7 @@ import { useAdFeed, useDailyFeed, useFeedPigeon, usePigeon } from '../hooks'
 import { levelLabel, MAX_LEVEL, pigeonImage, type LevelUp } from '../schema'
 import { AdRewardModal } from './AdRewardModal'
 import { LevelUpSequence } from './LevelUpSequence'
-import { FeedIcon, ProgressBar } from './QuestUi'
+import { FeedBowlIcon, FeedIcon, ProgressBar } from './QuestUi'
 
 /**
  * 내 비둘기 — 3-1 ~ 3-3.
@@ -83,7 +83,7 @@ export function PigeonCard() {
       {/* 보유 먹이 + 먹이 주기 (Figma 5. 리워드 탭의 "보유 먹이 + 먹이 주기") */}
       {!pigeon.isMaxLevel && (
         <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white px-4 py-3">
-          <FeedIcon className="size-9" />
+          <FeedBowlIcon className="h-11 w-12" />
           <div className="flex-1">
             <p className="text-[11px] text-q-muted">보유 먹이</p>
             <p className="text-xl leading-tight font-bold text-q-text tabular-nums">{feedBalance}개</p>
@@ -117,13 +117,16 @@ export function PigeonCard() {
             type="button"
             disabled={today.dailyFeedClaimed || busy}
             onClick={() => daily.mutate(undefined, { onSuccess: gained, onError: fail })}
-            className="flex h-[52px] flex-col items-center justify-center rounded-2xl border border-q-green bg-white text-q-green disabled:border-transparent disabled:text-q-muted"
+            // 씨앗은 왼쪽 고정 자리, 글자는 씨앗 오른쪽 남은 공간의 가운데 (문구 길이가 바뀌어도 겹치지 않음)
+            className="relative flex h-[52px] items-center rounded-2xl border border-q-green bg-white pr-2 pl-10 text-q-green disabled:border-transparent disabled:text-q-muted"
           >
-            <span className="flex items-center gap-1 text-[14px] font-bold">
-              <FeedIcon className="size-5" />
-              {today.dailyFeedClaimed ? '오늘 받았어요' : '무료 먹이 받기'}
+            <FeedIcon
+              className={`absolute top-1/2 left-3 size-6 -translate-y-1/2 ${today.dailyFeedClaimed ? 'opacity-40' : ''}`}
+            />
+            <span className="flex flex-1 flex-col items-center whitespace-nowrap">
+              <span className="text-[14px] font-bold">{today.dailyFeedClaimed ? '오늘 받았어요' : '무료 먹이 받기'}</span>
+              <span className="text-[11px] opacity-80">{today.dailyFeedClaimed ? '내일 또 받을 수 있어요' : '하루 1번'}</span>
             </span>
-            <span className="text-[11px] opacity-80">{today.dailyFeedClaimed ? '내일 또 받을 수 있어요' : '하루 1번'}</span>
           </button>
           <button
             type="button"
