@@ -103,7 +103,7 @@ export function CreateShortformFlow() {
     })
   const startRevision = () =>
     shortformId &&
-    generate.mutate({ storeId, photoUrls: detail.data?.imageUrls?.slice(1), revision: { shortformId, target: editTarget, request: editRequest.trim() } })
+    generate.mutate({ storeId, appeal: appeal.trim() || undefined, photoUrls: detail.data?.imageUrls?.slice(1), revision: { shortformId, target: editTarget, request: editRequest.trim() } })
 
   const inputStep = step === 'source' ? 1 : step === 'menus' ? 2 : step === 'appeal' ? 3 : 0
 
@@ -160,24 +160,22 @@ export function CreateShortformFlow() {
 
       {step === 'appeal' && (
         <Screen
-          hero={<Hero sub={'강조하고 싶은 문구가 있다면\n내 가게 어필을 적어주세요!'} />}
+          hero={<Hero sub={'손님에게 자랑하고 싶은 점을 적어 주세요\nAI가 게시물 글로 다듬어 드려요'} />}
           prev={{ onClick: () => setStep('menus') }}
-          next={{ label: generate.isPending ? '요청 중...' : '생성', onClick: startGenerate, disabled: generate.isPending }}
+          next={{ label: generate.isPending ? '요청 중...' : '생성', onClick: startGenerate, disabled: generate.isPending || !appeal.trim() }}
         >
           <textarea
             value={appeal}
             onChange={(e) => setAppeal(e.target.value)}
             maxLength={200}
             rows={5}
-            placeholder="내 가게 어필을 적어주세요 (선택)"
+            placeholder="예) 가게가 넓고 고기가 맛있어요"
             className="w-full resize-none border-b-2 border-green-4 py-2 text-[15px] leading-relaxed text-ink outline-none placeholder:text-gray-2"
           />
           <p className="mt-1 text-right text-xs text-gray-2">{appeal.length} / 200</p>
-          {!appeal && (
-            <button type="button" onClick={startGenerate} className="mx-auto mt-4 block text-[13px] text-q-muted underline">
-              그냥 넘어가셔도 돼요
-            </button>
-          )}
+          <p className="mt-4 rounded-xl bg-q-panel px-4 py-3 text-xs leading-relaxed break-keep text-q-muted">
+            적어 주신 내용을 바탕으로 손님 피드에 보일 소개 글을 만들어요. 없는 내용은 지어내지 않아요.
+          </p>
           {generate.isError && <ErrorText>{errorMessage(generate.error)}</ErrorText>}
         </Screen>
       )}
@@ -206,6 +204,7 @@ export function CreateShortformFlow() {
           {detail.data && (
             <div className="mx-auto mt-4 max-w-[300px]">
               <p className="text-[16px] font-bold text-ink">{detail.data.title}</p>
+              {detail.data.caption && <p className="mt-1 text-[14px] leading-relaxed text-q-sub">{detail.data.caption}</p>}
             </div>
           )}
         </Screen>

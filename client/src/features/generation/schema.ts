@@ -51,6 +51,8 @@ export interface ShortformDetail {
   /** 옆으로 넘겨 볼 사진 전체 (AI 사진 + 사장님 사진) */
   imageUrls?: string[]
   title: string
+  /** 게시물 소개 글 (사장님 어필을 AI가 다듬은 문장) */
+  caption?: string | null
   createdAt: string
   /** 목업 전용: 샘플 사진의 실제 그림 구간 (feed/schema 의 frame 과 같음) */
   frame?: { top: number; height: number }

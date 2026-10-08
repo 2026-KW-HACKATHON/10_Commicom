@@ -29,6 +29,8 @@ interface ServerShortform {
   /** 옆으로 넘겨 볼 사진 전체 */
   imageUrls?: string[]
   title: string
+  /** 게시물 소개 글 (사장님 어필을 AI가 다듬은 문장, 없으면 null) */
+  caption?: string | null
   createdAt: string
   /** PRO 가게 영상 (서버가 피드 앞쪽에 둠) */
   promoted?: boolean
@@ -49,7 +51,7 @@ function toShortform(s: ServerShortform, stores: StoreSummary[]): Shortform {
     categoryName: store?.categoryName ?? '',
     address: store?.address ?? '',
     menus: [],
-    description: s.title,
+    description: s.caption || s.title,
     posterUrl: s.imageUrl,
     images: s.imageUrls,
     createdAt: s.createdAt,

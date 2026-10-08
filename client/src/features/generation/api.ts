@@ -4,14 +4,13 @@ import { mockExtractMenus, mockGenerationApi, mockShortformApi } from './mock'
 import type { GenerationCreated, GenerationRequest, GenerationState, MenuItem, ShortformDetail } from './schema'
 
 /**
- * 화면에서 고른 메뉴·어필·수정 요청 → 서버 menuInfo 한 덩어리 (서버는 storeId + menuInfo만 받음)
- * 예) "메뉴: 아메리카노 2,500원, 크로플 4,500원\n가게 어필: 공강에 쉬어 가요\n수정 요청(영상): 음식 장면을 길게"
+ * 화면에서 고른 메뉴·수정 요청 → 서버 menuInfo 한 덩어리 (가게 어필은 appeal 로 따로 보냄 → 게시물 소개 글)
+ * 예) "메뉴: 아메리카노 2,500원, 크로플 4,500원\n수정 요청(글·문구): 학생 할인을 넣어 주세요"
  */
 function toMenuInfo(body: GenerationRequest) {
   const lines: string[] = []
   const menus = (body.menus ?? []).filter((m) => m.name.trim())
   if (menus.length) lines.push(`메뉴: ${menus.map((m) => (m.price ? `${m.name} ${m.price.toLocaleString()}원` : m.name)).join(', ')}`)
-  if (body.appeal?.trim()) lines.push(`가게 어필: ${body.appeal.trim()}`)
   if (body.mapUrl?.trim()) lines.push(`지도 링크: ${body.mapUrl.trim()}`)
   if (body.revision) lines.push(`수정 요청(${body.revision.target === 'VIDEO' ? '사진' : '글·문구'}): ${body.revision.request}`)
   return lines.join('\n') || undefined
@@ -35,7 +34,14 @@ export async function postGeneration(body: GenerationRequest): Promise<Generatio
     return mockGenerationApi.create({ ...body, photoUrls: body.photoUrls ?? photos.map((f) => URL.createObjectURL(f)) })
   }
   const photoUrls = photos.length ? await uploadStorePhotos(body.storeId, photos) : (body.photoUrls ?? [])
-  return request(api.post('/api/generation', { storeId: body.storeId, menuInfo: toMenuInfo(body), photoUrls: photoUrls.slice(0, MAX_POST_PHOTOS) }))
+  return request(
+    api.post('/api/generation', {
+      storeId: body.storeId,
+      menuInfo: toMenuInfo(body),
+      appeal: body.appeal?.trim() || undefined,
+      photoUrls: photoUrls.slice(0, MAX_POST_PHOTOS),
+    }),
+  )
 }
 
 /** GET /api/generation/{generationId} — COMPLETED/FAILED 될 때까지 폴링 */

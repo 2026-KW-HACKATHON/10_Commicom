@@ -72,6 +72,8 @@ function Revise({ original, onExit }: { original: Shortform; onExit: () => void 
     mutationFn: () =>
       postGeneration({
         storeId: original.storeId,
+        // 원래 소개 글을 바탕으로 다시 다듬음 (글·문구 수정 요청은 menuInfo 로)
+        appeal: original.description || undefined,
         photoUrls: original.images?.slice(1),
         revision: { shortformId: original.shortformId, target, request: text.trim() },
       }),
@@ -185,6 +187,7 @@ function Revise({ original, onExit }: { original: Shortform; onExit: () => void 
           {detail.data && (
             <div className="mx-auto mt-4 max-w-[300px]">
               <p className="text-[16px] font-bold text-ink">{detail.data.title}</p>
+              {detail.data.caption && <p className="mt-1 text-[14px] leading-relaxed text-q-sub">{detail.data.caption}</p>}
             </div>
           )}
           {replace.isError && <ErrorText>{errorMessage(replace.error)}</ErrorText>}
