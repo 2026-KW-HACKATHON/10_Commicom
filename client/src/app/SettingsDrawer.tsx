@@ -7,7 +7,7 @@ import { LoginForm } from '@/features/auth/components/LoginForm'
 import { useLogout } from '@/features/auth/hooks'
 import { canUseOwnerMode, modeOfRole } from '@/features/auth/schema'
 import { addTestFeed } from '@/features/quest/api'
-import { HAS_MOCK, resetAllLocalData } from '@/mocks/db'
+import { HAS_MOCK, resetAllLocalData, USE_MOCK } from '@/mocks/db'
 import { errorMessage } from '@/shared/lib/error'
 import { CloseIcon, MenuIcon } from '@/shared/ui/icons'
 import { toast } from '@/stores/toastStore'
@@ -251,7 +251,8 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
                       처음 화면(모드 선택) 다시 보기
                     </button>
                   </li>
-                  {HAS_MOCK && (
+                  {/* 테스트 먹이는 로컬 서버 전용 API라 개발 모드(npm run dev)에서만 */}
+                  {(import.meta.env.DEV || USE_MOCK) && (
                     <li>
                       <button
                         type="button"
