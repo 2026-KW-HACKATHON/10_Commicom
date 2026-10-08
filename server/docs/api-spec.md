@@ -742,6 +742,27 @@ Response 예시 (200)
 > 1. `POST /api/stores/{storeId}/photos` (multipart `photos` 여러 개, **사장님 본인 가게만** — 아니면 `STORE403_2`) → S3 주소 목록
 > 2. `POST /api/generation`에 `photoUrls`(최대 4개, 넘으면 `COMMON400`)로 보냄. 이 가게 사진 폴더(`stores/{storeId}/`)에 올라간 주소만 저장하고 나머지는 버림
 > 3. DB: [`docs/sql/2026-10-09-shortform-photo.sql`](sql/2026-10-09-shortform-photo.sql) (`shortform_photo` 테이블)
+
+#### 게시물 관리 (사장님)
+
+> AI로 만든 게시물은 **비공개**로 생기고(`published=false`), 사장님이 결과를 보고 [업로드]해야 손님 피드(`GET /api/shortforms`)에 보입니다. 단건 조회(`GET /api/shortforms/{id}`)는 공개 전에도 됩니다(만들기 결과 확인용).
+> 게시물 생성(`POST /api/generation`)도 **내 가게만** 됩니다 (아니면 `STORE403_2`). DB: [`docs/sql/2026-10-09-shortform-publish.sql`](sql/2026-10-09-shortform-publish.sql)
+
+| API | Method · Path | 설명 |
+| --- | --- | --- |
+| 게시물 공개 ([업로드]) | `POST /api/shortforms/{shortformId}/publish` | 손님 피드에 보이게. 응답은 단건 조회와 같음 |
+| 게시물 삭제 | `DELETE /api/shortforms/{shortformId}` | 손님 스크랩·사장님 사진도 같이 지움. 생성 기록은 연결만 끊음 |
+| 재수정본으로 교체 (PRO) | `PUT /api/shortforms/{shortformId}/replace` | Body `shortformId`(새 버전). 새 버전을 공개하고 옛 게시물은 지움. 옛 게시물 스크랩은 새 버전으로 옮김 |
+| 생성 취소 | `POST /api/generation/{generationId}/cancel` | 만드는 중(PENDING·PROCESSING)일 때만. 결과를 저장하지 않고 FAILED(`사장님이 생성을 취소했어요`). 취소한 요청은 끝나기 전이라도 새 생성 요청을 막지 않음 |
+
+| 상태코드 | 의미 |
+| --- | --- |
+| SHORTFORM403 | 내 가게 게시물이 아님 |
+| SHORTFORM404 | 게시물 없음 (공개 전 게시물은 스크랩도 404) |
+| SHORTFORM400 | 교체: 같은 가게의 다른 게시물이 아님 |
+| GENERATION403 | 생성 취소: 내가 요청한 생성이 아님 |
+| GENERATION409_2 | 생성 취소: 이미 끝난 생성 |
+| STORE403_2 | 생성 요청: 내 가게가 아님 |
 > 생성 흐름: 생성 요청(`POST /api/generation`) → 비동기 처리 → 상태 폴링(`GET /api/generation/{id}`) → 완료 후 게시물 조회
 
 ### 게시물 피드 조회
