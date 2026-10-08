@@ -19,7 +19,11 @@ export interface RouteHandle {
   immersive?: boolean
   /** 숏폼: 하단 탭 바도 투명하게 영상 위에 띄워 화면을 넓게 */
   overlayNav?: boolean
+  /** 탭 화면 우상단 + 버튼. 없으면(undefined) 숏폼 만들기, null 이면 버튼 없음 */
+  action?: { label: string; to: string } | null
 }
+
+const DEFAULT_ACTION = { label: '숏폼 만들기', to: '/create' }
 
 /** 하단 네비와 같은 톤: 흰 바탕 + 민트 테두리 + 초록 그림자 */
 const circleButton =
@@ -47,6 +51,7 @@ export function AppShell({
   const overlayNav = Boolean(handle?.overlayNav)
   // 탭 루트가 아닌 하위 화면(예: 지도 → 홍보 영상)이면 우상단을 뒤로가기로
   const showBack = !tabs.some((tab) => tab.to === pathname)
+  const action = handle?.action === undefined ? DEFAULT_ACTION : handle.action
   const mode = useModeStore((s) => s.mode)
   // 탭이 많으면(사장님 5개) 선택된 탭도 아이콘 위·글자 아래로
   const compact = tabs.length >= 5
@@ -77,10 +82,13 @@ export function AppShell({
           <button type="button" aria-label="뒤로" className={circleButton} onClick={() => navigate(-1)}>
             <BackIcon />
           </button>
-        ) : (
-          <button type="button" aria-label="숏폼 만들기" className={primaryCircleButton} onClick={() => navigate('/create')}>
+        ) : action ? (
+          <button type="button" aria-label={action.label} className={primaryCircleButton} onClick={() => navigate(action.to)}>
             <PlusIcon />
           </button>
+        ) : (
+          // 버튼이 없어도 제목이 가운데에 오도록 자리만 차지
+          <span aria-hidden className="size-[46px] shrink-0" />
         )}
       </header>
 

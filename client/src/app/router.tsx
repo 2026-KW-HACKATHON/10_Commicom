@@ -62,11 +62,12 @@ export const router = createBrowserRouter([
     element: <OwnerLayout />,
     children: [
       { index: true, element: <OwnerHomePage />, handle: { title: '우리 가게' } },
-      { path: 'quests', element: <OwnerQuestsPage />, handle: { title: '퀘스트 등록' } },
-      { path: 'coupons', element: <OwnerCouponsPage />, handle: { title: '쿠폰 관리' } },
+      // 우상단 + 는 할 일이 있는 탭에만: 홈 = 숏폼 만들기(기본), 쿠폰 = 쿠폰 발행.
+      { path: 'quests', element: <OwnerQuestsPage />, handle: { title: '퀘스트 등록', action: null } },
+      { path: 'coupons', element: <OwnerCouponsPage />, handle: { title: '쿠폰 관리', action: { label: '쿠폰 발행', to: '/owner/coupons/new' } } },
       { path: 'coupons/new', element: <CouponCreatePage />, handle: { title: '쿠폰 발행' } },
-      { path: 'redeem', element: <OwnerRedeemPage />, handle: { title: '쿠폰 사용 처리' } },
-      { path: 'settlement', element: <OwnerSettlementPage />, handle: { title: '쿠폰 정산' } },
+      { path: 'redeem', element: <OwnerRedeemPage />, handle: { title: '쿠폰 사용 처리', action: null } },
+      { path: 'settlement', element: <OwnerSettlementPage />, handle: { title: '쿠폰 정산', action: null } },
       { path: 'quest-store', element: <QuestStorePage />, handle: { title: '퀘스트 가게' } },
       { path: 'pro', element: <ProPage />, handle: { title: '잇다 PRO' } },
       { path: 'videos', element: <OwnerVideosPage />, handle: { title: '내 영상' } },
