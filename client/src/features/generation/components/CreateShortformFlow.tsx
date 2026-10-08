@@ -7,7 +7,7 @@ import pigeonUploaded from '@/assets/generation/pigeon-uploaded.png'
 import working2 from '@/assets/generation/pigeon-working-2.jpg'
 import { FramedVideo } from '@/features/feed/components/FramedVideo'
 import { useMyStore, useMyStoreId } from '@/features/owner/hooks'
-import { useIsPro } from '@/features/pro/store'
+import { useIsPro } from '@/features/pro/hooks'
 import { errorMessage } from '@/shared/lib/error'
 import { CloseIcon } from '@/shared/ui/icons'
 import {

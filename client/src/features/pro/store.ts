@@ -1,12 +1,10 @@
-import { useState } from 'react'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { OWNER_ILLUST } from '@/features/owner/illustrations'
 
 /**
- * 잇다 PRO 구독 상태.
- * 명세에 PRO API가 아직 없어 로컬 모의 구독으로 둠 → API가 생기면 서버 조회로 교체.
- * 숏폼 쪽 재수정·다운로드 버튼은 useIsPro()로 막고, 피드 우선 노출은 서버(숏폼 담당)에서 PRO 가게 가중치로 처리.
+ * 이 기기에 저장하는 모의 PRO 구독 — 목업(mockFor('pro'))일 때만 씀.
+ * 화면에서는 hooks.ts 의 usePro()/useIsPro() 로 읽음 (로그인한 사장님은 서버 GET /api/stores/{storeId}/pro)
  */
 interface ProState {
   startedAt: string | null
@@ -36,13 +34,6 @@ export const useProStore = create<ProState>()(
     { name: 'itda-pro' },
   ),
 )
-
-export function useIsPro() {
-  const expiresAt = useProStore((s) => s.expiresAt)
-  // 화면을 연 시점 기준으로 판단 (렌더마다 시간이 바뀌지 않게)
-  const [now] = useState(() => Date.now())
-  return Boolean(expiresAt && Date.parse(expiresAt) > now)
-}
 
 export const PRO_BENEFITS = [
   { image: OWNER_ILLUST.pro, title: '숏폼 우선 노출', description: '손님 숏폼 피드에 우리 가게 홍보 영상이 더 자주 떠요' },

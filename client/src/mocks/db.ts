@@ -65,6 +65,8 @@ export const MOCK_ONLY = {
   shortformManage: true,
   /** 비밀번호 변경 */
   memberExtra: false,
+  /** 잇다 PRO 구독 (가게를 등록한 사장님으로 로그인해야 가입) */
+  pro: false,
 } as const
 
 /** 이 기능을 목업으로 돌릴지 */

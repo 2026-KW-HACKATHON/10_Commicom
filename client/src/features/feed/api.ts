@@ -6,7 +6,7 @@ import { api, request } from '@/shared/api/client'
 import { allMockShortforms, isHiddenShortform, removeMockShortform } from './mock'
 import { FEED_PAGE_SIZE, type Shortform, type ShortformListResult } from './schema'
 
-/** 목업: PRO 구독 중인 가게. PRO는 아직 기기 저장이라 이 기기의 사장님 가게만 해당 */
+/** 목업: PRO 구독 중인 가게. 목업 PRO는 기기 저장이라 이 기기의 사장님 가게만 해당 */
 function mockProStoreIds() {
   const { expiresAt } = useProStore.getState()
   return new Set(expiresAt && Date.parse(expiresAt) > Date.now() ? [mockOwnerStoreId()] : [])
@@ -27,6 +27,8 @@ interface ServerShortform {
   title: string
   duration: number
   createdAt: string
+  /** PRO 가게 영상 (서버가 피드 앞쪽에 둠) */
+  promoted?: boolean
 }
 type ServerPage = Omit<ShortformListResult, 'shortforms'> & { shortforms: ServerShortform[] }
 
@@ -48,6 +50,7 @@ function toShortform(s: ServerShortform, stores: StoreSummary[]): Shortform {
     videoUrl: s.videoUrl,
     posterUrl: s.thumbnailUrl,
     createdAt: s.createdAt,
+    promoted: s.promoted,
   }
 }
 
@@ -62,7 +65,7 @@ async function fromServer(res: ServerPage): Promise<ShortformListResult> {
 export async function fetchShortforms(storeId?: number, page = 0, size = FEED_PAGE_SIZE): Promise<ShortformListResult> {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, page > 0 ? 500 : 0))
-    // PRO 혜택 "숏폼 우선 노출": PRO 가게 영상을 앞으로 (서버에선 숏폼 담당이 PRO 가중치로 정렬)
+    // PRO 혜택 "숏폼 우선 노출": PRO 가게 영상을 앞으로 (서버는 GET /api/shortforms 가 정렬)
     const pro = mockProStoreIds()
     const all = allMockShortforms().map((s) => (pro.has(s.storeId) ? { ...s, promoted: true } : s))
     const rank = (s: Shortform) => (storeId ? Number(s.storeId === storeId) * 2 : 0) + Number(!!s.promoted)

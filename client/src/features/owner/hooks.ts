@@ -21,6 +21,24 @@ export function useMyStoreQuery() {
   })
 }
 
+/**
+ * 유료 상품(퀘스트 가게·PRO)을 결제·관리할 수 있는지.
+ * 가게를 등록한 사장님으로 로그인해야 함 — 그 기능이 목업이면 로그인 없이도 됨(시연용).
+ * storeId: 서버를 부를 내 가게 (목업·로그인 전이면 null), pending: 내 가게를 불러오는 중
+ */
+export function useStoreManageAccess(feature: Parameters<typeof mockFor>[0]) {
+  const me = useMe()
+  const myStore = useMyStoreQuery()
+  const local = mockFor(feature)
+  const owner = me?.role === 'OWNER'
+  return {
+    local,
+    storeId: !local && owner ? (myStore.data?.storeId ?? null) : null,
+    pending: !local && owner && myStore.isLoading,
+    canManage: local || (owner && !!myStore.data),
+  }
+}
+
 /** 로그인한 사장님의 가게 id (불러오기 전·목업·로그인 전에는 샘플 가게) */
 export function useMyStoreId() {
   const storeId = useMyStoreQuery().data?.storeId ?? MOCK_OWNER_STORE_ID

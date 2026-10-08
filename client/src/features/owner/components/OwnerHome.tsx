@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 import { useOwnerCoupons, useSettlement } from '@/features/coupon/hooks'
 import { untilText } from '@/features/coupon/schema'
-import { useIsPro } from '@/features/pro/store'
+import { useIsPro } from '@/features/pro/hooks'
 import { useQuestSubscription } from '@/features/quest/hooks'
 import { HAS_MOCK, resetAllLocalData } from '@/mocks/db'
-import { useMyStoreId, useMyStoreName } from '../hooks'
+import { useMyStoreId, useMyStoreName, useStoreManageAccess } from '../hooks'
 import { OWNER_ILLUST } from '../illustrations'
 import { currentMonth } from '../date'
 import { OwnerCard, OwnerScreen } from './OwnerUi'
@@ -14,10 +14,13 @@ export function OwnerHome() {
   const storeId = useMyStoreId()
   const storeName = useMyStoreName()
   const { data: sub } = useQuestSubscription(storeId)
-  const { data: coupons } = useOwnerCoupons(storeId)
-  const { data: settlement } = useSettlement(storeId, currentMonth())
+  // 로그인 전엔 쿠폰·정산을 부르지 않음 (서버가 로그인을 요구 → 0으로 보임)
+  const couponAccess = useStoreManageAccess('coupon').canManage
+  const { data: coupons } = useOwnerCoupons(storeId, undefined, couponAccess)
+  const { data: settlement } = useSettlement(storeId, currentMonth(), couponAccess)
   const isPro = useIsPro()
-  const questActive = sub?.status === 'ACTIVE'
+  // 로그인 전엔 샘플 가게 상태 대신 미등록으로 (퀘스트 가게 화면과 같게)
+  const questActive = useStoreManageAccess('quest').canManage && sub?.status === 'ACTIVE'
   const activeCoupons = coupons?.filter((c) => c.status === 'ACTIVE') ?? []
 
   return (

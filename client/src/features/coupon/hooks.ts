@@ -43,11 +43,13 @@ export function useDownloadCoupon() {
   return useMutation({ mutationFn: postDownload, onSuccess: useInvalidateCoupons() })
 }
 
-export function useOwnerCoupons(storeId: number, status?: CouponStatus) {
+/** enabled=false 면 부르지 않음 (로그인 전 사장님 홈) */
+export function useOwnerCoupons(storeId: number, status?: CouponStatus, enabled = true) {
   return useQuery({
     queryKey: [...couponKeys.owner(storeId), status ?? 'ALL'],
     queryFn: () => fetchOwnerCoupons(storeId, status),
     select: (d) => d.coupons,
+    enabled,
   })
 }
 
@@ -66,6 +68,6 @@ export function useRedeemCoupon() {
   return useMutation({ mutationFn: postRedeem, onSuccess: useInvalidateCoupons() })
 }
 
-export function useSettlement(storeId: number, month: string) {
-  return useQuery({ queryKey: couponKeys.settlement(storeId, month), queryFn: () => fetchSettlement(storeId, month) })
+export function useSettlement(storeId: number, month: string, enabled = true) {
+  return useQuery({ queryKey: couponKeys.settlement(storeId, month), queryFn: () => fetchSettlement(storeId, month), enabled })
 }
