@@ -52,7 +52,7 @@ unsplash:
   access-key: ${UNSPLASH_ACCESS_KEY}
 
 runway:
-  api-key: ${RUNWAY_API_KEY}
+  api-key: ${RUNWAYML_API_SECRET:${RUNWAY_API_KEY:}}
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}

@@ -1,7 +1,3 @@
-# Runway mock 모드 (true: FFmpeg 정적 클립, false: 실제 Runway AI 호출)
-runway:
-  mock: false
-
 spring:
   datasource:
     url: jdbc:h2:mem:itda;MODE=MySQL

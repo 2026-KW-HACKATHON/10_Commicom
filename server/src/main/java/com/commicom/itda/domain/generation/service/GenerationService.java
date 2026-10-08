@@ -52,11 +52,13 @@ public class GenerationService {
         // 트랜잭션 커밋 완료 후에 비동기 파이프라인 실행 (커밋 전엔 DB에서 못 찾음)
         Long generationId = generation.getId();
         String menuInfo = request.menuInfo();
-        List<String> photoUrls = request.photoUrls();
+        String menuImageUrl = request.menuImageUrl();
+        String interiorImageUrl = request.interiorImageUrl();
+        String tableImageUrl = request.tableImageUrl();
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                pipelineService.execute(generationId, menuInfo, photoUrls);
+                pipelineService.execute(generationId, menuInfo, menuImageUrl, interiorImageUrl, tableImageUrl);
             }
         });
 
