@@ -46,5 +46,11 @@ export const NICKNAME_MAX = 30
 
 export const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
 
+/**
+ * 사장님 모드를 쓸 수 있는지: 사장님 계정이거나, 아직 로그인 전(시연용으로 자유 전환).
+ * 손님 계정으로 로그인했으면 막음.
+ */
+export const canUseOwnerMode = (me: AuthMember | null) => !me || me.role === 'OWNER'
+
 /** 회원 유형 → 앱 이용 모드 (RESIDENT는 손님 화면) */
 export const modeOfRole = (role: AuthMember['role']): AppMode => (role === 'OWNER' ? 'OWNER' : 'USER')

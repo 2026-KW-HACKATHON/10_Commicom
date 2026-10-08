@@ -5,7 +5,7 @@ import logo from '@/assets/logo-itda.svg'
 import pigeonWalk from '@/assets/map/pigeon-walk.png'
 import { LoginForm } from '@/features/auth/components/LoginForm'
 import { useLogout } from '@/features/auth/hooks'
-import { modeOfRole } from '@/features/auth/schema'
+import { canUseOwnerMode, modeOfRole } from '@/features/auth/schema'
 import { mockAddFeed, resetMockDb, USE_MOCK } from '@/mocks/db'
 import { CloseIcon, MenuIcon } from '@/shared/ui/icons'
 import { useAuthStore, useMe } from '@/stores/authStore'
@@ -121,7 +121,14 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
+  const me = useMe()
+  const logout = useLogout()
+  // 손님 계정으로 로그인한 채 사장님 모드를 고르면 막고 안내
+  const [ownerBlocked, setOwnerBlocked] = useState(false)
+
   const switchMode = (next: AppMode) => {
+    if (next === 'OWNER' && !canUseOwnerMode(me)) return setOwnerBlocked(true)
+    setOwnerBlocked(false)
     setMode(next)
     setOpen(false)
     navigate(MODE_HOME[next])
@@ -129,7 +136,12 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
 
   return (
     <>
-      <button type="button" aria-label="설정 열기" aria-expanded={open} className={buttonClassName} onClick={() => setOpen(true)}>
+      <button type="button" aria-label="설정 열기" aria-expanded={open} className={buttonClassName}
+        onClick={() => {
+          setOwnerBlocked(false)
+          setOpen(true)
+        }}
+      >
         <MenuIcon />
       </button>
 
@@ -172,6 +184,27 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
                     )
                   })}
                 </div>
+                {ownerBlocked && (
+                  <div role="alert" className="mt-2 rounded-2xl border border-point-orange bg-point-yellow/20 px-4 py-3">
+                    <p className="text-[13px] font-bold text-point-red-dark">사장님 모드는 사장님 계정으로 쓸 수 있어요</p>
+                    <p className="mt-0.5 text-[12px] text-q-sub">지금은 손님 계정({me?.nickname})으로 로그인되어 있어요</p>
+                    <div className="mt-2.5 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          logout('로그아웃했어요 · 사장님 계정으로 로그인해 주세요')
+                          setOwnerBlocked(false)
+                        }}
+                        className="h-9 rounded-lg bg-white text-[12px] font-bold text-q-text"
+                      >
+                        다른 계정으로 로그인
+                      </button>
+                      <Link to="/signup?role=OWNER" className="flex h-9 items-center justify-center rounded-lg bg-green-4 text-[12px] font-bold text-white">
+                        사장님으로 가입
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </section>
 
               <section className="mt-6 px-5">
