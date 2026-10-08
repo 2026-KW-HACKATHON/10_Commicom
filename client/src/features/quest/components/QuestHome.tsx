@@ -17,8 +17,9 @@ export function QuestHome() {
   const done = quests?.filter((q) => q.status === 'COMPLETED') ?? []
 
   return (
-    <div className="h-full overflow-y-auto px-5 pt-3 pb-8">
-      <p className="mb-3 flex items-center justify-end gap-1.5 text-[15px] font-bold text-q-green">
+    <div className="h-full overflow-y-auto px-5 pb-8">
+      {/* 떠 있는 ≡ · + 버튼(높이 76px) 사이 가운데 */}
+      <p className="flex h-[76px] items-center justify-center gap-1.5 text-[17px] font-bold text-q-green">
         월계동 <span aria-hidden className="size-2.5 rounded-full bg-q-green" />
       </p>
 

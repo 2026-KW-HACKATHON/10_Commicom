@@ -5,17 +5,19 @@ import pigeonWalk from '@/assets/map/pigeon-walk.png'
 import { StoreCouponSheet } from '@/features/coupon/components/StoreCouponSheet'
 import { useFilteredStores, useMyLocation, useStoreGroups, useStores } from '../hooks'
 import { DEFAULT_CENTER, type MapCategoryKey, type StoreSummary } from '../schema'
-import { MapBanner } from './MapBanner'
 import { MapBottomSheet } from './MapBottomSheet'
 import { MyLocationMarker } from './MyLocationMarker'
 import { StoreMarker } from './StoreMarker'
 
 const KAKAO_KEY = import.meta.env.VITE_KAKAO_MAP_KEY
+/** 지도 기본 배율 (카카오 level, 작을수록 확대) */
+const DEFAULT_LEVEL = 3
 
 /** 잇다 맵 화면 */
 export function StoreMapView() {
   return (
-    <div className="relative h-full bg-gray-1">
+    // 시트를 내렸을 때 아래 탭 바를 덮지 않도록 지도 영역 밖은 잘라냄
+    <div className="relative h-full overflow-hidden bg-gray-1">
       {KAKAO_KEY ? (
         <KakaoStoreMap appkey={KAKAO_KEY} />
       ) : (
@@ -49,6 +51,14 @@ function KakaoStoreMap({ appkey }: { appkey: string }) {
   const location = useMyLocation()
 
   const panTo = (lat: number, lng: number) => map?.panTo(new kakao.maps.LatLng(lat, lng))
+
+  /** 내 위치로: 확대·축소해 둔 배율을 기본으로 되돌리고 지금 위치를 가운데로 */
+  const goToMe = () => {
+    if (!map || location.status !== 'ok') return
+    const me = new kakao.maps.LatLng(location.position.lat, location.position.lng)
+    if (map.getLevel() !== DEFAULT_LEVEL) map.setLevel(DEFAULT_LEVEL, { anchor: me })
+    map.panTo(me)
+  }
 
   // 그 가게를 지도 가운데로
   const focused = useRef(false)
@@ -98,7 +108,7 @@ function KakaoStoreMap({ appkey }: { appkey: string }) {
     <>
       <Map
         center={DEFAULT_CENTER}
-        level={3}
+        level={DEFAULT_LEVEL}
         className="size-full"
         onCreate={setMap}
         onIdle={() => setViewVersion((v) => v + 1)}
@@ -123,8 +133,6 @@ function KakaoStoreMap({ appkey }: { appkey: string }) {
         {location.status === 'ok' && <MyLocationMarker position={location.position} />}
       </Map>
 
-      <MapBanner />
-
       <button
         type="button"
         aria-pressed={questOnly}
@@ -132,7 +140,7 @@ function KakaoStoreMap({ appkey }: { appkey: string }) {
           setQuestOnly((v) => !v)
           clearSelection()
         }}
-        className="absolute top-[52px] left-[14px] z-20 rounded-full border border-green-1 bg-white px-3 py-1.5 text-[13px] font-bold text-ink shadow-sm aria-pressed:border-green-6 aria-pressed:bg-green-6 aria-pressed:text-white"
+        className="absolute top-[78px] left-[14px] z-20 rounded-full border border-green-1 bg-white px-3 py-1.5 text-[13px] font-bold text-ink shadow-sm aria-pressed:border-green-6 aria-pressed:bg-green-6 aria-pressed:text-white"
       >
         🚩 퀘스트 가게만
       </button>
@@ -146,7 +154,7 @@ function KakaoStoreMap({ appkey }: { appkey: string }) {
       )}
 
       {isError && (
-        <p className="absolute inset-x-[14px] top-14 z-20 rounded-full border border-point-orange bg-white px-4 py-2 text-center text-sm font-medium text-point-red-dark">
+        <p className="absolute inset-x-[14px] top-[124px] z-20 rounded-full border border-point-orange bg-white px-4 py-2 text-center text-sm font-medium text-point-red-dark">
           가게 정보를 불러오지 못했어요
         </p>
       )}
@@ -158,7 +166,7 @@ function KakaoStoreMap({ appkey }: { appkey: string }) {
               type="button"
               aria-label="내 위치로 이동"
               className="flex size-[49px] items-center justify-center rounded-full border border-green-1 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
-              onClick={() => panTo(location.position.lat, location.position.lng)}
+              onClick={goToMe}
             >
               <img src={pigeonWalk} alt="" className="size-8 object-contain" />
             </button>
