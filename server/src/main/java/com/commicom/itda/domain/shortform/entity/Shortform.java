@@ -2,7 +2,9 @@ package com.commicom.itda.domain.shortform.entity;
 
 import com.commicom.itda.domain.store.entity.Store;
 import com.commicom.itda.global.entity.BaseTimeEntity;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -10,10 +12,15 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OrderColumn;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 
 @Getter
 @Entity
@@ -35,10 +42,28 @@ public class Shortform extends BaseTimeEntity {
     @Column(nullable = false, length = 200)
     private String title;
 
+    /** 사장님이 올린 메뉴판·음식·가게 사진 (AI 사진 뒤에 붙어 옆으로 넘겨 봄, 최대 MAX_PHOTOS) */
+    @ElementCollection
+    @CollectionTable(name = "shortform_photo", joinColumns = @JoinColumn(name = "shortform_id"))
+    @OrderColumn(name = "sort_order")
+    @Column(name = "url", nullable = false, length = 1000)
+    private List<String> photoUrls = new ArrayList<>();
+
+    /** 게시물 한 개의 사진은 AI 사진 1장 + 사장님 사진 4장까지 */
+    public static final int MAX_PHOTOS = 4;
+
     @Builder
-    private Shortform(Store store, String imageUrl, String title) {
+    private Shortform(Store store, String imageUrl, String title, List<String> photoUrls) {
         this.store = store;
         this.imageUrl = imageUrl;
         this.title = title;
+        if (photoUrls != null) {
+            this.photoUrls = new ArrayList<>(photoUrls.stream().limit(MAX_PHOTOS).toList());
+        }
+    }
+
+    /** 게시물에서 옆으로 넘겨 볼 사진 전체: AI 사진이 첫 장 */
+    public List<String> getImageUrls() {
+        return Stream.concat(Stream.of(imageUrl), photoUrls.stream()).toList();
     }
 }

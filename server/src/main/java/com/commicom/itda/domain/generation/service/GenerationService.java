@@ -12,6 +12,7 @@ import com.commicom.itda.domain.store.entity.Store;
 import com.commicom.itda.domain.store.repository.StoreRepository;
 import com.commicom.itda.global.exception.BusinessException;
 import com.commicom.itda.global.exception.ErrorCode;
+import com.commicom.itda.infra.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,7 @@ public class GenerationService {
     private final StoreRepository storeRepository;
     private final MemberRepository memberRepository;
     private final GenerationPipelineService pipelineService;
+    private final StorageService storageService;
 
     @Transactional
     public GenerationResponse requestGeneration(Long memberId, GenerationRequest request) {
@@ -53,10 +55,13 @@ public class GenerationService {
         Long generationId = generation.getId();
         String menuInfo = request.menuInfo();
         String menuImageUrl = request.menuImageUrl();
+        // 게시물에 넣을 사장님 사진: 이 가게 사진 폴더에 올라간 것만 (POST /api/stores/{storeId}/photos)
+        List<String> photoUrls = request.photoUrls() == null ? List.of()
+                : request.photoUrls().stream().filter(u -> storageService.isUploadedUnder(u, "stores/" + store.getId())).toList();
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                pipelineService.execute(generationId, menuInfo, menuImageUrl);
+                pipelineService.execute(generationId, menuInfo, menuImageUrl, photoUrls);
             }
         });
 

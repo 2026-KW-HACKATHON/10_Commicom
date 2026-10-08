@@ -8,7 +8,6 @@ import com.commicom.itda.domain.store.dto.StoreUpdateRequest;
 import com.commicom.itda.domain.store.entity.StoreCategory;
 import com.commicom.itda.domain.store.service.StoreService;
 import com.commicom.itda.global.response.ApiResponse;
-import com.commicom.itda.infra.storage.StorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,7 +35,6 @@ import java.util.List;
 public class StoreController {
 
     private final StoreService storeService;
-    private final StorageService storageService;
 
     @Operation(summary = "가게 목록 조회", description = "지도에 표시할 가게 목록을 조회한다. category 를 주면 업종으로 필터링한다.")
     @GetMapping
@@ -93,15 +91,13 @@ public class StoreController {
         return ApiResponse.onSuccess(storeService.updateStoreImage(memberId, storeId, image));
     }
 
-    @Operation(summary = "가게 사진 업로드",
-            description = "사장님이 숏폼 생성에 쓸 가게 사진을 업로드한다. 반환된 URL을 생성 요청의 photoUrls에 사용한다.")
+    @Operation(summary = "가게 사진 업로드 (사장님)",
+            description = "게시물에 넣을 메뉴판·음식·가게 사진을 올린다. 반환된 URL을 생성 요청의 photoUrls에 사용한다. 내 가게만 (STORE403_2)")
     @PostMapping(value = "/{storeId}/photos", consumes = "multipart/form-data")
     public ApiResponse<List<String>> uploadPhotos(
+            @Parameter(hidden = true) @AuthenticationPrincipal Long memberId,
             @PathVariable Long storeId,
             @RequestPart("photos") List<MultipartFile> photos) {
-        List<String> urls = photos.stream()
-                .map(photo -> storageService.upload(photo, "stores/" + storeId))
-                .toList();
-        return ApiResponse.onSuccess(urls);
+        return ApiResponse.onSuccess(storeService.uploadPhotos(memberId, storeId, photos));
     }
 }

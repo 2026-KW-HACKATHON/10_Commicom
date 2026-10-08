@@ -99,6 +99,12 @@ public class StoreService {
         return StoreDetailResponse.from(store);
     }
 
+    /** 게시물에 넣을 사진 올리기 (사장님 본인 가게만). 주소는 생성 요청 photoUrls 에 씀 */
+    public List<String> uploadPhotos(Long memberId, Long storeId, List<MultipartFile> photos) {
+        findMyStore(memberId, storeId);
+        return photos.stream().map(photo -> storageService.upload(photo, "stores/" + storeId)).toList();
+    }
+
     @Transactional
     public StoreDetailResponse updateStoreImage(Long memberId, Long storeId, MultipartFile image) {
         Store store = findMyStore(memberId, storeId);
