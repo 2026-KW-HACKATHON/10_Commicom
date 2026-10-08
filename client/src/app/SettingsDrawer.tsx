@@ -5,7 +5,6 @@ import logo from '@/assets/logo-itda.svg'
 import { mockAddFeed, resetMockDb, USE_MOCK } from '@/mocks/db'
 import { CloseIcon, MenuIcon } from '@/shared/ui/icons'
 import { MODE_HOME, useModeStore, type AppMode } from '@/stores/modeStore'
-import { HiddenMessage } from './HiddenMessage'
 
 export interface MenuItem {
   to: string
@@ -26,7 +25,6 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
   const { pathname } = useLocation()
   const { mode, setMode, reset } = useModeStore()
   const [open, setOpen] = useState(false)
-  const [secret, setSecret] = useState(false)
   const queryClient = useQueryClient()
 
   // 화면이 바뀌면 닫기
@@ -171,19 +169,10 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
                   </li>
                 </ul>
               </section>
-
-              <button
-                type="button"
-                onClick={() => setSecret(true)}
-                className="mx-5 mt-4 rounded-2xl border-2 border-dashed border-mint-line bg-q-mint/50 py-3 text-sm font-bold text-green-6 transition-transform active:scale-95"
-              >
-                🤫 히든 메시지 🕊️
-              </button>
             </aside>
           </div>
         </div>
       )}
-      {secret && <HiddenMessage onClose={() => setSecret(false)} />}
     </>
   )
 }
