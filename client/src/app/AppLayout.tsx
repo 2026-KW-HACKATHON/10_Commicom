@@ -1,6 +1,7 @@
 import pigeonCouponBox from '@/assets/user/pigeon-coupon-box.png'
 import pigeonGrowth from '@/assets/user/pigeon-growth.png'
 import pigeonQuest from '@/assets/user/pigeon-quest.png'
+import { OWNER_ILLUST } from '@/features/owner/illustrations'
 import { FlagNavIcon, MapNavIcon, VideoNavIcon } from '@/shared/ui/icons'
 import { AppShell, type TabItem } from './AppShell'
 import type { MenuItem } from './SettingsDrawer'
@@ -18,6 +19,7 @@ const MENU: MenuItem[] = [
   { to: '/coupons', label: '내 쿠폰함', icon: '🎟', image: pigeonCouponBox },
   { to: '/quest', label: '내 비둘기·퀘스트', icon: '🕊', image: pigeonQuest },
   { to: '/quest/history', label: '성장 기록', icon: '📈', image: pigeonGrowth },
+  { to: '/scraps', label: '스크랩한 영상', icon: '🔖', image: OWNER_ILLUST.videoDownload },
 ]
 
 /** 손님 모드: 숏폼 / 지도 / 퀘스트 */
