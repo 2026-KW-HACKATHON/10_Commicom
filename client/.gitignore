@@ -26,3 +26,6 @@ dist-ssr
 # env
 .env
 !.env.example
+
+# 숏폼 시연용 샘플 영상 (용량이 커서 GitHub에 안 올림 — 각자 public/samples에 넣어 사용)
+public/samples/
