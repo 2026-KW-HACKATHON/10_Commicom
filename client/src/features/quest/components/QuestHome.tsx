@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom'
+import pigeonWalk from '@/assets/map/pigeon-walk.png'
+import pigeonGps from '@/assets/quest/pigeon-gps.png'
+import { OWNER_ILLUST } from '@/features/owner/illustrations'
 import { useMyCoupons } from '@/features/coupon/hooks'
 import { useQuests } from '../hooks'
-import type { Quest } from '../schema'
+import { questTemplate, type Quest } from '../schema'
 import { PigeonCard } from './PigeonCard'
 import { FeedIcon, ProgressBar, SectionTitle } from './QuestUi'
 
@@ -14,8 +17,9 @@ export function QuestHome() {
   const done = quests?.filter((q) => q.status === 'COMPLETED') ?? []
 
   return (
-    <div className="h-full overflow-y-auto px-5 pt-3 pb-8">
-      <p className="mb-3 flex items-center justify-end gap-1.5 text-[15px] font-bold text-q-green">
+    <div className="h-full overflow-y-auto px-5 pb-8">
+      {/* 떠 있는 ≡ · + 버튼(높이 76px) 사이 가운데 */}
+      <p className="flex h-[76px] items-center justify-center gap-1.5 text-[17px] font-bold text-q-green">
         월계동 <span aria-hidden className="size-2.5 rounded-full bg-q-green" />
       </p>
 
@@ -55,18 +59,32 @@ const BASIC_HINT: Record<string, string> = {
   '지도에서 가게 3곳 둘러보기': '지도 탭에서 진행돼요',
 }
 
+/** 템플릿이 아닌 퀘스트의 비둘기 그림 (기본 퀘스트는 제목으로 구분) */
+const BASIC_IMAGE: Record<string, string> = {
+  '숏폼 5개 보기': OWNER_ILLUST.videoDownload,
+  '지도에서 가게 3곳 둘러보기': pigeonWalk,
+}
+
+function questImage(quest: Quest) {
+  const tpl = questTemplate(quest.templateKey)
+  if (tpl) return tpl.image
+  if (quest.type === 'VISIT') return pigeonGps
+  return BASIC_IMAGE[quest.title] ?? pigeonWalk
+}
+
 function QuestCard({ quest }: { quest: Quest }) {
   const done = quest.status === 'COMPLETED'
   const isVisit = quest.type === 'VISIT'
+  const tpl = questTemplate(quest.templateKey)
+  const desc = tpl
+    ? `동네 ${tpl.place} ${quest.targetCount}곳 방문하기 · 참여 가게 ${quest.storeIds?.length ?? 0}곳`
+    : isVisit
+      ? '퀘스트 가게에서 GPS + QR로 방문 인증'
+      : (BASIC_HINT[quest.title] ?? '앱 기본 퀘스트')
   const body = (
     <>
-      <span
-        aria-hidden
-        className={`flex size-11 shrink-0 items-center justify-center rounded-full text-xl ${
-          isVisit ? 'bg-q-mint' : 'bg-q-panel'
-        }`}
-      >
-        {isVisit ? '📍' : '⭐'}
+      <span aria-hidden className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-q-mint">
+        <img src={questImage(quest)} alt="" className="h-11 w-auto object-contain" />
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
@@ -75,9 +93,7 @@ function QuestCard({ quest }: { quest: Quest }) {
             <span className="shrink-0 rounded-full bg-q-mint px-2 py-0.5 text-[11px] font-bold text-q-green">완료</span>
           )}
         </div>
-        <p className="truncate text-xs text-q-muted">
-          {isVisit ? '퀘스트 가게에서 GPS + QR로 방문 인증' : (BASIC_HINT[quest.title] ?? '앱 기본 퀘스트')}
-        </p>
+        <p className="truncate text-xs text-q-muted">{desc}</p>
         <div className="mt-2 flex items-center gap-2.5">
           <span className="shrink-0 text-xs text-q-text">
             {quest.currentCount} / {quest.targetCount}

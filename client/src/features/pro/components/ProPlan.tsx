@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { untilText } from '@/features/coupon/schema'
 import { useMyStoreName } from '@/features/owner/hooks'
@@ -22,6 +23,7 @@ export function ProPlan() {
   const [paying, setPaying] = useState(false)
   const [welcome, setWelcome] = useState(false)
   const [confirmCancel, setConfirmCancel] = useState(false)
+  const queryClient = useQueryClient()
 
   return (
     <div className="h-full overflow-y-auto bg-q-panel px-5 pt-4 pb-10">
@@ -114,6 +116,8 @@ export function ProPlan() {
             className="mt-5"
             onClick={() => {
               subscribe()
+              // 우선 노출: 피드 순서를 바로 다시 받기
+              queryClient.invalidateQueries({ queryKey: ['shortforms'] })
               setPaying(false)
               setWelcome(true)
             }}
@@ -150,7 +154,7 @@ export function ProPlan() {
         <CelebrationScreen
           image={OWNER_ILLUST.pro}
           title="PRO 시작!"
-          subtitle="이제 홍보 영상을 다시 고치고 원본으로 내려받을 수 있어요"
+          subtitle="이제 손님 숏폼 피드 맨 앞에 우리 가게 영상이 뜨고, 영상을 다시 고치거나 원본으로 내려받을 수 있어요"
           actions={<PrimaryButton onClick={() => setWelcome(false)}>확인</PrimaryButton>}
         />
       )}

@@ -9,8 +9,12 @@ export function useMyStoreId() {
   return MOCK_OWNER_STORE_ID
 }
 
-export function useMyStoreName() {
+export function useMyStore() {
   const storeId = useMyStoreId()
   const { data: stores } = useStores()
-  return stores?.find((s) => s.storeId === storeId)?.name ?? `내 가게`
+  return stores?.find((s) => s.storeId === storeId) ?? null
+}
+
+export function useMyStoreName() {
+  return useMyStore()?.name ?? '내 가게'
 }

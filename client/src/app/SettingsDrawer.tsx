@@ -2,8 +2,13 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import logo from '@/assets/logo-itda.svg'
+import pigeonWalk from '@/assets/map/pigeon-walk.png'
+import { LoginForm } from '@/features/auth/components/LoginForm'
+import { useLogout } from '@/features/auth/hooks'
+import { modeOfRole } from '@/features/auth/schema'
 import { mockAddFeed, resetMockDb, USE_MOCK } from '@/mocks/db'
 import { CloseIcon, MenuIcon } from '@/shared/ui/icons'
+import { useAuthStore, useMe } from '@/stores/authStore'
 import { MODE_HOME, useModeStore, type AppMode } from '@/stores/modeStore'
 
 export interface MenuItem {
@@ -18,6 +23,81 @@ const MODES: { mode: AppMode; label: string; desc: string }[] = [
   { mode: 'USER', label: '손님', desc: '가게 구경·퀘스트' },
   { mode: 'OWNER', label: '사장님', desc: '가게 홍보·쿠폰' },
 ]
+
+/**
+ * 계정 (Figma GNB: 로그인X → 로그인·회원가입 / 로그인O → 닉네임 님·로그아웃·스크랩·프로필)
+ */
+function AccountSection({ onLoggedIn, onLoggedOut }: { onLoggedIn: (mode: AppMode) => void; onLoggedOut: () => void }) {
+  const me = useMe()
+  const logout = useLogout()
+
+  if (!me) {
+    return (
+      <section className="mt-6 px-5">
+        <h2 className="text-xs font-bold text-q-muted">계정</h2>
+        <div className="mt-2 rounded-2xl bg-q-panel px-4 pt-4 pb-3">
+          <LoginForm
+            compact
+            onSuccess={() => {
+              const m = useAuthStore.getState().member
+              if (m) onLoggedIn(modeOfRole(m.role))
+            }}
+          />
+          <p className="mt-3 text-center text-[12px] text-q-muted">
+            아직 계정이 없나요?{' '}
+            <Link to="/signup" className="font-bold text-green-4 underline">
+              회원가입
+            </Link>
+          </p>
+        </div>
+      </section>
+    )
+  }
+
+  const owner = me.role === 'OWNER'
+  return (
+    <section className="mt-6 px-5">
+      <h2 className="text-xs font-bold text-q-muted">계정</h2>
+      <div className="mt-2 flex items-center gap-3 rounded-2xl bg-q-panel px-4 py-3">
+        <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white">
+          {me.profileImageUrl ? <img src={me.profileImageUrl} alt="" className="size-full object-cover" /> : <img src={pigeonWalk} alt="" className="size-9 object-contain" />}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[15px] font-bold text-ink">{me.nickname} 님</span>
+          <span className="block truncate text-[11px] text-q-muted">
+            {owner ? '사장님' : '손님'} · {me.email}
+          </span>
+        </span>
+      </div>
+      <ul className="mt-1 text-[15px] text-ink">
+        <li>
+          <Link to={owner ? '/owner/profile' : '/profile'} className="flex justify-between border-b border-q-line py-3.5">
+            프로필 <span className="text-q-muted">›</span>
+          </Link>
+        </li>
+        {!owner && (
+          <li>
+            <Link to="/scraps" className="flex justify-between border-b border-q-line py-3.5">
+              스크랩 <span className="text-q-muted">›</span>
+            </Link>
+          </li>
+        )}
+        <li>
+          <button
+            type="button"
+            onClick={() => {
+              logout()
+              onLoggedOut()
+            }}
+            className="w-full border-b border-q-line py-3.5 text-left text-q-muted"
+          >
+            로그아웃
+          </button>
+        </li>
+      </ul>
+    </section>
+  )
+}
 
 /** 햄버거 버튼 → 왼쪽에서 열리는 설정 (이용 모드 전환, 바로가기, 앱 설정) */
 export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: string; items: MenuItem[] }) {
@@ -111,10 +191,13 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
                 </ul>
               </section>
 
-              <section className="mt-6 px-5">
-                <h2 className="text-xs font-bold text-q-muted">계정</h2>
-                <p className="mt-2 rounded-xl bg-q-panel px-4 py-3 text-[13px] text-q-muted">로그인·프로필·스크랩은 준비 중이에요</p>
-              </section>
+              <AccountSection
+                onLoggedIn={(role) => {
+                  setOpen(false)
+                  if (role !== mode) navigate(MODE_HOME[role])
+                }}
+                onLoggedOut={() => setOpen(false)}
+              />
 
               <section className="mt-6 px-5">
                 <h2 className="text-xs font-bold text-q-muted">앱 설정</h2>
@@ -155,6 +238,11 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
                         onClick={() => {
                           resetMockDb()
                           localStorage.removeItem('itda-pro')
+                          localStorage.removeItem('itda-mock-published')
+                          localStorage.removeItem('itda-mock-deleted')
+                          localStorage.removeItem('itda-mock-store-edits')
+                          localStorage.removeItem('itda-mock-members')
+                          localStorage.removeItem('itda-auth')
                           window.location.reload()
                         }}
                         className="w-full border-b border-q-line py-3.5 text-left"

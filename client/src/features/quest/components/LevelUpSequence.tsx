@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { untilText } from '@/features/coupon/schema'
 import { ConfettiBurst } from '@/shared/ui/Confetti'
 import { pigeonImage, type LevelUp } from '../schema'
-import { CelebrationScreen, OutlineButton, PrimaryButton } from './QuestUi'
+import { CelebrationScreen, FeedBowlIcon, FeedIcon, OutlineButton, PrimaryButton } from './QuestUi'
 import { RewardCardDraw } from './RewardCardDraw'
 
 /**
@@ -68,27 +68,47 @@ function LevelUpStep({
       <div className="rounded-3xl bg-q-panel px-3 pt-4 pb-3">
         <p className="mb-2 text-xs font-medium text-q-muted">레벨업 보상 뽑기</p>
         <RewardCardDraw levelUp={levelUp} onRevealed={() => setRevealed(true)} />
-        {revealed && (
-          <p
-            role="status"
-            className={`mt-2 animate-[rise-center_.3s_ease-out] rounded-2xl px-3 py-2.5 text-[13px] font-bold ${
-              wonCoupon ? 'bg-point-yellow/30 text-point-red-dark' : 'bg-white text-q-green'
-            }`}
-          >
-            {rewardResultText(reward)}
-          </p>
-        )}
+        {revealed && <RewardResult reward={reward} />}
       </div>
       {wonCoupon && <ConfettiBurst />}
     </CelebrationScreen>
   )
 }
 
-/** 결과 안내 문구 (카드 아래) */
-function rewardResultText(reward: LevelUp['reward']) {
-  if (reward.type === 'COUPON' && reward.userCoupon) {
-    return `${reward.userCoupon.storeName} · ${reward.userCoupon.title} (${untilText(reward.userCoupon.expiresAt)}) — 쿠폰함에 담았어요`
+/** 뽑기 결과 (카드 아래): 아이콘 + 큰 글씨 보상 + 짧은 안내 */
+function RewardResult({ reward }: { reward: LevelUp['reward'] }) {
+  const coupon = reward.type === 'COUPON' ? reward.userCoupon : null
+  const box = 'mt-2 flex animate-[rise-center_.3s_ease-out] items-center gap-3 rounded-2xl px-4 py-3 text-left'
+
+  if (coupon) {
+    return (
+      <div role="status" className={`${box} border border-dashed border-point-orange bg-point-yellow/25`}>
+        <span aria-hidden className="text-[30px] leading-none">🎟</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[17px] font-bold text-point-red-dark">쿠폰 당첨!</span>
+          <span className="block truncate text-[13px] font-bold text-q-text">
+            {coupon.storeName} · {coupon.title}
+          </span>
+          <span className="block text-[11px] text-q-muted">{untilText(coupon.expiresAt)} · 쿠폰함에 넣어 뒀어요</span>
+        </span>
+      </div>
+    )
   }
-  if (reward.feedAmount > 0) return `먹이 ${reward.feedAmount}개를 획득했습니다 — 보유 먹이에 담았어요`
-  return '최고 레벨 달성을 축하해요!'
+  if (reward.feedAmount > 0) {
+    return (
+      <div role="status" className={`${box} bg-white`}>
+        {reward.feedAmount >= 2 ? <FeedBowlIcon className="h-10 w-11 shrink-0" /> : <FeedIcon className="size-10 shrink-0" />}
+        <span className="flex-1">
+          <span className="block text-[20px] leading-tight font-bold text-q-green">먹이 +{reward.feedAmount}</span>
+          <span className="block text-[12px] text-q-muted">보유 먹이로 쏙! 비둘기에게 바로 줄 수 있어요</span>
+        </span>
+      </div>
+    )
+  }
+  return (
+    <div role="status" className={`${box} bg-white`}>
+      <span aria-hidden className="text-[28px] leading-none">🏆</span>
+      <span className="text-[16px] font-bold text-q-green">최고 레벨 달성을 축하해요!</span>
+    </div>
+  )
 }

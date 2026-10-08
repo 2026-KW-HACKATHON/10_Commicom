@@ -4,6 +4,8 @@ import type {
   FeedPigeonResult,
   FeedResult,
   HistoryPage,
+  OwnerQuestTemplate,
+  QuestTemplateKey,
   Pigeon,
   QuestListResult,
   QuestQr,
@@ -33,6 +35,23 @@ export function fetchQuestSubscription(storeId: number): Promise<QuestSubscripti
 export function postQuestSubscription(storeId: number): Promise<QuestSubscription> {
   if (USE_MOCK) return mockQuestApi.subscribe(storeId)
   return request(api.post(`/api/stores/${storeId}/quest-subscription`, { plan: 'MONTHLY' }))
+}
+
+/* 사장님: 퀘스트 템플릿 참여 (명세 추가 제안) */
+
+export function fetchQuestTemplates(storeId: number): Promise<{ templates: OwnerQuestTemplate[] }> {
+  if (USE_MOCK) return mockQuestApi.templates(storeId)
+  return request(api.get(`/api/stores/${storeId}/quest-templates`))
+}
+
+export function postJoinQuestTemplate(storeId: number, key: QuestTemplateKey) {
+  if (USE_MOCK) return mockQuestApi.joinTemplate(storeId, key)
+  return request<{ templateKey: QuestTemplateKey; joined: boolean }>(api.post(`/api/stores/${storeId}/quest-templates/${key}`))
+}
+
+export function deleteJoinQuestTemplate(storeId: number, key: QuestTemplateKey) {
+  if (USE_MOCK) return mockQuestApi.leaveTemplate(storeId, key)
+  return request<{ templateKey: QuestTemplateKey; joined: boolean }>(api.delete(`/api/stores/${storeId}/quest-templates/${key}`))
 }
 
 export function fetchQuestQr(storeId: number): Promise<QuestQr> {

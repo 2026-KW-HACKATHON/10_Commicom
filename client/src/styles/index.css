@@ -116,3 +116,46 @@ body {
     transform: scaleX(0);
   }
 }
+
+/* 시작 스플래시 (Figma 온보딩 홈 1→2→3): 로고 등장 → 연두 덩어리가 퍼져 화면을 덮음 → 사라짐 */
+@keyframes splash-pop {
+  from {
+    transform: scale(0.82);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes splash-blob {
+  0% {
+    transform: scale(0) rotate(-12deg);
+  }
+  60% {
+    transform: scale(1.1) rotate(0deg);
+  }
+  100% {
+    transform: scale(4.5) rotate(6deg);
+  }
+}
+@keyframes splash-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* 숏폼 "눌러서 소리 켜기": 잠깐 나타났다가 서서히 사라짐 */
+@keyframes hint-fade {
+  0% {
+    opacity: 0;
+  }
+  10%,
+  65% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
