@@ -44,6 +44,7 @@
 | --- | --- |
 | `owner@test.com` | 사장님(OWNER) |
 | `resident@test.com` | 주민(RESIDENT) |
+| `newowner@test.com` | 사장님(OWNER), 가게 미등록 — 로그인하면 가게 등록 화면 |
 
 ---
 
@@ -351,7 +352,7 @@ Request 예시
 | Header | `Authorization: Bearer {accessToken}` (필수) |
 | Request | 없음 |
 | Response | 없음 (`result` 생략) |
-| 로직 간단 설명 | 회원을 탈퇴한다. 회원이 보유한 스크랩 및 숏폼 생성 요청 데이터를 먼저 삭제한 뒤 회원 데이터를 삭제한다. 탈퇴 후에는 토큰이 만료되기 전까지 요청이 가능하므로 클라이언트에서 토큰을 즉시 제거해야 한다. |
+| 로직 간단 설명 | 회원을 탈퇴한다. 회원이 보유한 스크랩 및 게시물 생성 요청 데이터를 먼저 삭제한 뒤 회원 데이터를 삭제한다. 탈퇴 후에는 토큰이 만료되기 전까지 요청이 가능하므로 클라이언트에서 토큰을 즉시 제거해야 한다. |
 | 상태코드 | COMMON200: 탈퇴 성공<br>COMMON401: 토큰 없음·만료 |
 
 Response 예시 (200)
@@ -580,7 +581,7 @@ Response 예시 (404)
 | --- | --- | --- | --- |
 | 퀘스트 목록 | `GET /api/quests` | 선택 | 로그인 전이면 진행도 0. 기본(BASIC)은 항상, "동네 가게 N곳 방문"은 퀘스트 가게가 1곳 이상일 때, 템플릿 퀘스트는 참여 가게(등록 기간 중)가 1곳 이상일 때만 보인다. 템플릿 목표는 `min(2, 참여 가게 수)` |
 | 방문 인증 | `POST /api/quests/{questId}/visits` | 필수 | Body `storeId, latitude, longitude, qrToken`. 퀘스트 가게 + 반경 100m + 오늘의 가게 QR. 방문마다 먹이 1개, 완료하면 보너스 `rewardFeed` |
-| 기본 퀘스트 진행 | `POST /api/quests/events` | 필수 | Body `type` (`SHORTFORM_VIEW`: 숏폼 2초 이상 시청, `STORE_VIEW`: 가게 상세 열기), `targetId` (숏폼·가게 id). 같은 대상은 한 번만 센다. 응답 `completedQuests[]`(새로 완료한 퀘스트), `feedBalance` |
+| 기본 퀘스트 진행 | `POST /api/quests/events` | 필수 | Body `type` (`SHORTFORM_VIEW`: 게시물 2초 이상 시청, `STORE_VIEW`: 가게 상세 열기), `targetId` (게시물·가게 id). 같은 대상은 한 번만 센다. 응답 `completedQuests[]`(새로 완료한 퀘스트), `feedBalance` |
 | 퀘스트 가게 상태 | `GET /api/stores/{storeId}/quest-subscription` | 없음 | `status`: `ACTIVE` / `EXPIRED` / `NONE`, `startedAt`, `expiresAt` |
 | 퀘스트 가게 등록 | `POST /api/stores/{storeId}/quest-subscription` | 사장님 | 30일 (해커톤: 결제 모의 처리). 만료됐으면 다시 30일 |
 | 템플릿 목록 | `GET /api/stores/{storeId}/quest-templates` | 사장님 | `templates[]`: `templateKey, title, description, targetCount, rewardFeed, participantCount, joined` |
@@ -701,7 +702,7 @@ Response 예시 (404)
 ## PRO
 
 > 사장님 가게 단위 월 구독 (30일). 해커톤: 결제는 모의 처리하고, 만료일에 자동 결제도 하지 않는다 (만료되면 다시 가입).
-> 혜택: 숏폼 피드 우선 노출(서버가 정렬), 영상 재수정·원본 다운로드(클라이언트가 `status`로 버튼을 연다).
+> 혜택: 게시물 피드 우선 노출(서버가 정렬), 영상 재수정·원본 다운로드(클라이언트가 `status`로 버튼을 연다).
 
 | API | Method · Path | 인증 | 설명 |
 | --- | --- | --- | --- |
@@ -734,20 +735,21 @@ Response 예시 (200)
 
 ## Shortform
 
-> 숏폼은 AI가 가게 정보를 바탕으로 나레이션 스크립트를 작성하고 TTS·영상 합성을 거쳐 생성하는 짧은 소개 영상입니다.
-> 생성 흐름: 생성 요청(`POST /api/generation`) → 비동기 처리 → 상태 폴링(`GET /api/generation/{id}`) → 완료 후 숏폼 조회
+> 게시물은 AI가 가게 정보로 만드는 가게 홍보 게시물입니다. 앱 화면에서는 "게시물", API·코드 이름은 그대로 `shortform`을 씁니다.
+> 지금 생성 흐름은 나레이션 스크립트 → TTS·영상 합성으로 영상 파일(`videoUrl`)을 만듭니다. 사진 게시물로 바꾸는 작업은 생성 담당과 정할 예정입니다.
+> 생성 흐름: 생성 요청(`POST /api/generation`) → 비동기 처리 → 상태 폴링(`GET /api/generation/{id}`) → 완료 후 게시물 조회
 
-### 숏폼 피드 조회
+### 게시물 피드 조회
 
 | 항목 | 내용 |
 | --- | --- |
-| API명 | 숏폼 피드 조회 |
+| API명 | 게시물 피드 조회 |
 | HTTP Method | `GET` |
 | API Path | `/api/shortforms` |
 | Header | 없음 |
-| Request | Query `storeId` (선택, Long): 특정 가게의 숏폼만 조회<br>Query `page` (선택, Int, 기본값 0): 페이지 번호 (0부터 시작)<br>Query `size` (선택, Int, 기본값 10): 페이지 크기 |
+| Request | Query `storeId` (선택, Long): 특정 가게의 게시물만 조회<br>Query `page` (선택, Int, 기본값 0): 페이지 번호 (0부터 시작)<br>Query `size` (선택, Int, 기본값 10): 페이지 크기 |
 | Response | `totalCount` (Int)<br>`page` (Int)<br>`size` (Int)<br>`hasNext` (Boolean)<br>`shortforms` (Array)<br>`shortforms[].shortformId` (Long)<br>`shortforms[].storeId` (Long)<br>`shortforms[].storeName` (String)<br>`shortforms[].videoUrl` (String)<br>`shortforms[].thumbnailUrl` (String \| null)<br>`shortforms[].title` (String)<br>`shortforms[].duration` (Int)<br>`shortforms[].createdAt` (String)<br>`shortforms[].promoted` (Boolean) |
-| 로직 간단 설명 | 전체 숏폼을 페이지네이션하여 반환한다. **PRO 이용 중인 가게 영상이 먼저**, 그 안에서는 최신순 ([PRO](#pro)). `storeId`가 있으면 해당 가게의 숏폼만 반환한다. 피드 화면에서 스와이프로 영상을 넘길 때 다음 배치를 미리 요청하는 방식으로 사용한다.<br><br>**result 필드**<br>`totalCount`: 조건에 맞는 전체 숏폼 수<br>`page`: 현재 페이지 번호 (0부터 시작)<br>`size`: 요청된 페이지 크기<br>`hasNext`: 다음 페이지 존재 여부<br>`shortforms[].shortformId`: 숏폼 ID<br>`shortforms[].storeId`: 가게 ID (가게 상세로 이동 시 사용)<br>`shortforms[].storeName`: 가게 이름<br>`shortforms[].videoUrl`: 재생할 영상 파일 URL<br>`shortforms[].thumbnailUrl`: 로딩 전 표시할 썸네일 이미지 URL (없으면 `null`)<br>`shortforms[].title`: 숏폼 제목<br>`shortforms[].duration`: 영상 길이 (초 단위)<br>`shortforms[].createdAt`: 생성 일시 (ISO 8601, 예: `2025-10-08T14:30:00`)<br>`shortforms[].promoted`: PRO 가게 영상이면 `true` (추천 배지) |
+| 로직 간단 설명 | 전체 게시물을 페이지네이션하여 반환한다. **PRO 이용 중인 가게 영상이 먼저**, 그 안에서는 최신순 ([PRO](#pro)). `storeId`가 있으면 해당 가게의 게시물만 반환한다. 피드 화면에서 스와이프로 영상을 넘길 때 다음 배치를 미리 요청하는 방식으로 사용한다.<br><br>**result 필드**<br>`totalCount`: 조건에 맞는 전체 게시물 수<br>`page`: 현재 페이지 번호 (0부터 시작)<br>`size`: 요청된 페이지 크기<br>`hasNext`: 다음 페이지 존재 여부<br>`shortforms[].shortformId`: 게시물 ID<br>`shortforms[].storeId`: 가게 ID (가게 상세로 이동 시 사용)<br>`shortforms[].storeName`: 가게 이름<br>`shortforms[].videoUrl`: 재생할 영상 파일 URL<br>`shortforms[].thumbnailUrl`: 로딩 전 표시할 썸네일 이미지 URL (없으면 `null`)<br>`shortforms[].title`: 게시물 제목<br>`shortforms[].duration`: 영상 길이 (초 단위)<br>`shortforms[].createdAt`: 생성 일시 (ISO 8601, 예: `2025-10-08T14:30:00`)<br>`shortforms[].promoted`: PRO 가게 영상이면 `true` (추천 배지) |
 | 상태코드 | COMMON200: 조회 성공<br>COMMON400: 잘못된 파라미터 (page·size 음수 등) |
 
 Request 예시
@@ -785,18 +787,18 @@ Response 예시 (200)
 }
 ```
 
-### 숏폼 단건 조회
+### 게시물 단건 조회
 
 | 항목 | 내용 |
 | --- | --- |
-| API명 | 숏폼 단건 조회 |
+| API명 | 게시물 단건 조회 |
 | HTTP Method | `GET` |
 | API Path | `/api/shortforms/{shortformId}` |
 | Header | 없음 |
 | Request | Path `shortformId` (필수, Long) |
 | Response | `shortformId` (Long)<br>`storeId` (Long)<br>`storeName` (String)<br>`storeCategory` (String)<br>`storeCategoryName` (String)<br>`videoUrl` (String)<br>`thumbnailUrl` (String \| null)<br>`title` (String)<br>`script` (String)<br>`duration` (Int)<br>`createdAt` (String) |
-| 로직 간단 설명 | 숏폼 ID로 상세 정보를 조회한다. 영상 URL과 AI가 생성한 나레이션 스크립트, 연결된 가게 정보를 포함한다. 자막 표시나 가게 상세 이동에 활용한다.<br><br>**result 필드**<br>`shortformId`: 숏폼 ID<br>`storeId`: 가게 ID<br>`storeName`: 가게 이름<br>`storeCategory`: 업종 코드 (예: `RESTAURANT`)<br>`storeCategoryName`: 업종 한글 이름 (예: 음식점)<br>`videoUrl`: 재생할 영상 파일 URL<br>`thumbnailUrl`: 썸네일 이미지 URL (없으면 `null`)<br>`title`: 숏폼 제목<br>`script`: AI가 생성한 나레이션 스크립트 전문 (자막 표시용)<br>`duration`: 영상 길이 (초 단위)<br>`createdAt`: 생성 일시 (ISO 8601) |
-| 상태코드 | COMMON200: 조회 성공<br>SHORTFORM404: 해당 숏폼 없음 |
+| 로직 간단 설명 | 게시물 ID로 상세 정보를 조회한다. 영상 URL과 AI가 생성한 나레이션 스크립트, 연결된 가게 정보를 포함한다. 자막 표시나 가게 상세 이동에 활용한다.<br><br>**result 필드**<br>`shortformId`: 게시물 ID<br>`storeId`: 가게 ID<br>`storeName`: 가게 이름<br>`storeCategory`: 업종 코드 (예: `RESTAURANT`)<br>`storeCategoryName`: 업종 한글 이름 (예: 음식점)<br>`videoUrl`: 재생할 영상 파일 URL<br>`thumbnailUrl`: 썸네일 이미지 URL (없으면 `null`)<br>`title`: 게시물 제목<br>`script`: AI가 생성한 나레이션 스크립트 전문 (자막 표시용)<br>`duration`: 영상 길이 (초 단위)<br>`createdAt`: 생성 일시 (ISO 8601) |
+| 상태코드 | COMMON200: 조회 성공<br>SHORTFORM404: 해당 게시물 없음 |
 
 Response 예시 (200)
 
@@ -827,7 +829,7 @@ Response 예시 (404)
 {
   "isSuccess": false,
   "code": "SHORTFORM404",
-  "message": "숏폼을 찾을 수 없어요"
+  "message": "게시물을 찾을 수 없어요"
 }
 ```
 
@@ -835,20 +837,20 @@ Response 예시 (404)
 
 ## Generation
 
-> AI 숏폼 생성은 비동기로 처리됩니다. 요청 후 `generationId`를 받아 상태 폴링으로 완료 여부를 확인하세요.
+> AI 게시물 생성은 비동기로 처리됩니다. 요청 후 `generationId`를 받아 상태 폴링으로 완료 여부를 확인하세요.
 > `status` 값: `PENDING`(대기 중) → `PROCESSING`(생성 중) → `COMPLETED`(완료) / `FAILED`(실패)
 
-### AI 숏폼 생성 요청
+### AI 게시물 생성 요청
 
 | 항목 | 내용 |
 | --- | --- |
-| API명 | AI 숏폼 생성 요청 |
+| API명 | AI 게시물 생성 요청 |
 | HTTP Method | `POST` |
 | API Path | `/api/generation` |
 | Header | `Authorization: Bearer {accessToken}` (필수)<br>`Content-Type: application/json` |
-| Request | Body<br>`storeId` (필수, Long): 숏폼을 생성할 가게 ID |
+| Request | Body<br>`storeId` (필수, Long): 게시물을 생성할 가게 ID |
 | Response | `generationId` (Long)<br>`storeId` (Long)<br>`storeName` (String)<br>`status` (String)<br>`requestedAt` (String) |
-| 로직 간단 설명 | 특정 가게에 대한 AI 숏폼 생성을 요청한다. 내부적으로 가게 정보 스크래핑 → AI 스크립트 생성 → TTS 음성 합성 → 영상 합성 순으로 비동기 처리된다. 완료까지 수십 초가 소요되므로 클라이언트는 상태 조회 API를 폴링해야 한다. 동일 가게에 이미 진행 중인 요청이 있으면 409로 거절한다.<br><br>**result 필드**<br>`generationId`: 생성 요청 ID (상태 조회 API에 사용)<br>`storeId`: 요청한 가게 ID<br>`storeName`: 요청한 가게 이름<br>`status`: 요청 직후 항상 `PENDING`<br>`requestedAt`: 요청 일시 (ISO 8601) |
+| 로직 간단 설명 | 특정 가게에 대한 AI 게시물 생성을 요청한다. 내부적으로 가게 정보 스크래핑 → AI 스크립트 생성 → TTS 음성 합성 → 영상 합성 순으로 비동기 처리된다. 완료까지 수십 초가 소요되므로 클라이언트는 상태 조회 API를 폴링해야 한다. 동일 가게에 이미 진행 중인 요청이 있으면 409로 거절한다.<br><br>**result 필드**<br>`generationId`: 생성 요청 ID (상태 조회 API에 사용)<br>`storeId`: 요청한 가게 ID<br>`storeName`: 요청한 가게 이름<br>`status`: 요청 직후 항상 `PENDING`<br>`requestedAt`: 요청 일시 (ISO 8601) |
 | 상태코드 | COMMON201: 생성 요청 접수<br>COMMON400: 필수 필드 누락<br>COMMON401: 토큰 없음·만료<br>STORE404: 가게가 존재하지 않음<br>GENERATION409: 해당 가게에 이미 진행 중(`PENDING` / `PROCESSING`)인 생성 요청 있음 |
 
 Request 예시
@@ -886,17 +888,17 @@ Response 예시 (409, 이미 진행 중)
 }
 ```
 
-### AI 숏폼 생성 상태 조회
+### AI 게시물 생성 상태 조회
 
 | 항목 | 내용 |
 | --- | --- |
-| API명 | AI 숏폼 생성 상태 조회 |
+| API명 | AI 게시물 생성 상태 조회 |
 | HTTP Method | `GET` |
 | API Path | `/api/generation/{generationId}` |
 | Header | `Authorization: Bearer {accessToken}` (필수) |
 | Request | Path `generationId` (필수, Long) |
 | Response | `generationId` (Long)<br>`storeId` (Long)<br>`storeName` (String)<br>`status` (String)<br>`shortformId` (Long \| null)<br>`errorMessage` (String \| null)<br>`requestedAt` (String) |
-| 로직 간단 설명 | 생성 요청 ID로 AI 숏폼 생성 진행 상태를 조회한다. 클라이언트는 `COMPLETED` 또는 `FAILED`가 될 때까지 폴링(예: 3초 간격)한다. `COMPLETED`이면 `shortformId`로 숏폼을 바로 조회할 수 있다.<br><br>**result 필드**<br>`generationId`: 생성 요청 ID<br>`storeId`: 가게 ID<br>`storeName`: 가게 이름<br>`status`: 현재 상태 (`PENDING` / `PROCESSING` / `COMPLETED` / `FAILED`)<br>`shortformId`: 생성 완료된 숏폼 ID. `COMPLETED`일 때만 값이 있고 그 외엔 `null`<br>`errorMessage`: 실패 사유 메시지. `FAILED`일 때만 값이 있고 그 외엔 `null`<br>`requestedAt`: 최초 요청 일시 (ISO 8601) |
+| 로직 간단 설명 | 생성 요청 ID로 AI 게시물 생성 진행 상태를 조회한다. 클라이언트는 `COMPLETED` 또는 `FAILED`가 될 때까지 폴링(예: 3초 간격)한다. `COMPLETED`이면 `shortformId`로 게시물을 바로 조회할 수 있다.<br><br>**result 필드**<br>`generationId`: 생성 요청 ID<br>`storeId`: 가게 ID<br>`storeName`: 가게 이름<br>`status`: 현재 상태 (`PENDING` / `PROCESSING` / `COMPLETED` / `FAILED`)<br>`shortformId`: 생성 완료된 게시물 ID. `COMPLETED`일 때만 값이 있고 그 외엔 `null`<br>`errorMessage`: 실패 사유 메시지. `FAILED`일 때만 값이 있고 그 외엔 `null`<br>`requestedAt`: 최초 요청 일시 (ISO 8601) |
 | 상태코드 | COMMON200: 조회 성공<br>COMMON401: 토큰 없음·만료<br>GENERATION403: 자신이 요청하지 않은 생성 요청<br>GENERATION404: 해당 생성 요청 없음 |
 
 Response 예시 (200, 완료)
@@ -942,7 +944,7 @@ Response 예시 (200, 처리 중)
 ## Scrap
 
 > 스크랩은 관심 가게를 저장하는 기능입니다. 모든 스크랩 API는 로그인이 필요합니다.
-> 숏폼 영상 스크랩(피드의 🔖)은 [숏폼 스크랩](#숏폼-스크랩)을 쓰세요. 가게 스크랩과 따로 저장됩니다.
+> 게시물 영상 스크랩(피드의 🔖)은 [게시물 스크랩](#게시물-스크랩)을 쓰세요. 가게 스크랩과 따로 저장됩니다.
 
 ### 스크랩 추가
 
@@ -1065,22 +1067,22 @@ Response 예시 (200)
 }
 ```
 
-### 숏폼 스크랩
+### 게시물 스크랩
 
-> 피드에서 🔖를 누른 숏폼 영상을 저장한다. 앱의 "메뉴 > 스크랩한 영상" 화면에서 쓴다. 로그인 필요.
+> 피드에서 🔖를 누른 게시물 영상을 저장한다. 앱의 "메뉴 > 스크랩한 영상" 화면에서 쓴다. 로그인 필요.
 
 | API | Method · Path | 설명 |
 | --- | --- | --- |
-| 숏폼 스크랩 추가 | `POST /api/scraps/shortforms` | Body `shortformId` (Long, 필수). 응답 `scrapId, shortformId, storeId, storeName, videoUrl, thumbnailUrl, title, duration, createdAt(영상 생성 일시), scrappedAt` (201) |
-| 숏폼 스크랩 취소 | `DELETE /api/scraps/shortforms/{shortformId}` | `result` 생략 |
-| 내 숏폼 스크랩 목록 | `GET /api/scraps/shortforms` | `count`, `shortforms[]` (추가 응답과 같은 모양). 스크랩한 순서 최신순 |
+| 게시물 스크랩 추가 | `POST /api/scraps/shortforms` | Body `shortformId` (Long, 필수). 응답 `scrapId, shortformId, storeId, storeName, videoUrl, thumbnailUrl, title, duration, createdAt(영상 생성 일시), scrappedAt` (201) |
+| 게시물 스크랩 취소 | `DELETE /api/scraps/shortforms/{shortformId}` | `result` 생략 |
+| 내 게시물 스크랩 목록 | `GET /api/scraps/shortforms` | `count`, `shortforms[]` (추가 응답과 같은 모양). 스크랩한 순서 최신순 |
 
 | 상태코드 | 의미 |
 | --- | --- |
 | COMMON400 | `shortformId` 누락 |
 | COMMON401 | 토큰 없음·만료 |
-| SHORTFORM404 | 숏폼 없음 |
+| SHORTFORM404 | 게시물 없음 |
 | SCRAP409_2 | 이미 스크랩한 영상 |
 | SCRAP404_2 | 스크랩하지 않은 영상 |
 
-> **DB 변경:** [`docs/sql/2026-10-09-shortform-scrap.sql`](sql/2026-10-09-shortform-scrap.sql) (`shortform_scrap` 테이블). 회원 탈퇴 시 함께 삭제된다. 숏폼을 삭제하는 API를 만들 때는 `ShortformScrapRepository.deleteAllByShortform`으로 그 숏폼의 스크랩을 먼저 지워야 한다.
+> **DB 변경:** [`docs/sql/2026-10-09-shortform-scrap.sql`](sql/2026-10-09-shortform-scrap.sql) (`shortform_scrap` 테이블). 회원 탈퇴 시 함께 삭제된다. 게시물을 삭제하는 API를 만들 때는 `ShortformScrapRepository.deleteAllByShortform`으로 그 게시물의 스크랩을 먼저 지워야 한다.
