@@ -14,6 +14,8 @@ export interface TabItem {
 
 export interface RouteHandle {
   title?: string
+  /** 숏폼처럼 화면 전체를 쓰는 페이지: 상단 바를 투명하게 영상 위에 띄움 (Figma 3:203) */
+  immersive?: boolean
 }
 
 /** 하단 네비와 같은 톤: 흰 바탕 + 민트 테두리 + 초록 그림자 */
@@ -36,7 +38,9 @@ export function AppShell({
   const navigate = useNavigate()
   const { pathname, search } = useLocation()
   const matches = useMatches()
-  const title = (matches.at(-1)?.handle as RouteHandle | undefined)?.title
+  const handle = matches.at(-1)?.handle as RouteHandle | undefined
+  const title = handle?.title
+  const immersive = Boolean(handle?.immersive)
   // 탭 루트가 아닌 하위 화면(예: 지도 → 홍보 영상)이면 우상단을 뒤로가기로
   const showBack = !tabs.some((tab) => tab.to === pathname)
   const mode = useModeStore((s) => s.mode)
@@ -49,14 +53,20 @@ export function AppShell({
   if (mode === 'OWNER' && pathname === '/') return <Navigate to="/owner" replace />
 
   return (
-    <div className="mx-auto flex h-full max-w-[430px] flex-col bg-white">
-      <header className="flex h-[76px] shrink-0 items-center justify-between gap-2 border-b border-green-1 bg-white px-[18px] pt-[env(safe-area-inset-top)]">
+    <div className="relative mx-auto flex h-full max-w-[430px] flex-col bg-white">
+      <header
+        className={`flex h-[76px] shrink-0 items-center justify-between gap-2 px-[18px] pt-[env(safe-area-inset-top)] ${
+          immersive ? 'absolute inset-x-0 top-0 z-30' : 'border-b border-green-1 bg-white'
+        }`}
+      >
         <SettingsDrawer buttonClassName={circleButton} items={menuItems} />
         <div className="flex min-w-0 flex-col items-center">
           {modeBadge && (
             <span className="mb-0.5 rounded-full bg-green-6 px-2 py-px text-[10px] font-bold text-white">{modeBadge}</span>
           )}
-          <h1 className={`truncate font-bold text-ink ${modeBadge ? 'text-[21px] leading-tight' : 'text-[25px]'}`}>{title}</h1>
+          {!immersive && (
+            <h1 className={`truncate font-bold text-ink ${modeBadge ? 'text-[21px] leading-tight' : 'text-[25px]'}`}>{title}</h1>
+          )}
         </div>
         {showBack ? (
           <button type="button" aria-label="뒤로" className={circleButton} onClick={() => navigate(-1)}>

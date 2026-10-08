@@ -131,3 +131,47 @@ export function ChartNavIcon() {
     </svg>
   )
 }
+
+/* 숏폼 플레이어 (Figma 3:203 오른쪽 아이콘 톤) */
+export function BookmarkIcon({ filled = false }: { filled?: boolean }) {
+  return (
+    <svg width="22" height="26" viewBox="0 0 20 23" fill={filled ? 'currentColor' : 'none'} aria-hidden>
+      <path d="M19 1H1V22L10 13L19 22V1Z" {...stroke} />
+    </svg>
+  )
+}
+
+/** 위치 보기: 지도 핀 모양 */
+export function LocationIcon() {
+  return (
+    <svg width="22" height="26" viewBox="0 0 22 26" fill="none" aria-hidden>
+      <path d="M11 24.5s8.5-7.6 8.5-14A8.5 8.5 0 0 0 2.5 10.5c0 6.4 8.5 14 8.5 14Z" {...stroke} />
+      <circle cx="11" cy="10.5" r="3" {...stroke} />
+    </svg>
+  )
+}
+
+export function SoundIcon({ muted }: { muted: boolean }) {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M4 9v6h4l5 4V5L8 9H4Z" {...stroke} fill="currentColor" />
+      {muted ? <path d="m17 9 5 6M22 9l-5 6" {...stroke} /> : <path d="M17 8.5a5 5 0 0 1 0 7M19.5 6a8.5 8.5 0 0 1 0 12" {...stroke} />}
+    </svg>
+  )
+}
+
+export function PlayIcon() {
+  return (
+    <svg width="34" height="38" viewBox="0 0 34 38" aria-hidden>
+      <path d="M4 3.5v31c0 1.6 1.7 2.5 3 1.6l23.4-15.5a1.9 1.9 0 0 0 0-3.2L7 1.9C5.7 1 4 1.9 4 3.5Z" fill="currentColor" />
+    </svg>
+  )
+}
+
+export function TicketSmallIcon() {
+  return (
+    <svg width="24" height="20" viewBox="0 0 28 22" fill="none" aria-hidden>
+      <path d="M2 4a2 2 0 0 1 2-2h20a2 2 0 0 1 2 2v4a3 3 0 0 0 0 6v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a3 3 0 0 0 0-6V4ZM10 2v18" {...stroke} />
+    </svg>
+  )
+}
