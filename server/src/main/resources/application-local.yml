@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    # DB_CLOSE_DELAY=-1: 연결이 모두 끊겨도(PC 잠자기 등) 서버가 켜져 있는 동안 DB 유지
+    url: jdbc:h2:mem:itda;MODE=MySQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+
+# 로컬: 메일 서버(MAIL_HOST) 없이도 가입 테스트가 되게 인증번호를 응답 devCode 로 줌
+email-verification:
+  expose-code: true
+
+# 로컬: 집에서도 방문 인증을 해 볼 수 있게 GPS 반경 검사를 건너뜀
+quest:
+  gps-bypass: ${QUEST_GPS_BYPASS:true}

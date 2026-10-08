@@ -1,0 +1,62 @@
+import { Link } from 'react-router-dom'
+import { OWNER_ILLUST } from '@/features/owner/illustrations'
+import { PhotoIcon } from '@/shared/ui/icons'
+import { useCanScrap, useScrappedShortforms } from '../hooks'
+
+/** 스크랩 — 3열 영상 썸네일 (Figma 11:1426) */
+export function ScrapGrid() {
+  const canScrap = useCanScrap()
+  const { data: scrapped = [], isLoading, isError } = useScrappedShortforms()
+
+  if (!canScrap) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center px-8 text-center">
+        <img src={OWNER_ILLUST.videoDownload} alt="" className="h-[110px] w-auto object-contain opacity-90" />
+        <p className="mt-3 text-[16px] font-bold text-ink">로그인하면 스크랩한 게시물을 볼 수 있어요</p>
+        <Link to="/login?next=/scraps" className="mt-5 flex h-11 w-full items-center justify-center rounded-xl bg-green-4 text-[15px] font-bold text-white">
+          로그인
+        </Link>
+      </div>
+    )
+  }
+  if (isLoading) return <div className="grid h-40 animate-pulse grid-cols-3 gap-0.5 bg-q-panel" />
+  if (isError) return <p className="py-10 text-center text-sm text-q-muted">스크랩한 게시물을 불러오지 못했어요</p>
+  if (scrapped.length === 0) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center px-8 text-center text-sm leading-relaxed text-q-muted">
+        <img src={OWNER_ILLUST.videoDownload} alt="" className="mb-3 h-[110px] w-auto object-contain opacity-90" />
+        아직 스크랩한 게시물이 없어요.
+        <br />
+        피드에서 🔖 버튼을 눌러 마음에 드는 가게를 모아 보세요!
+      </div>
+    )
+  }
+
+  return (
+    <ul className="grid h-full auto-rows-min grid-cols-3 gap-0.5 overflow-y-auto">
+      {scrapped.map((s) => (
+        <li key={s.shortformId}>
+          <Link to={`/?start=${s.shortformId}`} className="relative block aspect-[9/13] overflow-hidden bg-q-mint">
+            {s.posterUrl && (
+              // 샘플 영상은 위아래 검은 띠가 있어 가운데 그림 구간만 보이게 확대
+              <img
+                src={s.posterUrl}
+                alt=""
+                className="absolute left-1/2 max-w-none -translate-x-1/2"
+                style={s.frame ? { height: `${100 / s.frame.height}%`, top: `${(-100 * s.frame.top) / s.frame.height}%` } : { height: '100%', top: 0 }}
+              />
+            )}
+            <span className="absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-md bg-white/90 text-q-text">
+              <span className="scale-[0.35]">
+                <PhotoIcon />
+              </span>
+            </span>
+            <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/70 to-transparent px-1.5 pt-4 pb-1 text-[11px] font-bold text-white">
+              {s.storeName}
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )
+}

@@ -1,0 +1,87 @@
+spring:
+  application:
+    name: itda
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  # server/.env 가 있으면 읽어온다 (없으면 OS 환경변수만 사용)
+  config:
+    import: optional:file:.env[.properties]
+
+
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+  # 회원가입 인증 메일 (SMTP). MAIL_HOST 가 비어 있으면 메일을 보내지 않고 로그에만 남김
+  # 예) Gmail: MAIL_HOST=smtp.gmail.com, MAIL_PORT=587, MAIL_USERNAME=주소, MAIL_PASSWORD=앱 비밀번호(16자리)
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+
+  ai:
+    bedrock:
+      aws:
+        region: ${AWS_REGION:ap-northeast-2}
+        access-key: ${AWS_ACCESS_KEY_ID}
+        secret-key: ${AWS_SECRET_ACCESS_KEY}
+      converse:
+        chat:
+          options:
+            model: ${BEDROCK_MODEL_ID}
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:86400000}
+
+aws:
+  region: ${AWS_REGION:ap-northeast-2}
+  s3:
+    bucket: ${AWS_S3_BUCKET}
+    presigned-url-expiration-minutes: 10
+  cloudfront:
+    domain: ${AWS_CLOUDFRONT_DOMAIN}
+  polly:
+    voice-id: ${AWS_POLLY_VOICE_ID:Seoyeon}
+
+video:
+  ffmpeg-path: ${FFMPEG_PATH:ffmpeg}
+  work-dir: ${VIDEO_WORK_DIR:./tmp/video}
+
+email-verification:
+  # 보내는 사람 주소 (비우면 MAIL_USERNAME)
+  from: ${MAIL_FROM:${MAIL_USERNAME:}}
+  # 메일 서버가 없을 때 인증번호를 응답(devCode)에 담을지 — 운영에선 false
+  expose-code: false
+
+quest:
+  # 방문 인증 GPS 반경 검사를 건너뜀 (개발·시연용, 운영은 false)
+  gps-bypass: ${QUEST_GPS_BYPASS:false}
+  # 가게 방문 QR 값을 만드는 비밀값 (없으면 JWT 비밀값 사용)
+  qr-secret: ${QUEST_QR_SECRET:${jwt.secret}}
+
+unsplash:
+  access-key: ${UNSPLASH_ACCESS_KEY}
+
+runway:
+  api-key: ${RUNWAYML_API_SECRET:${RUNWAY_API_KEY:}}
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

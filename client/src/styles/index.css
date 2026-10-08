@@ -1,0 +1,258 @@
+@import 'tailwindcss';
+
+/* Figma(컴미컴) 디자인 토큰 */
+@theme {
+  --color-green-1: #cbd7ce;
+  --color-green-4: #3cb371;
+  --color-green-6: #086816;
+  --color-gray-1: #f5f5f5;
+  --color-gray-2: #bebebe;
+
+  /* 포인트 컬러: 디자인 시스템 hex 미정 → 지도 화면(94:106)에 쓰인 값 */
+  --color-point-yellow: #ffd166;
+  --color-point-orange: #f4a261;
+  --color-point-red: #e76f51;
+  --color-point-red-dark: #d25131;
+
+  /* 지도 화면 전용 */
+  --color-ink: #3c4045;
+  --color-mint: #c9ffcb;
+  --color-mint-line: #94db96;
+  --color-handle: #c3c6c1;
+  --color-glass: rgb(121 123 123 / 0.2);
+  --color-glass-dark: rgb(93 96 94 / 0.2);
+
+  /* 퀘스트·리워드 화면 전용 (Figma 114:8 — 디자인 시스템 초록과 별도 톤) */
+  --color-q-green: #1e8e5a;
+  --color-q-green-dark: #1e6b45;
+  --color-q-mint: #e8f4ee;
+  --color-q-panel: #f1f5f3;
+  --color-q-card: #f6f8f7;
+  --color-q-line: #e5e5e5;
+  --color-q-track: #e3e3e3;
+  --color-q-text: #222222;
+  --color-q-sub: #555555;
+  --color-q-muted: #888888;
+  --color-q-cream: #fff6dd;
+  --color-q-ground: #efe6d6;
+
+  --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  /* Figma 타이틀 폰트 Jalnan 2 — 웹폰트가 없어 같은 계열의 여기어때 잘난체(Jalnan)로 (아래 @font-face) */
+  --font-title: 'Jalnan 2', 'Jalnan', 'Pretendard', sans-serif;
+}
+
+/* 여기어때 잘난체 (무료 폰트, 눈누 CDN) — font-title 을 쓰는 화면에서만 내려받음 */
+@font-face {
+  font-family: 'Jalnan';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_four@1.2/JalnanOTF00.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-gray-1 font-sans text-neutral-900 antialiased;
+}
+
+/* 사장님 방문 인증 QR 인쇄: QR 카드만 종이 가운데에 크게 */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .qr-print,
+  .qr-print * {
+    visibility: visible;
+  }
+  .qr-print {
+    position: fixed;
+    top: 30mm;
+    left: 50%;
+    transform: translateX(-50%) scale(1.6);
+    transform-origin: top center;
+  }
+}
+
+/* 설정 서랍 열림 효과 */
+@keyframes slide-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* 창이 아래에서 올라옴 */
+@keyframes rise {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes rise-center {
+  from {
+    transform: translateY(45vh);
+    opacity: 0;
+  }
+}
+
+/* 폭죽 조각: 가운데에서 퍼진 뒤 살짝 떨어지며 사라짐 */
+@keyframes confetti {
+  0% {
+    transform: translate(0, 0) scale(0.4) rotate(0);
+    opacity: 1;
+  }
+  60% {
+    transform: translate(var(--dx), var(--dy)) scale(1) rotate(calc(var(--rot) * 0.6));
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), calc(var(--dy) + 90px)) scale(0.9) rotate(var(--rot));
+    opacity: 0;
+  }
+}
+
+/* 뽑기 카드 공개 시간 표시 막대 */
+@keyframes shrink {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* 시작 스플래시 (Figma 온보딩 홈 1→2→3): 로고 등장 → 연두 덩어리가 퍼져 화면을 덮음 → 사라짐 */
+@keyframes splash-pop {
+  from {
+    transform: scale(0.82);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes splash-blob {
+  0% {
+    transform: scale(0) rotate(-12deg);
+  }
+  60% {
+    transform: scale(1.1) rotate(0deg);
+  }
+  100% {
+    transform: scale(4.5) rotate(6deg);
+  }
+}
+@keyframes splash-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* 숏폼 첫 사용 안내: 손가락이 위로 쓸어 올림 / 꾹 눌렀다 내림 */
+@keyframes guide-swipe {
+  0%,
+  100% {
+    transform: translateY(10px);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
+}
+@keyframes guide-press {
+  0%,
+  100% {
+    transform: translateY(-4px) scale(1);
+  }
+  40% {
+    transform: translateY(-4px) scale(0.86);
+  }
+  80% {
+    transform: translateY(8px) scale(0.86);
+  }
+}
+
+/* 비둘기 알(Lv.0): 가끔 좌우로 흔들 — 곧 깨어날 것처럼 */
+@keyframes egg-wobble {
+  0%,
+  60%,
+  100% {
+    transform: rotate(0);
+  }
+  68% {
+    transform: rotate(-7deg);
+  }
+  76% {
+    transform: rotate(6deg);
+  }
+  84% {
+    transform: rotate(-4deg);
+  }
+  92% {
+    transform: rotate(2deg);
+  }
+}
+
+/* 비둘기 먹이 먹기: 아래(발)를 기준으로 살짝 움츠렸다 폈다 — 위아래로 튀지 않음 */
+@keyframes pigeon-eat {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  30% {
+    transform: scale(1.05, 0.93);
+  }
+  60% {
+    transform: scale(0.98, 1.03);
+  }
+}
+
+/* 가입 환영 비둘기: 둥실둥실 */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* 공통 토스트: 위에서 살짝 내려오며 나타났다가 사라짐 */
+@keyframes toast {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  10%,
+  85% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* 숏폼 "눌러서 소리 켜기": 잠깐 나타났다가 서서히 사라짐 */
+@keyframes hint-fade {
+  0% {
+    opacity: 0;
+  }
+  10%,
+  65% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
