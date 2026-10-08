@@ -1,0 +1,118 @@
+@import 'tailwindcss';
+
+/* Figma(컴미컴) 디자인 토큰 */
+@theme {
+  --color-green-1: #cbd7ce;
+  --color-green-4: #3cb371;
+  --color-green-6: #086816;
+  --color-gray-1: #f5f5f5;
+  --color-gray-2: #bebebe;
+
+  /* 포인트 컬러: 디자인 시스템 hex 미정 → 지도 화면(94:106)에 쓰인 값 */
+  --color-point-yellow: #ffd166;
+  --color-point-orange: #f4a261;
+  --color-point-red: #e76f51;
+  --color-point-red-dark: #d25131;
+
+  /* 지도 화면 전용 */
+  --color-ink: #3c4045;
+  --color-mint: #c9ffcb;
+  --color-mint-line: #94db96;
+  --color-handle: #c3c6c1;
+  --color-glass: rgb(121 123 123 / 0.2);
+  --color-glass-dark: rgb(93 96 94 / 0.2);
+
+  /* 퀘스트·리워드 화면 전용 (Figma 114:8 — 디자인 시스템 초록과 별도 톤) */
+  --color-q-green: #1e8e5a;
+  --color-q-green-dark: #1e6b45;
+  --color-q-mint: #e8f4ee;
+  --color-q-panel: #f1f5f3;
+  --color-q-card: #f6f8f7;
+  --color-q-line: #e5e5e5;
+  --color-q-track: #e3e3e3;
+  --color-q-text: #222222;
+  --color-q-sub: #555555;
+  --color-q-muted: #888888;
+  --color-q-cream: #fff6dd;
+  --color-q-ground: #efe6d6;
+
+  --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  /* Jalnan 2 폰트 파일은 assets에 추가 후 @font-face 등록 */
+  --font-title: 'Jalnan 2', 'Pretendard', sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-gray-1 font-sans text-neutral-900 antialiased;
+}
+
+/* 사장님 방문 인증 QR 인쇄: QR 카드만 종이 가운데에 크게 */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .qr-print,
+  .qr-print * {
+    visibility: visible;
+  }
+  .qr-print {
+    position: fixed;
+    top: 30mm;
+    left: 50%;
+    transform: translateX(-50%) scale(1.6);
+    transform-origin: top center;
+  }
+}
+
+/* 설정 서랍 열림 효과 */
+@keyframes slide-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* 창이 아래에서 올라옴 */
+@keyframes rise {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes rise-center {
+  from {
+    transform: translateY(45vh);
+    opacity: 0;
+  }
+}
+
+/* 폭죽 조각: 가운데에서 퍼진 뒤 살짝 떨어지며 사라짐 */
+@keyframes confetti {
+  0% {
+    transform: translate(0, 0) scale(0.4) rotate(0);
+    opacity: 1;
+  }
+  60% {
+    transform: translate(var(--dx), var(--dy)) scale(1) rotate(calc(var(--rot) * 0.6));
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), calc(var(--dy) + 90px)) scale(0.9) rotate(var(--rot));
+    opacity: 0;
+  }
+}
+
+/* 뽑기 카드 공개 시간 표시 막대 */
+@keyframes shrink {
+  to {
+    transform: scaleX(0);
+  }
+}
