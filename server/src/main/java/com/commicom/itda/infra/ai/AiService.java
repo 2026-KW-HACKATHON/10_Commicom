@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 public class AiService {
 
     private final ChatClient chatClient;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("classpath:prompts/shortform-script.txt")
     private Resource scriptPromptTemplate;

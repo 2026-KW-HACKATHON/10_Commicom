@@ -7,10 +7,6 @@ spring:
   config:
     import: optional:file:.env[.properties]
 
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false
-    time-zone: Asia/Seoul
 
   jpa:
     open-in-view: false
