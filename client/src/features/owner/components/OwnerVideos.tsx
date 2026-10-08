@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import pigeonCrying from '@/assets/generation/pigeon-crying.jpg'
 import pigeonUpload from '@/assets/generation/pigeon-upload.jpg'
-import { FramedVideo } from '@/features/feed/components/FramedVideo'
+import { PostImage } from '@/features/feed/components/PostImage'
 import { useDeleteShortform, useStoreShortforms } from '@/features/feed/hooks'
 import type { Shortform } from '@/features/feed/schema'
 import { Dialog } from '@/features/generation/components/Dialog'
@@ -131,8 +131,8 @@ function VideoDetail({ video, onClose }: { video: Shortform; onClose: () => void
           </button>
         </div>
 
-        <div className="relative mx-auto mt-2 aspect-[9/16] w-full max-w-[240px] overflow-hidden rounded-3xl shadow-[0_10px_30px_rgba(8,104,22,0.18)]">
-          <FramedVideo videoUrl={video.videoUrl} posterUrl={video.posterUrl} frame={video.frame} />
+        <div className="relative mx-auto mt-2 aspect-[4/5] w-full max-w-[280px] overflow-hidden rounded-3xl shadow-[0_10px_30px_rgba(8,104,22,0.18)]">
+          <PostImage url={video.posterUrl} alt={video.description || video.storeName} frame={video.frame} />
         </div>
 
         <p className="mt-4 text-[16px] font-bold text-q-text">{video.description || video.storeName}</p>
@@ -150,8 +150,8 @@ function VideoDetail({ video, onClose }: { video: Shortform; onClose: () => void
           </Action>
           {isPro ? (
             <a
-              href={video.videoUrl}
-              download={`${video.storeName}-게시물${video.videoUrl.match(/\.\w+(?=$|\?)/)?.[0] ?? ''}`}
+              href={video.posterUrl ?? undefined}
+              download={`${video.storeName}-게시물${video.posterUrl?.match(/\.\w+(?=$|\?)/)?.[0] ?? ''}`}
               className="flex flex-col items-center gap-1 rounded-xl bg-q-panel py-3 text-[12px] font-bold text-q-text active:bg-q-mint"
             >
               <img src={OWNER_ILLUST.videoDownload} alt="" className="size-9 object-contain" />

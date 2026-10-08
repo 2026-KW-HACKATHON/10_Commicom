@@ -42,13 +42,11 @@ export interface ShortformDetail {
   storeName: string
   storeCategory: string
   storeCategoryName: string
-  videoUrl: string
-  thumbnailUrl: string | null
+  /** AI 생성 게시물 사진 */
+  imageUrl: string | null
   title: string
-  script: string
-  duration: number
   createdAt: string
-  /** 목업 전용: 샘플 영상의 실제 그림 구간 (feed/schema 의 frame 과 같음) */
+  /** 목업 전용: 샘플 사진의 실제 그림 구간 (feed/schema 의 frame 과 같음) */
   frame?: { top: number; height: number }
 }
 

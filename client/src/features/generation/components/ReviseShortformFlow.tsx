@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import pigeonCrying from '@/assets/generation/pigeon-crying.jpg'
 import pigeonUpload from '@/assets/generation/pigeon-upload.jpg'
 import pigeonUploaded from '@/assets/generation/pigeon-uploaded.png'
-import { FramedVideo } from '@/features/feed/components/FramedVideo'
+import { PostImage } from '@/features/feed/components/PostImage'
 import { useStoreShortforms } from '@/features/feed/hooks'
 import type { Shortform } from '@/features/feed/schema'
 import { useMyStoreId } from '@/features/owner/hooks'
@@ -171,9 +171,9 @@ function Revise({ original, onExit }: { original: Shortform; onExit: () => void 
           next={{ label: '이걸로 교체', onClick: () => setModal('replace'), disabled: !detail.data }}
         >
           <p className="mb-2 text-center text-[13px] font-bold text-green-4">새 버전이 완성됐어요</p>
-          <div className="relative mx-auto aspect-[9/16] w-full max-w-[260px] overflow-hidden rounded-3xl bg-green-1 shadow-[0_10px_30px_rgba(8,104,22,0.18)]">
+          <div className="relative mx-auto aspect-[4/5] w-full max-w-[260px] overflow-hidden rounded-3xl bg-green-1 shadow-[0_10px_30px_rgba(8,104,22,0.18)]">
             {detail.data ? (
-              <FramedVideo videoUrl={detail.data.videoUrl} posterUrl={detail.data.thumbnailUrl} frame={detail.data.frame} />
+              <PostImage url={detail.data.imageUrl} alt={detail.data.title} frame={detail.data.frame} />
             ) : (
               <p className="flex h-full items-center justify-center text-sm text-q-muted">게시물을 불러오는 중...</p>
             )}
@@ -181,7 +181,6 @@ function Revise({ original, onExit }: { original: Shortform; onExit: () => void 
           {detail.data && (
             <div className="mx-auto mt-4 max-w-[300px]">
               <p className="text-[16px] font-bold text-ink">{detail.data.title}</p>
-              <p className="mt-1 line-clamp-3 text-[13px] leading-relaxed text-q-muted">{detail.data.script}</p>
             </div>
           )}
           {replace.isError && <ErrorText>{errorMessage(replace.error)}</ErrorText>}

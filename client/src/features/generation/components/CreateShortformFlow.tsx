@@ -5,7 +5,7 @@ import pigeonCrying from '@/assets/generation/pigeon-crying.jpg'
 import pigeonUpload from '@/assets/generation/pigeon-upload.jpg'
 import pigeonUploaded from '@/assets/generation/pigeon-uploaded.png'
 import working2 from '@/assets/generation/pigeon-working-2.jpg'
-import { FramedVideo } from '@/features/feed/components/FramedVideo'
+import { PostImage } from '@/features/feed/components/PostImage'
 import { useMyStore, useMyStoreId } from '@/features/owner/hooks'
 import { useIsPro } from '@/features/pro/hooks'
 import { errorMessage } from '@/shared/lib/error'
@@ -184,9 +184,9 @@ export function CreateShortformFlow() {
           prev={{ label: '수정', onClick: () => (isPro ? setStep('editPick') : setModal('pro')) }}
           next={{ label: '업로드', onClick: () => setModal('upload'), disabled: !detail.data }}
         >
-          <div className="relative mx-auto mt-2 aspect-[9/16] w-full max-w-[300px] overflow-hidden rounded-3xl bg-green-1 shadow-[0_10px_30px_rgba(8,104,22,0.18)]">
+          <div className="relative mx-auto mt-2 aspect-[4/5] w-full max-w-[300px] overflow-hidden rounded-3xl bg-green-1 shadow-[0_10px_30px_rgba(8,104,22,0.18)]">
             {detail.data ? (
-              <FramedVideo videoUrl={detail.data.videoUrl} posterUrl={detail.data.thumbnailUrl} frame={detail.data.frame} />
+              <PostImage url={detail.data.imageUrl} alt={detail.data.title} frame={detail.data.frame} />
             ) : (
               <p className="flex h-full items-center justify-center text-sm text-q-muted">게시물을 불러오는 중...</p>
             )}
@@ -194,7 +194,6 @@ export function CreateShortformFlow() {
           {detail.data && (
             <div className="mx-auto mt-4 max-w-[300px]">
               <p className="text-[16px] font-bold text-ink">{detail.data.title}</p>
-              <p className="mt-1 line-clamp-3 text-[13px] leading-relaxed text-q-muted">{detail.data.script}</p>
             </div>
           )}
         </Screen>

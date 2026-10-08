@@ -6,6 +6,7 @@ import { BookmarkIcon, LocationIcon, ShareIcon, TicketSmallIcon } from '@/shared
 import { toast } from '@/stores/toastStore'
 import { useCanScrap, useIsScrapped, useToggleScrap } from '../hooks'
 import type { Shortform } from '../schema'
+import { PostImage } from './PostImage'
 
 interface Props {
   item: Shortform
@@ -137,40 +138,19 @@ export function ShortformItem({ item, couponCount, onOpenCoupons }: Props) {
 
 /** 게시물 사진. 없거나 못 불러오면 업종 그림으로 채움 */
 function PostPhoto({ item, icon }: { item: Shortform; icon?: string }) {
-  const [failed, setFailed] = useState(false)
-  if (!item.posterUrl || failed) {
-    return (
-      <div className="flex size-full flex-col items-center justify-center bg-gradient-to-br from-q-mint to-[#d7ebe0] text-center">
-        {icon && <img src={icon} alt="" className="h-[120px] w-auto object-contain opacity-90" />}
-        <p className="mt-3 text-[15px] font-bold text-green-6">{item.storeName}</p>
-        <p className="mt-0.5 text-[12px] text-q-muted">사진을 준비하고 있어요</p>
-      </div>
-    )
-  }
-  const frame = item.frame
-  if (frame) {
-    // 위아래 검은 띠가 있는 샘플 사진은 실제 그림 구간(frame)만 보이게 확대
-    return (
-      <img
-        src={item.posterUrl}
-        alt={item.description || `${item.storeName} 사진`}
-        onError={() => setFailed(true)}
-        className="absolute left-1/2 max-w-none -translate-x-1/2"
-        style={{ height: `${100 / frame.height}%`, top: `${(-100 * frame.top) / frame.height}%` }}
-      />
-    )
-  }
-  // 사진 비율이 제각각이라 자르지 않고 통째로, 남는 곳은 같은 사진을 흐리게 깔아 채움
   return (
-    <>
-      <img src={item.posterUrl} alt="" aria-hidden className="absolute inset-0 size-full scale-110 object-cover opacity-60 blur-2xl" />
-      <img
-        src={item.posterUrl}
-        alt={item.description || `${item.storeName} 사진`}
-        onError={() => setFailed(true)}
-        className="relative size-full object-contain"
-      />
-    </>
+    <PostImage
+      url={item.posterUrl}
+      alt={item.description || `${item.storeName} 사진`}
+      frame={item.frame}
+      fallback={
+        <div className="flex size-full flex-col items-center justify-center bg-gradient-to-br from-q-mint to-[#d7ebe0] text-center">
+          {icon && <img src={icon} alt="" className="h-[120px] w-auto object-contain opacity-90" />}
+          <p className="mt-3 text-[15px] font-bold text-green-6">{item.storeName}</p>
+          <p className="mt-0.5 text-[12px] text-q-muted">사진을 준비하고 있어요</p>
+        </div>
+      }
+    />
   )
 }
 

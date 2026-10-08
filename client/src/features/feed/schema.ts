@@ -13,7 +13,9 @@ export interface Shortform {
   menus: string[]
   /** 한 줄 소개 */
   description: string
-  videoUrl: string
+  /** 목업 샘플 영상 (서버 게시물은 사진만 있음) */
+  videoUrl?: string
+  /** 게시물 사진 (서버 imageUrl) */
   posterUrl: string | null
   /**
    * 영상 파일 안에서 실제 그림이 있는 세로 구간(0~1). 위아래 검은 띠가 박힌 영상을 잘라 보여줄 때 사용.

@@ -8,10 +8,8 @@ import type { GenerationCreated, GenerationRequest, GenerationState, MenuItem, S
  * 생성은 요청 후 약 2초 PENDING → 약 9초까지 PROCESSING → COMPLETED 로 흘러감.
  */
 const SAMPLE = {
-  videoUrl: '/samples/shortform-sample.mp4',
-  thumbnailUrl: '/samples/shortform-sample-poster.jpg',
+  imageUrl: '/samples/shortform-sample-poster.jpg',
   frame: { top: 656 / 1920, height: 607 / 1920 },
-  duration: 25,
 }
 
 interface Job {
@@ -89,8 +87,7 @@ function makeDraft(job: Job) {
       storeCategory: store.category,
       storeCategoryName: store.categoryName,
       ...SAMPLE,
-      title,
-      script: `${base?.script ?? title} (수정 요청 반영: ${revision.request})`,
+      title: `${title} (수정 요청 반영: ${revision.request})`,
       createdAt: now(),
     })
     return shortformId
@@ -104,8 +101,7 @@ function makeDraft(job: Job) {
     storeCategory: store.category,
     storeCategoryName: store.categoryName,
     ...SAMPLE,
-    title: appeal ? appeal.slice(0, 24) : `동네 사람들이 사랑하는 ${store.name}`,
-    script: `${store.address}에 자리한 ${store.name}.${menuText ? ` 대표 메뉴 ${menuText}로` : ''} 오늘도 동네 손님을 기다립니다.${appeal ? ` ${appeal}` : ''}`,
+    title: `${appeal || `동네 사람들이 사랑하는 ${store.name}`}${menuText ? ` · 대표 메뉴 ${menuText}` : ''}`,
     createdAt: now(),
   })
   return shortformId
