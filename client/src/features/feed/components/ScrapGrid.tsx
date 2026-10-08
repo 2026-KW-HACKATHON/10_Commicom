@@ -1,15 +1,26 @@
 import { Link } from 'react-router-dom'
 import { OWNER_ILLUST } from '@/features/owner/illustrations'
 import { PlayIcon } from '@/shared/ui/icons'
-import { useScrapStore, useShortforms } from '../hooks'
+import { useCanScrap, useScrappedShortforms } from '../hooks'
 
 /** 스크랩 — 3열 영상 썸네일 (Figma 11:1426) */
 export function ScrapGrid() {
-  const ids = useScrapStore((s) => s.ids)
-  const { data: items, isLoading } = useShortforms()
-  const scrapped = ids.map((id) => items?.find((s) => s.shortformId === id)).filter((s) => s !== undefined)
+  const canScrap = useCanScrap()
+  const { data: scrapped = [], isLoading, isError } = useScrappedShortforms()
 
+  if (!canScrap) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center px-8 text-center">
+        <img src={OWNER_ILLUST.videoDownload} alt="" className="h-[110px] w-auto object-contain opacity-90" />
+        <p className="mt-3 text-[16px] font-bold text-ink">로그인하면 스크랩한 영상을 볼 수 있어요</p>
+        <Link to="/login?next=/scraps" className="mt-5 flex h-11 w-full items-center justify-center rounded-xl bg-green-4 text-[15px] font-bold text-white">
+          로그인
+        </Link>
+      </div>
+    )
+  }
   if (isLoading) return <div className="grid h-40 animate-pulse grid-cols-3 gap-0.5 bg-q-panel" />
+  if (isError) return <p className="py-10 text-center text-sm text-q-muted">스크랩한 영상을 불러오지 못했어요</p>
   if (scrapped.length === 0) {
     return (
       <div className="flex h-full flex-col items-center justify-center px-8 text-center text-sm leading-relaxed text-q-muted">

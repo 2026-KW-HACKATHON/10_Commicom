@@ -4,7 +4,7 @@ import { MAP_CATEGORIES } from '@/features/map/schema'
 import { shareLink } from '@/shared/lib/share'
 import { BookmarkIcon, LocationIcon, PlayIcon, ShareIcon, SoundIcon, TicketSmallIcon } from '@/shared/ui/icons'
 import { toast } from '@/stores/toastStore'
-import { useScrapStore } from '../hooks'
+import { useCanScrap, useIsScrapped, useToggleScrap } from '../hooks'
 import type { Shortform } from '../schema'
 import { useSpeedPress } from '../useSpeedPress'
 
@@ -26,8 +26,9 @@ export function ShortformItem({ item, active, muted, onToggleMute, couponCount, 
   const [menusOpen, setMenusOpen] = useState(false)
   const pressRef = useRef<HTMLButtonElement>(null)
   const { speed, unlock, consumeClick, pressHandlers } = useSpeedPress(pressRef, videoRef, active)
-  const scrapped = useScrapStore((s) => s.ids.includes(item.shortformId))
-  const toggleScrap = useScrapStore((s) => s.toggle)
+  const scrapped = useIsScrapped(item.shortformId)
+  const canScrap = useCanScrap()
+  const toggleScrap = useToggleScrap()
 
   // 화면에 보이는 영상만 재생, 지나간 영상은 처음으로
   useEffect(() => {
@@ -162,7 +163,13 @@ export function ShortformItem({ item, active, muted, onToggleMute, couponCount, 
         <SideButton
           label={scrapped ? '스크랩됨' : '스크랩'}
           onClick={() => {
-            toggleScrap(item.shortformId)
+            if (!canScrap) {
+              // 로그인 전엔 저장할 곳이 없으니 로그인부터 (로그인 후 이 영상으로 돌아옴)
+              toast('로그인하면 스크랩할 수 있어요')
+              navigate(`/login?next=${encodeURIComponent(`/?start=${item.shortformId}`)}`)
+              return
+            }
+            toggleScrap.mutate({ item, scrapped })
             toast(scrapped ? '스크랩을 취소했어요' : '스크랩했어요 · 메뉴 > 스크랩한 영상에서 볼 수 있어요')
           }}
           pressed={scrapped}

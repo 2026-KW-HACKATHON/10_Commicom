@@ -3,8 +3,10 @@ import type { StoreSummary } from '@/features/map/schema'
 import { useProStore } from '@/features/pro/store'
 import { mockFor, mockOwnerStoreId, USE_MOCK } from '@/mocks/db'
 import { api, request } from '@/shared/api/client'
+import { errorCode } from '@/shared/lib/error'
 import { allMockShortforms, isHiddenShortform, removeMockShortform } from './mock'
 import { FEED_PAGE_SIZE, type Shortform, type ShortformListResult } from './schema'
+import { useLocalScrapStore } from './scrapStore'
 
 /** 목업: PRO 구독 중인 가게. 목업 PRO는 기기 저장이라 이 기기의 사장님 가게만 해당 */
 function mockProStoreIds() {
@@ -91,4 +93,39 @@ export async function deleteStoreShortform(shortformId: number) {
     return removeMockShortform(shortformId)
   }
   return request(api.delete(`/api/shortforms/${shortformId}`))
+}
+
+/* 숏폼 스크랩 (피드의 🔖) — 로그인 필요. 목업이면 이 기기에 저장 */
+
+/** GET /api/scraps/shortforms — 스크랩한 순서(최신순) */
+export async function fetchScrappedShortforms(): Promise<Shortform[]> {
+  if (mockFor('scrap')) {
+    const { shortforms } = await fetchShortforms(undefined, 0, 100)
+    return useLocalScrapStore
+      .getState()
+      .ids.map((id) => shortforms.find((s) => s.shortformId === id))
+      .filter((s) => s !== undefined)
+  }
+  const res = await request<{ count: number; shortforms: ServerShortform[] }>(api.get('/api/scraps/shortforms'))
+  return (await fromServer({ totalCount: res.count, page: 0, size: res.count, hasNext: false, shortforms: res.shortforms })).shortforms
+}
+
+/** POST /api/scraps/shortforms — 이미 스크랩했으면(SCRAP409_2, 다른 기기 등) 그대로 둠 */
+export async function addShortformScrap(shortformId: number) {
+  if (mockFor('scrap')) return useLocalScrapStore.getState().add(shortformId)
+  try {
+    await request(api.post('/api/scraps/shortforms', { shortformId }))
+  } catch (e) {
+    if (errorCode(e) !== 'SCRAP409_2') throw e
+  }
+}
+
+/** DELETE /api/scraps/shortforms/{id} — 이미 취소됐으면(SCRAP404_2) 그대로 둠 */
+export async function removeShortformScrap(shortformId: number) {
+  if (mockFor('scrap')) return useLocalScrapStore.getState().remove(shortformId)
+  try {
+    await request(api.delete(`/api/scraps/shortforms/${shortformId}`))
+  } catch (e) {
+    if (errorCode(e) !== 'SCRAP404_2') throw e
+  }
 }
