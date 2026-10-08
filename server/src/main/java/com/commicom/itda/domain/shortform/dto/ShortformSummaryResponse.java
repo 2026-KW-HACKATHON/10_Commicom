@@ -12,10 +12,12 @@ public record ShortformSummaryResponse(
         String thumbnailUrl,
         String title,
         int duration,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        /** PRO 가게 영상 (피드 우선 노출·추천 배지) */
+        boolean promoted
 ) {
 
-    public static ShortformSummaryResponse from(Shortform shortform) {
+    public static ShortformSummaryResponse from(Shortform shortform, boolean promoted) {
         return new ShortformSummaryResponse(
                 shortform.getId(),
                 shortform.getStore().getId(),
@@ -24,7 +26,8 @@ public record ShortformSummaryResponse(
                 shortform.getThumbnailUrl(),
                 shortform.getTitle(),
                 shortform.getDuration(),
-                shortform.getCreatedAt()
+                shortform.getCreatedAt(),
+                promoted
         );
     }
 }
