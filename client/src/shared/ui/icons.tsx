@@ -132,6 +132,15 @@ export function ChartNavIcon() {
   )
 }
 
+/** 사장님 제작 탭: 사진 카드 위 + (피드 만들기) */
+export function CreateNavIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M8 2.5H6A3.5 3.5 0 0 0 2.5 6v12A3.5 3.5 0 0 0 6 21.5h12a3.5 3.5 0 0 0 3.5-3.5v-2M15 2.5h6.5M18.25 -0.75v6.5M2.5 16l5-5 4.5 4.5 3-3 3.5 3.5" {...navStroke} />
+    </svg>
+  )
+}
+
 /* 숏폼 플레이어 (Figma 3:203 오른쪽 아이콘 톤) */
 export function BookmarkIcon({ filled = false }: { filled?: boolean }) {
   return (

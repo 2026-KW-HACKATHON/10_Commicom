@@ -14,7 +14,6 @@ import {
   OwnerProfilePage,
   OwnerQuestsPage,
   OwnerRedeemPage,
-  OwnerSettlementPage,
   OwnerVideosPage,
   ProPage,
   QuestStorePage,
@@ -61,16 +60,19 @@ export const router = createBrowserRouter([
     path: '/owner',
     element: <OwnerLayout />,
     children: [
-      { index: true, element: <OwnerHomePage />, handle: { title: '우리 가게' } },
-      // 우상단 + 는 할 일이 있는 탭에만: 홈 = 숏폼 만들기(기본), 쿠폰 = 쿠폰 발행.
+      // 우상단 + 는 할 일이 있는 탭에만: 쿠폰 = 쿠폰 발행. 피드 만들기는 제작 탭으로
+      { index: true, element: <OwnerHomePage />, handle: { title: '우리 가게', action: null } },
       { path: 'quests', element: <OwnerQuestsPage />, handle: { title: '퀘스트 등록', action: null } },
-      { path: 'coupons', element: <OwnerCouponsPage />, handle: { title: '쿠폰 관리', action: { label: '쿠폰 발행', to: '/owner/coupons/new' } } },
+      // 쿠폰 관리 / 정산 (?view=settlement)
+      { path: 'coupons', element: <OwnerCouponsPage />, handle: { title: '쿠폰', action: { label: '쿠폰 발행', to: '/owner/coupons/new' } } },
       { path: 'coupons/new', element: <CouponCreatePage />, handle: { title: '쿠폰 발행' } },
       { path: 'redeem', element: <OwnerRedeemPage />, handle: { title: '쿠폰 사용 처리', action: null } },
-      { path: 'settlement', element: <OwnerSettlementPage />, handle: { title: '쿠폰 정산', action: null } },
+      { path: 'create', element: <OwnerVideosPage />, handle: { title: '피드 제작', action: null } },
       { path: 'quest-store', element: <QuestStorePage />, handle: { title: '퀘스트 가게' } },
       { path: 'pro', element: <ProPage />, handle: { title: '잇다 PRO' } },
-      { path: 'videos', element: <OwnerVideosPage />, handle: { title: '내 영상' } },
+      // 예전 주소 호환 (정산은 쿠폰 탭 안으로, 내 영상은 제작 탭으로)
+      { path: 'settlement', element: <Navigate to="/owner/coupons?view=settlement" replace /> },
+      { path: 'videos', element: <Navigate to="/owner/create" replace /> },
       { path: 'profile', element: <OwnerProfilePage />, handle: { title: '프로필' } },
     ],
   },

@@ -58,7 +58,7 @@ export function OwnerHome() {
         </Link>
       )}
 
-      <OwnerCard title="이번 달 쿠폰" className="mt-3" aside={<Link to="/owner/settlement" className="text-xs font-medium text-q-green">정산 보기 ›</Link>}>
+      <OwnerCard title="이번 달 쿠폰" className="mt-3" aside={<Link to="/owner/coupons?view=settlement" className="text-xs font-medium text-q-green">정산 보기 ›</Link>}>
         <dl className="grid grid-cols-3 gap-2 text-center">
           <Stat label="발행 중" value={`${activeCoupons.length}종`} />
           <Stat label="사용" value={`${settlement?.usedCount ?? 0}건`} />
@@ -68,7 +68,7 @@ export function OwnerHome() {
 
       <OwnerCard title="바로가기" className="mt-3">
         <div className="grid grid-cols-5 gap-1">
-          <Shortcut to="/owner/videos" image={OWNER_ILLUST.videoEdit} label="내 영상" />
+          <Shortcut to="/owner/create" image={OWNER_ILLUST.videoEdit} label="피드 제작" />
           <Shortcut to="/owner/redeem" image={OWNER_ILLUST.coupon} label="쿠폰 사용" />
           <Shortcut to="/owner/coupons/new" image={OWNER_ILLUST.couponNew} label="쿠폰 발행" />
           <Shortcut to="/owner/quest-store" image={OWNER_ILLUST.qr} label="방문 QR" />

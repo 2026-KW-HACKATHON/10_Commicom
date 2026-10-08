@@ -24,23 +24,33 @@ export function OwnerVideos() {
 
   return (
     <OwnerScreen>
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="text-[13px] text-q-muted">손님 숏폼 피드에 공개 중</p>
-          <h2 className="text-[22px] font-bold text-q-text">
-            우리 가게 영상 <span className="text-q-green">{videos?.length ?? 0}</span>개
-          </h2>
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate('/create')}
-          className="flex h-10 items-center gap-1 rounded-full bg-green-6 pr-4 pl-3 text-[13px] font-bold text-white shadow-[0_4px_10px_rgba(8,104,22,0.3)] active:scale-[0.97]"
-        >
+      {/* 제작 탭의 주 동작 (예전엔 우상단 + 로만 만들 수 있었음) */}
+      <button
+        type="button"
+        onClick={() => navigate('/create')}
+        className="flex w-full items-center gap-3 overflow-hidden rounded-2xl bg-q-green py-2 pr-4 pl-3 text-left text-white active:scale-[0.99]"
+      >
+        <img src={OWNER_ILLUST.videoEdit} alt="" className="-my-1 h-[84px] w-auto object-contain drop-shadow" />
+        <span className="flex-1">
+          <span className="block text-[17px] font-bold">새 피드 만들기</span>
+          <span className="block text-xs leading-relaxed break-keep opacity-85">
+            사진·메뉴판만 있으면
+            <br />
+            AI가 홍보 피드를 만들어요
+          </span>
+        </span>
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/20">
           <span className="scale-[0.7]">
             <PlusIcon />
           </span>
-          새 영상
-        </button>
+        </span>
+      </button>
+
+      <div className="mt-5">
+        <p className="text-[13px] text-q-muted">손님 피드에 공개 중</p>
+        <h2 className="text-[20px] font-bold text-q-text">
+          우리 가게 피드 <span className="text-q-green">{videos?.length ?? 0}</span>개
+        </h2>
       </div>
 
       {isLoading && (

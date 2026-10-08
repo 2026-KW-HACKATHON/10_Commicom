@@ -6,7 +6,7 @@ import { OwnerStoreRegister } from '@/features/owner/components/OwnerStoreRegist
 import { useMyStoreQuery } from '@/features/owner/hooks'
 import { OWNER_ILLUST } from '@/features/owner/illustrations'
 import { errorCode, errorMessage } from '@/shared/lib/error'
-import { ChartNavIcon, FlagNavIcon, HomeNavIcon, ScanNavIcon, TicketNavIcon } from '@/shared/ui/icons'
+import { CreateNavIcon, FlagNavIcon, HomeNavIcon, ScanNavIcon, TicketNavIcon } from '@/shared/ui/icons'
 import { useMe } from '@/stores/authStore'
 import { useModeStore } from '@/stores/modeStore'
 import { AppShell, type TabItem } from './AppShell'
@@ -15,14 +15,16 @@ import type { MenuItem } from './SettingsDrawer'
 const TABS: TabItem[] = [
   { to: '/owner', label: '홈', Icon: HomeNavIcon, end: true },
   { to: '/owner/quests', label: '퀘스트', Icon: FlagNavIcon },
-  { to: '/owner/coupons', label: '쿠폰', Icon: TicketNavIcon },
+  // 피드 제작이 주 동작이라 가운데 (예전엔 우상단 + 로만 만들 수 있었음)
+  { to: '/owner/create', label: '제작', Icon: CreateNavIcon },
   { to: '/owner/redeem', label: '사용 처리', Icon: ScanNavIcon },
-  { to: '/owner/settlement', label: '정산', Icon: ChartNavIcon },
+  // 쿠폰 관리 + 정산
+  { to: '/owner/coupons', label: '쿠폰', Icon: TicketNavIcon },
 ]
 
 const MENU: MenuItem[] = [
   { to: '/owner/profile', label: '가게 정보 · 프로필', icon: '🏪', image: pigeonWalk },
-  { to: '/owner/videos', label: '내 영상', icon: '🎬', image: OWNER_ILLUST.videoEdit },
+  { to: '/owner/create', label: '피드 제작', icon: '🎬', image: OWNER_ILLUST.videoEdit },
   { to: '/owner/quest-store', label: '퀘스트 가게 · 방문 QR', icon: '📍', image: OWNER_ILLUST.qr },
   { to: '/owner/coupons/new', label: '쿠폰 발행', icon: '🎟', image: OWNER_ILLUST.couponNew },
   { to: '/owner/redeem', label: '쿠폰 사용 처리', icon: '✅', image: OWNER_ILLUST.coupon },

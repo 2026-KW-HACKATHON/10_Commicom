@@ -111,7 +111,7 @@ export function OwnerProfile() {
         <div className="flex items-center justify-between px-5">
           <h2 className="text-[13px] font-bold text-ink">내 영상</h2>
           {videos && videos.length > 0 && (
-            <Link to="/owner/videos" className="text-xs font-medium text-green-4">
+            <Link to="/owner/create" className="text-xs font-medium text-green-4">
               관리하기 ›
             </Link>
           )}
@@ -122,7 +122,7 @@ export function OwnerProfile() {
           <ul className="mt-3 grid grid-cols-3 gap-px bg-white">
             {videos?.map((v) => (
               <li key={v.shortformId}>
-                <Link to="/owner/videos" className="relative block aspect-[9/13] overflow-hidden bg-[#dde5e2]">
+                <Link to="/owner/create" className="relative block aspect-[9/13] overflow-hidden bg-[#dde5e2]">
                   <Thumb video={v} />
                   <span className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded bg-white/90 pl-px text-q-text">
                     <span className="scale-[0.3]">
