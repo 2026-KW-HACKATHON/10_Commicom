@@ -1,13 +1,31 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { fetchShortforms } from './api'
+import { deleteStoreShortform, fetchShortforms, fetchStoreShortforms } from './api'
 
 export function useShortforms(storeId?: number) {
   return useQuery({
     queryKey: ['shortforms', storeId ?? 'all'],
     queryFn: () => fetchShortforms(storeId),
     select: (d) => d.shortforms,
+  })
+}
+
+/** 사장님 내 영상: 우리 가게 영상, 최근 올린 순 */
+export function useStoreShortforms(storeId: number) {
+  return useQuery({
+    queryKey: ['shortforms', 'store', storeId],
+    queryFn: () => fetchStoreShortforms(storeId),
+    select: (d) => [...d.shortforms].sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? '')),
+  })
+}
+
+export function useDeleteShortform() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: deleteStoreShortform,
+    // 피드·내 영상 모두 다시 불러오기 (키가 모두 'shortforms'로 시작)
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['shortforms'] }),
   })
 }
 

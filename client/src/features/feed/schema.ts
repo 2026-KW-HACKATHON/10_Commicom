@@ -20,6 +20,12 @@ export interface Shortform {
    * 없으면 전체를 그대로 보여줌.
    */
   frame?: { top: number; height: number }
+  /** 올린 시각 (내 영상 목록 정렬·표시) */
+  createdAt?: string
+  /** 재수정(PRO)으로 새 버전으로 바꾼 시각 */
+  updatedAt?: string
+  /** PRO 가게 영상 (피드 우선 노출 + "추천" 표시). TODO: 숏폼 담당과 필드명 확정 */
+  promoted?: boolean
 }
 
 export interface ShortformListResult {
