@@ -13,7 +13,9 @@ public record StoreSummaryResponse(
         Double latitude,
         Double longitude,
         String thumbnailUrl,
-        boolean stepFree
+        boolean stepFree,
+        boolean isQuestStore,
+        int availableCouponCount
 ) {
 
     public static StoreSummaryResponse from(Store store) {
@@ -26,6 +28,8 @@ public record StoreSummaryResponse(
                 store.getLatitude(),
                 store.getLongitude(),
                 store.getThumbnailUrl(),
-                store.isStepFree());
+                store.isStepFree(),
+                store.isQuestStore(),
+                store.getAvailableCouponCount());
     }
 }

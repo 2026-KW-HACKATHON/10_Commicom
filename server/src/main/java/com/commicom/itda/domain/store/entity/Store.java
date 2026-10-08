@@ -57,10 +57,18 @@ public class Store extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean elevator;
 
+    /** 퀘스트 가게 여부 */
+    @Column(nullable = false)
+    private boolean isQuestStore = false;
+
+    /** 사용 가능한 쿠폰 수 */
+    @Column(nullable = false)
+    private int availableCouponCount = 0;
+
     @Builder
     private Store(String name, StoreCategory category, String address, Double latitude, Double longitude,
                   String phone, String businessHours, String description, String thumbnailUrl,
-                  boolean stepFree, boolean elevator) {
+                  boolean stepFree, boolean elevator, boolean isQuestStore, int availableCouponCount) {
         this.name = name;
         this.category = category;
         this.address = address;
@@ -72,5 +80,7 @@ public class Store extends BaseTimeEntity {
         this.thumbnailUrl = thumbnailUrl;
         this.stepFree = stepFree;
         this.elevator = elevator;
+        this.isQuestStore = isQuestStore;
+        this.availableCouponCount = availableCouponCount;
     }
 }
