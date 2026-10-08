@@ -539,3 +539,130 @@ Response 예시 (200, 처리 중)
   }
 }
 ```
+
+---
+
+## Scrap
+
+> 스크랩은 관심 가게를 저장하는 기능입니다. 모든 스크랩 API는 로그인이 필요합니다.
+
+### 스크랩 추가
+
+| 항목 | 내용 |
+| --- | --- |
+| API명 | 스크랩 추가 |
+| HTTP Method | `POST` |
+| API Path | `/api/scraps` |
+| Header | `Authorization: Bearer {accessToken}` (필수)<br>`Content-Type: application/json` |
+| Request | Body<br>`storeId` (필수, Long): 스크랩할 가게 ID |
+| Response | `scrapId` (Long)<br>`storeId` (Long)<br>`name` (String)<br>`category` (String)<br>`categoryName` (String)<br>`address` (String)<br>`thumbnailUrl` (String \| null)<br>`stepFree` (Boolean)<br>`scrappedAt` (String) |
+| 로직 간단 설명 | 가게를 내 스크랩 목록에 추가한다. 동일 가게를 중복 스크랩하면 409로 거절한다.<br><br>**result 필드**<br>`scrapId`: 스크랩 ID<br>`storeId`: 가게 ID<br>`name`: 가게 이름<br>`category`: 업종 코드<br>`categoryName`: 업종 한글 이름<br>`address`: 주소<br>`thumbnailUrl`: 대표 이미지 URL (없으면 `null`)<br>`stepFree`: 입구에 턱이 없으면 `true`<br>`scrappedAt`: 스크랩한 일시 (ISO 8601) |
+| 상태코드 | COMMON201: 스크랩 추가 성공<br>COMMON400: storeId 누락<br>COMMON401: 토큰 없음·만료<br>STORE404: 가게가 존재하지 않음<br>SCRAP409: 이미 스크랩한 가게 |
+
+Request 예시
+
+```json
+{
+  "storeId": 1
+}
+```
+
+Response 예시 (201)
+
+```json
+{
+  "isSuccess": true,
+  "code": "COMMON201",
+  "message": "성공적으로 생성했습니다.",
+  "result": {
+    "scrapId": 5,
+    "storeId": 1,
+    "name": "[샘플] 월계 분식",
+    "category": "RESTAURANT",
+    "categoryName": "음식점",
+    "address": "서울 노원구 월계동 (샘플 주소)",
+    "thumbnailUrl": null,
+    "stepFree": true,
+    "scrappedAt": "2025-10-08T16:00:00"
+  }
+}
+```
+
+### 스크랩 취소
+
+| 항목 | 내용 |
+| --- | --- |
+| API명 | 스크랩 취소 |
+| HTTP Method | `DELETE` |
+| API Path | `/api/scraps/{storeId}` |
+| Header | `Authorization: Bearer {accessToken}` (필수) |
+| Request | Path `storeId` (필수, Long): 스크랩 취소할 가게 ID |
+| Response | 없음 (`result` 생략) |
+| 로직 간단 설명 | 스크랩한 가게를 목록에서 제거한다. 스크랩하지 않은 가게에 요청하면 404로 응답한다. |
+| 상태코드 | COMMON200: 스크랩 취소 성공<br>COMMON401: 토큰 없음·만료<br>STORE404: 가게가 존재하지 않음<br>SCRAP404: 스크랩하지 않은 가게 |
+
+Request 예시
+
+```
+DELETE /api/scraps/1
+```
+
+Response 예시 (200)
+
+```json
+{
+  "isSuccess": true,
+  "code": "COMMON200",
+  "message": "성공적으로 요청을 처리했습니다."
+}
+```
+
+### 내 스크랩 목록 조회
+
+| 항목 | 내용 |
+| --- | --- |
+| API명 | 내 스크랩 목록 조회 |
+| HTTP Method | `GET` |
+| API Path | `/api/scraps` |
+| Header | `Authorization: Bearer {accessToken}` (필수) |
+| Request | 없음 |
+| Response | `count` (Int)<br>`scraps` (Array)<br>`scraps[].scrapId` (Long)<br>`scraps[].storeId` (Long)<br>`scraps[].name` (String)<br>`scraps[].category` (String)<br>`scraps[].categoryName` (String)<br>`scraps[].address` (String)<br>`scraps[].thumbnailUrl` (String \| null)<br>`scraps[].stepFree` (Boolean)<br>`scraps[].scrappedAt` (String) |
+| 로직 간단 설명 | 로그인한 회원이 스크랩한 가게 목록을 최신순으로 반환한다. 프로필 화면의 스크랩 탭에서 사용한다.<br><br>**result 필드**<br>`count`: 스크랩한 가게 수<br>`scraps[].scrapId`: 스크랩 ID<br>`scraps[].storeId`: 가게 ID<br>`scraps[].name`: 가게 이름<br>`scraps[].category`: 업종 코드<br>`scraps[].categoryName`: 업종 한글 이름<br>`scraps[].address`: 주소<br>`scraps[].thumbnailUrl`: 대표 이미지 URL (없으면 `null`)<br>`scraps[].stepFree`: 입구에 턱이 없으면 `true`<br>`scraps[].scrappedAt`: 스크랩한 일시 (ISO 8601) |
+| 상태코드 | COMMON200: 조회 성공<br>COMMON401: 토큰 없음·만료 |
+
+Response 예시 (200)
+
+```json
+{
+  "isSuccess": true,
+  "code": "COMMON200",
+  "message": "성공적으로 요청을 처리했습니다.",
+  "result": {
+    "count": 2,
+    "scraps": [
+      {
+        "scrapId": 5,
+        "storeId": 1,
+        "name": "[샘플] 월계 분식",
+        "category": "RESTAURANT",
+        "categoryName": "음식점",
+        "address": "서울 노원구 월계동 (샘플 주소)",
+        "thumbnailUrl": null,
+        "stepFree": true,
+        "scrappedAt": "2025-10-08T16:00:00"
+      },
+      {
+        "scrapId": 3,
+        "storeId": 2,
+        "name": "[샘플] 광운 카페",
+        "category": "CAFE_BAKERY_PUB",
+        "categoryName": "카페·베이커리·주점",
+        "address": "서울 노원구 월계동 (샘플 주소)",
+        "thumbnailUrl": null,
+        "stepFree": false,
+        "scrappedAt": "2025-10-07T11:00:00"
+      }
+    ]
+  }
+}
+```
