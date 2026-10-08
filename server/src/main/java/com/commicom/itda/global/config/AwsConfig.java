@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
+import org.springframework.context.annotation.Primary;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 import software.amazon.awssdk.services.polly.PollyClient;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -44,9 +45,19 @@ public class AwsConfig {
     }
 
     @Bean
+    @Primary
     public BedrockRuntimeClient bedrockRuntimeClient() {
         return BedrockRuntimeClient.builder()
                 .region(Region.of(region))
+                .credentialsProvider(credentialsProvider())
+                .build();
+    }
+
+    /** 이미지 생성 모델(SDXL)은 us-east-1에서만 지원 */
+    @Bean("bedrockImageRuntimeClient")
+    public BedrockRuntimeClient bedrockImageRuntimeClient() {
+        return BedrockRuntimeClient.builder()
+                .region(Region.US_EAST_1)
                 .credentialsProvider(credentialsProvider())
                 .build();
     }
