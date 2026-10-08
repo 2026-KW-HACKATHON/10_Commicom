@@ -7,6 +7,7 @@ import com.commicom.itda.domain.shortform.repository.ShortformRepository;
 import com.commicom.itda.domain.store.entity.Store;
 import com.commicom.itda.global.config.AsyncConfig;
 import com.commicom.itda.infra.ai.AiService;
+import com.commicom.itda.infra.image.ImageService;
 import com.commicom.itda.infra.scraping.ScrapingService;
 import com.commicom.itda.infra.storage.StorageService;
 import com.commicom.itda.infra.tts.TtsService;
@@ -18,6 +19,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -32,6 +34,7 @@ public class GenerationPipelineService {
     private final TtsService ttsService;
     private final VideoService videoService;
     private final StorageService storageService;
+    private final ImageService imageService;
 
     /**
      * AI 숏폼 생성 파이프라인을 비동기로 실행한다.
@@ -41,13 +44,13 @@ public class GenerationPipelineService {
      * 1. 스크래핑 (가게 메뉴 정보)
      * 2. AI 스크립트 생성 (Bedrock)
      * 3. TTS 음성 합성 (Polly)
-     * 4. 영상 합성 (FFmpeg)
+     * 4. 영상 생성 (photoUrls 있으면 Runway AI, 없으면 Unsplash 슬라이드쇼)
      * 5. S3 업로드
      * 6. Shortform 저장
      */
     @Async(AsyncConfig.VIDEO_GENERATION_EXECUTOR)
     @Transactional
-    public void execute(Long generationId, String menuInfo) {
+    public void execute(Long generationId, String menuInfo, List<String> photoUrls) {
         Generation generation = generationRepository.findById(generationId).orElse(null);
         if (generation == null) {
             log.error("Generation {} 을 찾을 수 없음", generationId);
@@ -71,14 +74,40 @@ public class GenerationPipelineService {
 
             // 3. TTS 음성 합성
             byte[] audioBytes = ttsService.synthesize(scriptResult.script());
-            log.info("[생성 {}] TTS 완료", generationId);
+            int durationSec = Math.max(5, audioBytes.length / 16_000);
+            log.info("[생성 {}] TTS 완료 (추정 {}초)", generationId, durationSec);
 
-            // 4. 영상 합성
+            // 4. 영상 생성
             String bgColor = VideoService.categoryColor(store.getCategory().name());
-            videoResult = videoService.createVideo(audioBytes, bgColor);
+            java.nio.file.Path mediaWorkPath = java.nio.file.Files.createTempDirectory("media-");
+            boolean hasPhotos = photoUrls != null && !photoUrls.isEmpty();
+
+            if (hasPhotos) {
+                // 사진 URL → 슬라이드쇼 (Runway 없이 즉시 생성)
+                log.info("[생성 {}] 슬라이드쇼 생성 시작 (사진 {}장)", generationId, photoUrls.size());
+                List<java.io.File> bgImages = imageService.downloadImages(photoUrls, mediaWorkPath);
+                if (bgImages.size() >= 2) {
+                    videoResult = videoService.createSlideshowVideo(audioBytes, bgImages, scriptResult.title());
+                } else if (!bgImages.isEmpty()) {
+                    videoResult = videoService.createVideo(audioBytes, bgColor, bgImages.get(0));
+                } else {
+                    videoResult = videoService.createVideo(audioBytes, bgColor, null);
+                }
+            } else {
+                // 사진 없음 → Unsplash 슬라이드쇼 폴백
+                log.info("[생성 {}] Unsplash 슬라이드쇼 폴백", generationId);
+                List<java.io.File> bgImages = imageService.fetchBackgroundImages(
+                        store.getCategory().name(), 12, mediaWorkPath);
+                if (bgImages.size() >= 2) {
+                    videoResult = videoService.createSlideshowVideo(audioBytes, bgImages, scriptResult.title());
+                } else {
+                    java.io.File bgImage = bgImages.isEmpty() ? null : bgImages.get(0);
+                    videoResult = videoService.createVideo(audioBytes, bgColor, bgImage);
+                }
+            }
             log.info("[생성 {}] 영상 생성 완료 ({}초)", generationId, videoResult.durationSec());
 
-            // 5. S3 업로드
+            // 6. S3 업로드
             String videoKey = "shortforms/" + UUID.randomUUID() + ".mp4";
             String videoUrl = storageService.uploadFile(videoResult.videoFile(), videoKey, "video/mp4");
 
