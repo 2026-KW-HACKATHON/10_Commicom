@@ -61,8 +61,8 @@ export const MOCK_ONLY = {
   coupon: false,
   /** 사장님 가게 등록·정보 수정 */
   storeEdit: false,
-  /** 숏폼 삭제·재수정 교체 (명세상 생성 완료 = 바로 공개) */
-  shortformManage: true,
+  /** 게시물 업로드(공개)·삭제·재수정 교체·생성 취소 */
+  shortformManage: false,
   /** 비밀번호 변경 */
   memberExtra: false,
   /** 잇다 PRO 구독 (가게를 등록한 사장님으로 로그인해야 가입) */

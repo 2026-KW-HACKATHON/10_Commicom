@@ -1,5 +1,4 @@
-import { removeMockShortform } from '@/features/feed/mock'
-import { MOCK_ONLY, USE_MOCK } from '@/mocks/db'
+import { USE_MOCK } from '@/mocks/db'
 import { api, request } from '@/shared/api/client'
 import { mockExtractMenus, mockGenerationApi, mockShortformApi } from './mock'
 import type { GenerationCreated, GenerationRequest, GenerationState, MenuItem, ShortformDetail } from './schema'
@@ -45,9 +44,10 @@ export function fetchGeneration(generationId: number): Promise<GenerationState> 
   return request(api.get(`/api/generation/${generationId}`))
 }
 
-/** 생성 취소. TODO: 명세에 취소 API가 없어 서버에선 폴링만 멈춤 */
-export function cancelGeneration(generationId: number) {
-  if (USE_MOCK) mockGenerationApi.cancel(generationId)
+/** POST /api/generation/{id}/cancel — 만드는 중이면 결과를 저장하지 않고 끝냄 (이미 끝났으면 GENERATION409_2, 화면은 그냥 나감) */
+export async function cancelGeneration(generationId: number) {
+  if (USE_MOCK) return mockGenerationApi.cancel(generationId)
+  await request(api.post(`/api/generation/${generationId}/cancel`)).catch(() => undefined)
 }
 
 /** GET /api/shortforms/{shortformId} */
@@ -84,27 +84,20 @@ export async function extractMenus(storeId: number, files: File[], _mapUrl: stri
   return menus
 }
 
-/**
- * 업로드(손님 피드에 공개). 명세상 생성 완료 = 바로 공개라 서버에선 할 일 없음.
- * TODO: "확인 후 공개"가 필요하면 서버와 공개 API를 정해야 함
- */
+/** POST /api/shortforms/{id}/publish — 업로드(손님 피드에 공개). AI로 만든 게시물은 비공개로 생김 */
 export async function publishShortform(shortformId: number) {
   if (USE_MOCK) return mockShortformApi.publish(shortformId)
+  await request(api.post(`/api/shortforms/${shortformId}/publish`))
 }
 
-/**
- * 이미 올린 영상을 재수정한 새 버전으로 바꾸기 (PRO).
- * TODO: 명세에 없음 (임시: PUT /api/shortforms/{oldId}/replace). 그전까지 서버 연동 중엔 옛 영상을 이 기기에서 숨김
- */
+/** PUT /api/shortforms/{oldId}/replace — 올린 게시물을 재수정한 새 버전으로 바꾸기 (PRO). 새 버전 공개 + 옛 게시물 삭제 */
 export async function replaceShortform(oldId: number, newId: number) {
   if (USE_MOCK) return mockShortformApi.replace(oldId, newId)
-  if (MOCK_ONLY.shortformManage) return removeMockShortform(oldId)
   return request(api.put(`/api/shortforms/${oldId}/replace`, { shortformId: newId }))
 }
 
-/** 만든 영상 지우기. TODO: 명세에 삭제 API 없음 — 그전까지 서버 연동 중엔 이 기기에서 숨김 */
+/** DELETE /api/shortforms/{id} — 만든(아직 안 올린) 게시물 지우기 */
 export async function deleteShortform(shortformId: number) {
   if (USE_MOCK) return mockShortformApi.remove(shortformId)
-  if (MOCK_ONLY.shortformManage) return removeMockShortform(shortformId)
   return request(api.delete(`/api/shortforms/${shortformId}`))
 }

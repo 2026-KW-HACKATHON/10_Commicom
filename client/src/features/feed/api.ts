@@ -84,10 +84,7 @@ export async function fetchStoreShortforms(storeId: number): Promise<ShortformLi
   return fromServer(await request<ServerPage>(api.get('/api/shortforms', { params: { storeId, page: 0, size: 100 } })))
 }
 
-/**
- * 올린 영상 지우기. TODO: 명세에 삭제 API 없음 — 서버와 정해야 함 (임시: DELETE /api/shortforms/{id}).
- * 그전까지는 이 기기에서만 숨김
- */
+/** DELETE /api/shortforms/{id} — 올린 게시물 지우기 (내 가게만, 손님 스크랩도 같이 지워짐) */
 export async function deleteStoreShortform(shortformId: number) {
   if (mockFor('shortformManage')) {
     await new Promise((r) => setTimeout(r, 300))
