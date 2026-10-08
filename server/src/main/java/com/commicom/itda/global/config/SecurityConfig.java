@@ -59,7 +59,7 @@ public class SecurityConfig {
                 .addFilterBefore(new JwtAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/api/stores/me", "/api/stores/*/quest-templates", "/api/stores/*/quest-qr",
-                                "/api/stores/*/coupons", "/api/stores/*/coupon-settlements").authenticated()
+                                "/api/stores/*/coupons", "/api/stores/*/coupon-settlements", "/api/stores/*/pro").authenticated()
                         .requestMatchers(PUBLIC_PATHS).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET_PATHS).permitAll()
                         .anyRequest().authenticated());

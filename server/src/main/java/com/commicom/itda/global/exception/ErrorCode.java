@@ -77,6 +77,10 @@ public enum ErrorCode {
     COUPON_SOLD_OUT(HttpStatus.GONE, "COUPON410", "쿠폰이 모두 소진되었어요"),
     COUPON_EXPIRED(HttpStatus.GONE, "COUPON410_2", "기한이 지난 쿠폰이에요"),
 
+    // PRO 구독
+    PRO_ALREADY_ACTIVE(HttpStatus.CONFLICT, "PRO409", "이미 PRO를 이용 중이에요"),
+    PRO_NOT_ACTIVE(HttpStatus.CONFLICT, "PRO409_2", "이용 중인 PRO 구독이 없어요"),
+
     // 숏폼
     SHORTFORM_NOT_FOUND(HttpStatus.NOT_FOUND, "SHORTFORM404", "숏폼을 찾을 수 없어요"),
 
