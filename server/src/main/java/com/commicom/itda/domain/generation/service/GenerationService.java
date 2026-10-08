@@ -1,5 +1,6 @@
 package com.commicom.itda.domain.generation.service;
 
+import com.commicom.itda.domain.generation.dto.GenerationRequest;
 import com.commicom.itda.domain.generation.dto.GenerationResponse;
 import com.commicom.itda.domain.generation.dto.GenerationStatusResponse;
 import com.commicom.itda.domain.generation.entity.Generation;
@@ -24,10 +25,11 @@ public class GenerationService {
     private final GenerationRepository generationRepository;
     private final StoreRepository storeRepository;
     private final MemberRepository memberRepository;
+    private final GenerationPipelineService pipelineService;
 
     @Transactional
-    public GenerationResponse requestGeneration(Long memberId, Long storeId) {
-        Store store = storeRepository.findById(storeId)
+    public GenerationResponse requestGeneration(Long memberId, GenerationRequest request) {
+        Store store = storeRepository.findById(request.storeId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
@@ -44,6 +46,9 @@ public class GenerationService {
                 .status(GenerationStatus.PENDING)
                 .build();
         generationRepository.save(generation);
+
+        // 비동기 파이프라인 실행 (트랜잭션 커밋 후 시작됨)
+        pipelineService.execute(generation.getId(), request.menuInfo());
 
         return GenerationResponse.from(generation);
     }

@@ -37,7 +37,7 @@ public class GenerationController {
             @Parameter(hidden = true) @AuthenticationPrincipal Long memberId,
             @Valid @RequestBody GenerationRequest request) {
         return ApiResponse.of(SuccessStatus.CREATED,
-                generationService.requestGeneration(memberId, request.storeId()));
+                generationService.requestGeneration(memberId, request));
     }
 
     @Operation(summary = "AI 숏폼 생성 상태 조회",

@@ -3,6 +3,8 @@ package com.commicom.itda.global.init;
 import com.commicom.itda.domain.member.entity.Member;
 import com.commicom.itda.domain.member.entity.Role;
 import com.commicom.itda.domain.member.repository.MemberRepository;
+import com.commicom.itda.domain.shortform.entity.Shortform;
+import com.commicom.itda.domain.shortform.repository.ShortformRepository;
 import com.commicom.itda.domain.store.entity.Store;
 import com.commicom.itda.domain.store.entity.StoreCategory;
 import com.commicom.itda.domain.store.repository.StoreRepository;
@@ -26,12 +28,14 @@ public class LocalDataInitializer implements ApplicationRunner {
 
     private final StoreRepository storeRepository;
     private final MemberRepository memberRepository;
+    private final ShortformRepository shortformRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(ApplicationArguments args) {
         initMembers();
         initStores();
+        initShortforms();
     }
 
     private void initMembers() {
@@ -70,6 +74,34 @@ public class LocalDataInitializer implements ApplicationRunner {
                         .phone("02-000-0003").businessHours("화-일 09:00-20:00, 월요일 휴무")
                         .description("매일 아침 굽는 식빵과 소금빵")
                         .stepFree(true).elevator(true)
+                        .build()
+        ));
+    }
+
+    private void initShortforms() {
+        if (shortformRepository.count() > 0) {
+            return;
+        }
+        List<Store> stores = storeRepository.findAll();
+        if (stores.isEmpty()) {
+            return;
+        }
+        shortformRepository.saveAll(List.of(
+                Shortform.builder()
+                        .store(stores.get(0))
+                        .videoUrl("https://example.com/sample-video-1.mp4")
+                        .thumbnailUrl("https://example.com/sample-thumb-1.jpg")
+                        .title("월계 분식 숏폼 소개")
+                        .script("안녕하세요! 월계동 대표 분식집입니다. 떡볶이와 김밥이 맛있어요.")
+                        .duration(30)
+                        .build(),
+                Shortform.builder()
+                        .store(stores.get(1))
+                        .videoUrl("https://example.com/sample-video-2.mp4")
+                        .thumbnailUrl("https://example.com/sample-thumb-2.jpg")
+                        .title("광운 카페 숏폼 소개")
+                        .script("학생 할인 있는 핸드드립 카페! 광운대 앞 아늑한 공간에서 만나요.")
+                        .duration(25)
                         .build()
         ));
     }
