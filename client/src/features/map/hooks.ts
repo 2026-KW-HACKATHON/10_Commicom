@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
-import { fetchStores } from './api'
+import { errorCode } from '@/shared/lib/error'
+import { fetchStoreDetail, fetchStores } from './api'
 import { MAP_CATEGORIES, type LatLng, type MapCategoryKey, type StoreSummary } from './schema'
 
 export function useStores(questOnly = false) {
@@ -8,6 +9,17 @@ export function useStores(questOnly = false) {
     queryKey: ['stores', { questOnly }],
     queryFn: () => fetchStores(questOnly),
     select: (data) => data.stores,
+  })
+}
+
+/** 가게 상세 (가게 프로필) — 키가 'stores'로 시작해 사장님이 정보를 고치면 같이 새로 받음 */
+export function useStoreDetail(storeId: number) {
+  return useQuery({
+    queryKey: ['stores', 'detail', storeId],
+    queryFn: () => fetchStoreDetail(storeId),
+    enabled: Number.isFinite(storeId) && storeId > 0,
+    // 없는 가게(STORE404)는 다시 시도해도 같으니 바로 안내
+    retry: (count, error) => errorCode(error) !== 'STORE404' && count < 1,
   })
 }
 
