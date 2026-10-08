@@ -4,7 +4,8 @@ import { StoreCouponSheet } from '@/features/coupon/components/StoreCouponSheet'
 import { useStoreShortforms } from '@/features/feed/hooks'
 import type { Shortform } from '@/features/feed/schema'
 import { errorMessage } from '@/shared/lib/error'
-import { LocationIcon, PlayIcon, TicketSmallIcon } from '@/shared/ui/icons'
+import { shareLink } from '@/shared/lib/share'
+import { LocationIcon, PlayIcon, ShareIcon, TicketSmallIcon } from '@/shared/ui/icons'
 import { StoreAvatar } from '@/shared/ui/StoreAvatar'
 import { useStoreDetail, useStores } from '../hooks'
 
@@ -46,7 +47,7 @@ export function StoreProfile({ storeId }: { storeId: number }) {
         </div>
         {store.description && <p className="mt-4 text-[14px] leading-relaxed text-q-sub">{store.description}</p>}
 
-        <div className={`mt-4 grid gap-2 ${couponCount > 0 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+        <div className={`mt-4 grid gap-2 ${couponCount > 0 ? 'grid-cols-4' : 'grid-cols-3'}`}>
           <Action label="위치 보기" onClick={() => navigate(`/map?storeId=${storeId}`)}>
             <LocationIcon />
           </Action>
@@ -63,6 +64,14 @@ export function StoreProfile({ storeId }: { storeId: number }) {
             <span className="scale-[0.55] pl-0.5">
               <PlayIcon />
             </span>
+          </Action>
+          <Action
+            label="공유"
+            onClick={() =>
+              shareLink({ title: `${store.name} | 잇다`, text: `우리 동네 ${store.name}을(를) 소개해요`, path: `/map/stores/${storeId}` })
+            }
+          >
+            <ShareIcon />
           </Action>
         </div>
       </section>

@@ -1,12 +1,24 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { deleteStoreShortform, fetchShortforms, fetchStoreShortforms } from './api'
 
+/** 숏폼 피드: 페이지 단위로 받아 이어 붙임 (fetchNextPage로 다음 묶음) */
+export function useShortformFeed(storeId?: number) {
+  return useInfiniteQuery({
+    queryKey: ['shortforms', 'feed', storeId ?? 'all'],
+    queryFn: ({ pageParam }) => fetchShortforms(storeId, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (last) => (last.hasNext ? last.page + 1 : undefined),
+    select: (d) => d.pages.flatMap((p) => p.shortforms),
+  })
+}
+
+/** 한 번에 넉넉히 받는 목록 (스크랩 모아보기 등 피드가 아닌 곳) */
 export function useShortforms(storeId?: number) {
   return useQuery({
     queryKey: ['shortforms', storeId ?? 'all'],
-    queryFn: () => fetchShortforms(storeId),
+    queryFn: () => fetchShortforms(storeId, 0, 100),
     select: (d) => d.shortforms,
   })
 }

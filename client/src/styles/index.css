@@ -146,6 +146,48 @@ body {
   }
 }
 
+/* 숏폼 첫 사용 안내: 손가락이 위로 쓸어 올림 / 꾹 눌렀다 내림 */
+@keyframes guide-swipe {
+  0%,
+  100% {
+    transform: translateY(10px);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
+}
+@keyframes guide-press {
+  0%,
+  100% {
+    transform: translateY(-4px) scale(1);
+  }
+  40% {
+    transform: translateY(-4px) scale(0.86);
+  }
+  80% {
+    transform: translateY(8px) scale(0.86);
+  }
+}
+
+/* 공통 토스트: 위에서 살짝 내려오며 나타났다가 사라짐 */
+@keyframes toast {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  10%,
+  85% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
 /* 숏폼 "눌러서 소리 켜기": 잠깐 나타났다가 서서히 사라짐 */
 @keyframes hint-fade {
   0% {

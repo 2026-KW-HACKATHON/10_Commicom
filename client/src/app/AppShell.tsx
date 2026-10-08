@@ -99,7 +99,10 @@ export function AppShell({
       <nav
         className={`shrink-0 pb-[max(16px,env(safe-area-inset-bottom))] transition-[padding] duration-300 ${
           shrunk ? 'px-12 pt-1.5' : 'px-5 pt-3'
-        } ${overlayNav ? 'absolute inset-x-0 bottom-0 z-30 bg-transparent' : 'bg-white'}`}
+        } ${
+          // 영상 위(z-10~20)에는 뜨되, 설정 서랍이 들어 있는 상단 바(z-30)보다는 아래
+          overlayNav ? 'absolute inset-x-0 bottom-0 z-[25] bg-transparent' : 'bg-white'
+        }`}
       >
         <div
           className={`grid items-center gap-1 rounded-full border px-[7px] transition-[height] duration-300 ${

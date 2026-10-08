@@ -7,6 +7,8 @@ import { useDeleteShortform, useStoreShortforms } from '@/features/feed/hooks'
 import type { Shortform } from '@/features/feed/schema'
 import { Dialog } from '@/features/generation/components/Dialog'
 import { useIsPro } from '@/features/pro/store'
+import { errorMessage } from '@/shared/lib/error'
+import { toast } from '@/stores/toastStore'
 import { CloseIcon, PlayIcon, PlusIcon } from '@/shared/ui/icons'
 import { useMyStoreId } from '../hooks'
 import { OWNER_ILLUST } from '../illustrations'
@@ -164,7 +166,14 @@ function VideoDetail({ video, onClose }: { video: Shortform; onClose: () => void
           primary={{ label: '아니요', onClick: () => setModal(null) }}
           secondary={{
             label: remove.isPending ? '삭제 중...' : '네 삭제할래요',
-            onClick: () => remove.mutate(video.shortformId, { onSuccess: onClose }),
+            onClick: () =>
+              remove.mutate(video.shortformId, {
+                onSuccess: () => {
+                  onClose()
+                  toast('영상을 삭제했어요')
+                },
+                onError: (e) => toast(errorMessage(e), 'error'),
+              }),
           }}
         />
       )}

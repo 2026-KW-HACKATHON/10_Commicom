@@ -5,6 +5,7 @@ import { useMyStoreName } from '@/features/owner/hooks'
 import { OWNER_ILLUST } from '@/features/owner/illustrations'
 import { CelebrationScreen, PrimaryButton } from '@/features/quest/components/QuestUi'
 import { Sheet } from '@/shared/ui/Sheet'
+import { toast } from '@/stores/toastStore'
 import { PRO_BENEFITS, useIsPro, useProStore } from '../store'
 
 const COMPARE = [
@@ -95,7 +96,16 @@ export function ProPlan() {
             구독 해지
           </button>
         )}
-        {isPro && canceled && <PrimaryButton onClick={resume}>해지 취소하고 계속 이용하기</PrimaryButton>}
+        {isPro && canceled && (
+          <PrimaryButton
+            onClick={() => {
+              resume()
+              toast('PRO를 계속 이용해요')
+            }}
+          >
+            해지 취소하고 계속 이용하기
+          </PrimaryButton>
+        )}
       </div>
 
       {paying && (
@@ -141,6 +151,7 @@ export function ProPlan() {
               onClick={() => {
                 cancel()
                 setConfirmCancel(false)
+                toast('해지를 예약했어요')
               }}
               className="h-11 rounded-full border border-q-line bg-white text-sm font-bold text-q-muted"
             >

@@ -151,6 +151,15 @@ export function LocationIcon() {
   )
 }
 
+/** 공유: 위로 나가는 화살표 + 상자 */
+export function ShareIcon() {
+  return (
+    <svg width="22" height="24" viewBox="0 0 22 24" fill="none" aria-hidden>
+      <path d="M11 15V2.5M6.5 7 11 2.5 15.5 7M6 11H4.5A1.5 1.5 0 0 0 3 12.5v8A1.5 1.5 0 0 0 4.5 22h13a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5H16" {...stroke} />
+    </svg>
+  )
+}
+
 export function SoundIcon({ muted }: { muted: boolean }) {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
