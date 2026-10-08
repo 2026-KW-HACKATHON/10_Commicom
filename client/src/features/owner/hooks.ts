@@ -18,6 +18,9 @@ export function useMyStoreQuery() {
     staleTime: 60_000,
     // 아직 가게를 등록하지 않은 사장님(STORE404_2)은 다시 물어봐도 같음
     retry: (count, e) => errorCode(e) !== 'STORE404_2' && count < 2,
+    // 실패한 뒤 이 훅을 쓰는 화면(가게 등록 등)이 새로 뜰 때마다 다시 부르지 않게.
+    // 다시 부르면 OwnerLayout 이 "불러오는 중"으로 바뀌어 그 화면을 내렸다 올리기를 반복함
+    retryOnMount: false,
   })
 }
 

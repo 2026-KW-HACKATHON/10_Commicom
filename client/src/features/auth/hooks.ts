@@ -1,4 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
+import { USE_MOCK } from '@/mocks/db'
+import { errorCode } from '@/shared/lib/error'
 import { useAuthStore } from '@/stores/authStore'
 import { useModeStore } from '@/stores/modeStore'
 import { toast } from '@/stores/toastStore'
@@ -40,4 +43,27 @@ export function useLogout() {
 export function useWithdraw() {
   const logout = useLogout()
   return useMutation({ mutationFn: withdraw, onSuccess: () => logout('탈퇴했어요. 그동안 고마웠어요') })
+}
+
+/**
+ * 앱을 켤 때 저장된 로그인이 아직 유효한지 서버에 한 번 확인 (GET /api/members/me).
+ * 서버 DB가 초기화됐거나 탈퇴한 계정이면(MEMBER404·COMMON401) 로그아웃, 유효하면 회원 정보를 최신으로
+ */
+export function useSessionCheck() {
+  const token = useAuthStore((s) => s.accessToken)
+  const setMember = useAuthStore((s) => s.setMember)
+  const logout = useLogout()
+  useEffect(() => {
+    if (!token || USE_MOCK) return
+    let alive = true
+    fetchMe(token)
+      .then((me) => alive && setMember(me))
+      .catch((e) => {
+        if (alive && ['MEMBER404', 'COMMON401'].includes(errorCode(e) ?? '')) logout('로그인 정보가 바뀌었어요 · 다시 로그인해 주세요')
+      })
+    return () => {
+      alive = false
+    }
+    // 앱을 켤 때 한 번만 (로그인·로그아웃으로 토큰이 바뀌는 건 각자 처리)
+  }, [])
 }
