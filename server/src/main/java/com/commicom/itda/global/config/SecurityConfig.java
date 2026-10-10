@@ -19,6 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Configuration
 public class SecurityConfig {
@@ -42,6 +43,10 @@ public class SecurityConfig {
 
     @Value("${cors.allowed-origins}")
     private List<String> allowedOrigins;
+
+    /** 배포된 화면 주소 (환경변수와 별개로 항상 허용) */
+    @Value("${cors.public-origins:}")
+    private List<String> publicOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtProvider jwtProvider,
@@ -74,7 +79,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(allowedOrigins);
+        config.setAllowedOrigins(Stream.concat(allowedOrigins.stream(), publicOrigins.stream())
+                .filter(origin -> !origin.isBlank()).distinct().toList());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
