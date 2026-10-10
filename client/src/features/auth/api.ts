@@ -1,5 +1,6 @@
 import { MOCK_ONLY, USE_MOCK } from '@/mocks/db'
-import { api, ApiError, request } from '@/shared/api/client'
+import { api, ApiError, request, type ApiResponse } from '@/shared/api/client'
+import { errorCode } from '@/shared/lib/error'
 import { useAuthStore } from '@/stores/authStore'
 import { mockAuthApi } from './mock'
 import type { LoginResult, MemberInfo, SignupRequest } from './schema'
@@ -25,19 +26,33 @@ export function fetchMe(accessToken = token()): Promise<MemberInfo> {
 }
 
 /**
+ * 로그인 없이 쓰는 API(중복 확인·이메일 인증)인데 401 이 오면 서버에 그 기능이 아직 없다는 뜻
+ * (이 서버는 없는 주소도 로그인 요구로 막음) → "로그인이 필요해요" 대신 알아볼 수 있는 문구로
+ */
+async function publicRequest<T>(promise: Promise<{ data: ApiResponse<T> }>): Promise<T> {
+  try {
+    return await request(promise)
+  } catch (e) {
+    if (errorCode(e) === 'COMMON401') throw new ApiError('NOT_READY', '서버가 아직 이 기능으로 업데이트되지 않았어요. 잠시 뒤 다시 시도해 주세요')
+    throw e
+  }
+}
+
+/**
  * 닉네임 중복 확인 — GET /api/members/check-nickname (Figma 회원가입·프로필의 [중복확인]).
  * 로그인한 상태면 서버가 내 현재 닉네임은 사용 가능으로 봄
  */
 export async function isNicknameTaken(nickname: string, exceptMemberId?: number): Promise<boolean> {
   if (USE_MOCK) return mockAuthApi.isNicknameTaken(nickname, exceptMemberId)
-  const { available } = await request<{ available: boolean }>(api.get('/api/members/check-nickname', { params: { nickname: nickname.trim() } }))
-  return !available
+  const res = await publicRequest<{ available: boolean } | boolean>(api.get('/api/members/check-nickname', { params: { nickname: nickname.trim() } }))
+  // 예전 서버는 result 에 사용 가능 여부(true/false)만 줌 — 배포 서버가 아직 예전 버전일 때도 동작하게
+  return !(typeof res === 'boolean' ? res : res.available)
 }
 
 /** 이메일 중복 확인 — GET /api/members/check-email */
 export async function isEmailTaken(email: string): Promise<boolean> {
   if (USE_MOCK) return mockAuthApi.isEmailTaken(email)
-  const { available } = await request<{ available: boolean }>(api.get('/api/members/check-email', { params: { email: email.trim() } }))
+  const { available } = await publicRequest<{ available: boolean }>(api.get('/api/members/check-email', { params: { email: email.trim() } }))
   return !available
 }
 
@@ -51,13 +66,13 @@ export interface EmailCodeSent {
 /** 이메일 인증번호 받기 — POST /api/members/email-verifications (이미 가입된 이메일이면 MEMBER409) */
 export function sendEmailCode(email: string): Promise<EmailCodeSent> {
   if (USE_MOCK) return mockAuthApi.sendEmailCode(email)
-  return request(api.post('/api/members/email-verifications', { email: email.trim() }))
+  return publicRequest(api.post('/api/members/email-verifications', { email: email.trim() }))
 }
 
 /** 이메일 인증번호 확인 — POST /api/members/email-verifications/confirm */
 export async function confirmEmailCode(email: string, code: string) {
   if (USE_MOCK) return mockAuthApi.confirmEmailCode(email, code)
-  await request(api.post('/api/members/email-verifications/confirm', { email: email.trim(), code: code.trim() }))
+  await publicRequest(api.post('/api/members/email-verifications/confirm', { email: email.trim(), code: code.trim() }))
 }
 
 /** PATCH /api/members/me/nickname */
