@@ -38,7 +38,7 @@ export function ShortformItem({ item, couponCount, onOpenCoupons }: Props) {
   }
 
   return (
-    <article className="flex h-full flex-col bg-white" aria-label={`${item.storeName} 홍보 게시물`}>
+    <article className="flex h-full flex-col bg-app" aria-label={`${item.storeName} 홍보 게시물`}>
       {/* 가게 프로필 */}
       <header className="flex shrink-0 items-center gap-2.5 px-4 py-2.5">
         <Link

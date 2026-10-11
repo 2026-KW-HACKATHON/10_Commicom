@@ -152,7 +152,7 @@ export function SignupFlow({ initialRole }: { initialRole?: Role }) {
   const accountReady = emailVerified && password.length >= PASSWORD_MIN && (owner || nickChecked === 'ok')
 
   return (
-    <div className="mx-auto flex h-full max-w-[430px] flex-col bg-white">
+    <div className="mx-auto flex h-full max-w-[430px] flex-col bg-app">
       {step !== 'welcome' && (
         <header className="flex h-[68px] shrink-0 items-center justify-between px-[18px] pt-[env(safe-area-inset-top)]">
           <span className="size-[44px]" />

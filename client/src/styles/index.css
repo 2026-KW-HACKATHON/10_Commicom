@@ -7,6 +7,8 @@
   --color-green-6: #086816;
   --color-gray-1: #f5f5f5;
   --color-gray-2: #bebebe;
+  /* 화면 바탕: 흰색이 눈부시지 않게 아주 연한 초록 (카드·시트는 흰색 그대로) */
+  --color-app: #f5f9f6;
 
   /* 포인트 컬러: 디자인 시스템 hex 미정 → 지도 화면(94:106)에 쓰인 값 */
   --color-point-yellow: #ffd166;

@@ -40,11 +40,11 @@ export function OwnerLayout() {
   const myStore = useMyStoreQuery()
   if (!canUseOwnerMode(me)) return <OwnerAccountNotice nickname={me?.nickname ?? ''} />
   // 서버의 내 가게를 불러오는 동안엔 샘플 가게 화면이 잠깐 보이지 않게 기다림
-  if (myStore.isLoading) return <div className="mx-auto h-full max-w-[430px] animate-pulse bg-white" />
+  if (myStore.isLoading) return <div className="mx-auto h-full max-w-[430px] animate-pulse bg-app" />
   if (errorCode(myStore.error) === 'STORE404_2') return <OwnerStoreRegister />
   if (myStore.isError) {
     return (
-      <div className="mx-auto flex h-full max-w-[430px] flex-col items-center justify-center gap-3 bg-white px-6 text-center">
+      <div className="mx-auto flex h-full max-w-[430px] flex-col items-center justify-center gap-3 bg-app px-6 text-center">
         <p className="text-[15px] text-ink">{errorMessage(myStore.error, '내 가게 정보를 불러오지 못했어요')}</p>
         <button type="button" onClick={() => myStore.refetch()} className="h-11 rounded-xl bg-green-4 px-5 text-[14px] font-bold text-white">
           다시 불러오기
@@ -61,7 +61,7 @@ function OwnerAccountNotice({ nickname }: { nickname: string }) {
   const logout = useLogout()
 
   return (
-    <div className="mx-auto flex h-full max-w-[430px] flex-col items-center bg-white px-6 pt-[max(72px,env(safe-area-inset-top))] pb-[max(20px,env(safe-area-inset-bottom))] text-center">
+    <div className="mx-auto flex h-full max-w-[430px] flex-col items-center bg-app px-6 pt-[max(72px,env(safe-area-inset-top))] pb-[max(20px,env(safe-area-inset-bottom))] text-center">
       <img src={OWNER_ILLUST.pro} alt="" className="h-[150px] w-auto object-contain" />
       <h1 className="mt-6 text-[22px] font-bold text-ink">사장님 계정으로 이용해 주세요</h1>
       <p className="mt-2 text-[14px] leading-relaxed text-q-muted">

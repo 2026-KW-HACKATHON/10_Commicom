@@ -70,10 +70,10 @@ export function AppShell({
   if (mode === 'OWNER' && pathname === '/') return <Navigate to="/owner" replace />
 
   return (
-    <div className="relative mx-auto flex h-full max-w-[430px] flex-col bg-white">
+    <div className="relative mx-auto flex h-full max-w-[430px] flex-col bg-app">
       <header
         className={`flex h-[76px] shrink-0 items-center justify-between gap-2 px-[18px] pt-[env(safe-area-inset-top)] ${
-          immersive ? 'absolute inset-x-0 top-0 z-30' : 'border-b border-green-1 bg-white'
+          immersive ? 'absolute inset-x-0 top-0 z-30' : 'border-b border-green-1 bg-app'
         }`}
       >
         <SettingsDrawer buttonClassName={circleButton} items={menuItems} />
@@ -115,7 +115,7 @@ export function AppShell({
           shrunk ? 'px-12 pt-1.5' : 'px-5 pt-3'
         } ${
           // 영상 위(z-10~20)에는 뜨되, 설정 서랍이 들어 있는 상단 바(z-30)보다는 아래
-          overlayNav ? 'absolute inset-x-0 bottom-0 z-[25] bg-transparent' : 'bg-white'
+          overlayNav ? 'absolute inset-x-0 bottom-0 z-[25] bg-transparent' : 'bg-app'
         }`}
       >
         <div

@@ -44,7 +44,7 @@ export function WelcomePage() {
   }
 
   return (
-    <div className="mx-auto flex h-full max-w-[430px] flex-col overflow-y-auto bg-white px-6 pt-[max(40px,env(safe-area-inset-top))] pb-[max(24px,env(safe-area-inset-bottom))]">
+    <div className="mx-auto flex h-full max-w-[430px] flex-col overflow-y-auto bg-app px-6 pt-[max(40px,env(safe-area-inset-top))] pb-[max(24px,env(safe-area-inset-bottom))]">
       <img src={logo} alt="잇다" className="h-[56px] w-fit" />
       <h1 className="mt-6 text-[26px] leading-snug font-bold text-ink">
         반가워요!

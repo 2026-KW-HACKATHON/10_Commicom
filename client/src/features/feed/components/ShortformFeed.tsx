@@ -78,7 +78,7 @@ export function ShortformFeed({ storeId, startId }: { storeId?: number; startId?
   const couponCount = (id: number) => stores?.find((s) => s.storeId === id)?.availableCouponCount ?? 0
 
   return (
-    <div className="relative h-full bg-white">
+    <div className="relative h-full bg-app">
       <div ref={containerRef} className="h-full snap-y snap-mandatory overflow-y-auto overscroll-contain [scrollbar-width:none]">
         {items.map((item, i) => (
           <div key={item.shortformId} data-index={i} className="h-full snap-start snap-always">
