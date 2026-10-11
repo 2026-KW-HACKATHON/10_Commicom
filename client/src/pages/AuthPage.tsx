@@ -31,7 +31,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex h-full max-w-[430px] flex-col bg-white px-6 pt-[max(16px,env(safe-area-inset-top))] pb-[max(24px,env(safe-area-inset-bottom))]">
+    <div className="mx-auto flex h-full max-w-[430px] flex-col bg-app px-6 pt-[max(16px,env(safe-area-inset-top))] pb-[max(24px,env(safe-area-inset-bottom))]">
       <button
         type="button"
         aria-label="뒤로"

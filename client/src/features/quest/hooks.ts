@@ -12,8 +12,10 @@ import {
   fetchQuests,
   fetchQuestSubscription,
   fetchQuestTemplates,
+  fetchVouchers,
   postAdFeed,
   postDailyFeed,
+  postExchangeVoucher,
   postFeedPigeon,
   postGraduate,
   postJoinQuestTemplate,
@@ -28,6 +30,7 @@ export const questKeys = {
   pigeon: ['pigeon'] as const,
   history: ['pigeon', 'history'] as const,
   album: ['pigeon', 'album'] as const,
+  vouchers: ['pigeon', 'vouchers'] as const,
   subscription: (storeId: number) => ['quest-subscription', storeId] as const,
   qr: (storeId: number) => ['quest-qr', storeId] as const,
   templates: (storeId: number) => ['quest-templates', storeId] as const,
@@ -188,4 +191,28 @@ export function useQuestEvent(type: QuestEventType, targetId: number | null | un
     }, delayMs)
     return () => clearTimeout(timer)
   }, [memberId, type, targetId, delayMs, qc])
+}
+
+/** 내 쿠폰 교환권 */
+export function useVouchers() {
+  const { memberId, needsLogin } = usePigeonAccess()
+  return useQuery({ queryKey: [...questKeys.vouchers, memberId], queryFn: fetchVouchers, enabled: !needsLogin })
+}
+
+/** 교환권 → 쿠폰 (바꾸면 쿠폰함·비둘기·기록 새로고침) */
+export function useExchangeVoucher() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: postExchangeVoucher,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: questKeys.pigeon })
+      qc.invalidateQueries({ queryKey: ['coupons'] })
+    },
+  })
+}
+
+/** 교환권이 있고 지금 쿠폰으로 바꿀 수 있는지 (사장님들이 쿠폰을 내놓으면 true → 쿠폰함 배지) */
+export function useVoucherReady() {
+  const { data } = useVouchers()
+  return Boolean(data?.poolAvailable && data.vouchers.some((v) => v.status === 'ISSUED'))
 }

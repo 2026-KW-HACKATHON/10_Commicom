@@ -63,10 +63,10 @@ export function OwnerProfile() {
     }
   }
 
-  if (!store) return <div className="h-full animate-pulse bg-white" />
+  if (!store) return <div className="h-full animate-pulse bg-app" />
 
   return (
-    <div className="h-full overflow-y-auto bg-white pb-10">
+    <div className="h-full overflow-y-auto bg-app pb-10">
       <section className="px-5 pt-6">
         <h2 className="text-[13px] font-bold text-ink">가게 정보</h2>
 

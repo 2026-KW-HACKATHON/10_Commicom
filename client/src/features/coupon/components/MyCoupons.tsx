@@ -11,6 +11,7 @@ import {
   type UserCouponStatus,
 } from '../schema'
 import { CouponTicket } from './CouponTicket'
+import { MyVouchers } from './MyVouchers'
 
 const TABS: { status: UserCouponStatus; label: string }[] = [
   { status: 'AVAILABLE', label: '사용 가능' },
@@ -40,6 +41,8 @@ export function MyCoupons() {
           </button>
         ))}
       </div>
+
+      {status === 'AVAILABLE' && <MyVouchers />}
 
       {isLoading && <div className="h-24 animate-pulse rounded-2xl bg-q-panel" />}
       {isError && <p className="py-10 text-center text-sm text-q-muted">쿠폰함을 불러오지 못했어요</p>}

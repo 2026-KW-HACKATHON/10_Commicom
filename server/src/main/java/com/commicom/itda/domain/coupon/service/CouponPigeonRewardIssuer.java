@@ -22,6 +22,11 @@ public class CouponPigeonRewardIssuer implements PigeonRewardCouponIssuer {
     private final CouponService couponService;
 
     @Override
+    public boolean hasPool() {
+        return couponService.hasPigeonRewardPool();
+    }
+
+    @Override
     public Optional<RewardCoupon> issue(Long memberId) {
         return couponService.issuePigeonReward(memberId)
                 .map(uc -> describe(List.of(uc.getId())).get(uc.getId()));

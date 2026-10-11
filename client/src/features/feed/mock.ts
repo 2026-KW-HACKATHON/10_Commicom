@@ -8,28 +8,53 @@ const SAMPLE_POSTER = '/samples/shortform-sample-poster.jpg'
 const SAMPLE_FRAME = { top: 656 / 1920, height: 607 / 1920 }
 
 const DETAILS: Record<number, { menus: string[]; description: string }> = {
-  1: { menus: ['치즈떡볶이 - 7,000원', '모둠튀김 - 5,000원', '마라떡볶이 - 8,000원'], description: '광운대 앞 30년 분식집, 오늘도 떡볶이 맛있게!' },
-  2: { menus: ['아메리카노 - 2,500원', '바닐라라떼 - 4,000원', '크로플 - 4,500원'], description: '공강 시간엔 광운 카페에서 쉬어 가세요 ☕' },
-  3: { menus: ['돈까스 - 8,500원', '김치볶음밥 - 7,000원', '라면 - 4,500원'], description: '든든한 한 끼, 김가네 광운대점' },
-  4: { menus: ['꽃다발 - 15,000원~', '화분 - 9,000원~'], description: '졸업·생일 꽃다발 당일 제작해 드려요 💐' },
-  5: { menus: ['커트 - 15,000원', '펌 - 60,000원~', '염색 - 50,000원~'], description: '학생 할인 있어요! 예약 없이 방문 가능' },
-  6: { menus: ['한우 등심 100g - 12,000원', '삼겹살 100g - 2,900원'], description: '매일 아침 들여오는 신선한 고기' },
+  1: { menus: ['치즈떡볶이 - 7,000원', '모둠튀김 - 5,000원', '마라떡볶이 - 8,000원'], description: '바삭한 튀김 위로 쭉 늘어나는 치즈를 듬뿍 올린 떡볶이 한 판! 메추리알과 파채까지 올려 친구들과 나눠 먹기 딱 좋아요.' },
+  2: { menus: ['아메리카노 - 2,500원', '바닐라라떼 - 4,000원', '크로플 - 4,500원'], description: '매일 아침 직접 내린 원두로 만드는 부드러운 라떼. 공강 시간에 쉬어 가기 좋은 동네 카페예요 ☕' },
+  3: { menus: ['뼈해장국 - 10,000원', '감자탕(중) - 32,000원', '순대국 - 9,000원'], description: '푸짐한 뼈다귀에 우거지 가득, 진하고 얼큰한 국물 한 그릇. 나 빼고 다 알고 있던 동네 해장국 맛집이에요.' },
+  4: { menus: ['마라탕 100g - 1,800원', '꿔바로우(소) - 12,000원'], description: '원하는 재료를 골라 담는 마라탕. 숙주·푸주·피쉬볼 듬뿍, 맵기는 입맛대로 골라 보세요.' },
+  5: { menus: ['커트 - 15,000원', '펌 - 60,000원~', '염색 - 50,000원~'], description: '커트·펌·염색 모두 OK! 학생 할인 있고 예약 없이도 방문 가능한 동네 미용실이에요 ✂️' },
+  6: { menus: ['한우 꽃등심 1++ 100g - 15,000원', '한우 채끝 1++ 100g - 13,000원', '한우 안심 100g - 16,000원'], description: '매일 아침 들여오는 신선한 국내산 한우! 꽃등심·채끝·안심 모두 1++ 등급으로 준비했어요 🥩' },
+  7: { menus: ['후라이드 - 18,000원', '양념치킨 - 19,000원', '간장치킨 - 19,000원'], description: '갓 튀겨 바삭한 후라이드부터 양념·간장치킨까지! 배달도 되고, 잇다 쿠폰으로 할인도 받아 가세요 🍗' },
+  8: { menus: ['짜장면 - 7,000원', '짬뽕 - 8,500원', '찹쌀 탕수육(소) - 16,000원'], description: '쫄깃한 면발의 짜장면, 해물 가득 얼큰한 짬뽕, 겉바속촉 탕수육까지. 볶음밥·군만두도 맛있는 동네 중화요리집이에요 🥢' },
+  9: { menus: ['모둠초밥 12p - 18,000원', '참치초밥 8p - 16,000원', '연어알 군함 2p - 6,000원'], description: '신선한 재료로 만드는 바른 초밥! 연어·참치·장어·새우 초밥에 연어알 군함까지, 매일 아침 들여온 생선으로 쥐어요 🍣' },
+  10: { menus: ['마르게리따 피자 - 17,000원', '토마토 파스타 - 15,000원', '버섯 리조또 - 16,000원'], description: '화덕 피자, 토마토 파스타, 크리미한 버섯 리조또, 부라타 샐러드까지. 오늘도 맛있는 이탈리안 요리를 준비했어요 🍝' },
+  11: { menus: ['오늘의 채소 꾸러미 - 9,900원', '과자·음료 2+1', '2만 원 이상 동네 배달 무료'], description: '생필품·간식·신선식품·음료까지 우리 동네 생활 필수품 다 있어요! 좋은 상품, 착한 가격의 동네마트예요 🛒' },
 }
 
-export const MOCK_SHORTFORMS: Shortform[] = MOCK_STORES.map((store, i) => ({
-  shortformId: 500 + i,
-  storeId: store.storeId,
-  storeName: store.name,
-  category: store.category,
-  categoryName: store.categoryName,
-  address: store.address,
-  menus: DETAILS[store.storeId]?.menus ?? [],
-  description: DETAILS[store.storeId]?.description ?? '',
-  videoUrl: SAMPLE_VIDEO,
-  posterUrl: SAMPLE_POSTER,
-  frame: SAMPLE_FRAME,
-  createdAt: `2026-09-${String(20 + i).padStart(2, '0')}T12:00:00`,
-}))
+const CDN = 'https://d3fsd6ho09c0x2.cloudfront.net/test-feed'
+const unsplash = (id: string) => `https://images.unsplash.com/photo-${id}?w=1080&q=80&fm=jpg&fit=crop&ar=4:5`
+
+/** 시연 피드: 가게마다 실제 사진 게시물 (5·6번은 마스코트 일러스트, public/demo) */
+const POST_IMAGES: Record<number, string[]> = {
+  1: [`${CDN}/tteokbokki.jpg`],
+  2: [unsplash('1534687941688-651ccaafbff8'), unsplash('1747459707229-7b1b7c8367e0')],
+  3: [`${CDN}/haejangguk.jpg`],
+  4: [`${CDN}/malatang.jpg`],
+  5: ['/demo/salon.jpg'],
+  6: ['/demo/butcher.jpg'],
+  7: ['/demo/chicken.jpg'],
+  8: ['/demo/chinese.jpg'],
+  9: ['/demo/sushi.jpg'],
+  10: ['/demo/pasta.jpg'],
+  11: ['/demo/mart.jpg'],
+}
+
+export const MOCK_SHORTFORMS: Shortform[] = MOCK_STORES.map((store, i) => {
+  const images = POST_IMAGES[store.storeId]
+  return {
+    shortformId: 500 + i,
+    storeId: store.storeId,
+    storeName: store.name,
+    category: store.category,
+    categoryName: store.categoryName,
+    address: store.address,
+    menus: DETAILS[store.storeId]?.menus ?? [],
+    description: DETAILS[store.storeId]?.description ?? '',
+    ...(images ? { posterUrl: images[0], images } : { videoUrl: SAMPLE_VIDEO, posterUrl: SAMPLE_POSTER, frame: SAMPLE_FRAME }),
+    // 하루씩 앞선 날짜 (최신 글이 위)
+    createdAt: new Date(Date.UTC(2026, 9, 10 - i, 3)).toISOString().slice(0, 19),
+  }
+})
 
 /**
  * 사장님이 숏폼 만들기에서 "업로드"한 영상 (목업 전용, 브라우저에 저장).

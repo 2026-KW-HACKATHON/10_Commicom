@@ -76,7 +76,7 @@ export function MyProfile() {
   const pwShort = password !== '' && password.length < PASSWORD_MIN
 
   return (
-    <div className="h-full overflow-y-auto bg-white px-5 pt-16 pb-10">
+    <div className="h-full overflow-y-auto bg-app px-5 pt-16 pb-10">
       <Field
         label="닉네임"
         status={nickStatus?.text}

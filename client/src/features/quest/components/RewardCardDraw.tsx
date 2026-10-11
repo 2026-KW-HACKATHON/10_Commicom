@@ -13,9 +13,9 @@ const SHUFFLE_STEPS = 8
 /** 처음에 어떤 보상이 있는지 보여주는 시간 */
 const INTRO_MS = 3500
 
-/** 서버가 정한 보상 → 카드 종류 (쿠폰 풀이 비어 먹이로 대체된 경우도 그대로 먹이 카드) */
+/** 서버가 정한 보상 → 카드 종류 (쿠폰을 내놓은 가게가 없어 교환권으로 받아도 뽑은 카드는 쿠폰) */
 function kindOf(reward: LevelUp['reward']): Kind {
-  if (reward.type === 'COUPON') return 'COUPON'
+  if (reward.type === 'COUPON' || reward.type === 'VOUCHER') return 'COUPON'
   return reward.feedAmount >= 2 ? 'FEED2' : reward.feedAmount === 1 ? 'FEED1' : 'COUPON'
 }
 
@@ -92,7 +92,12 @@ export function RewardCardDraw({ levelUp, onRevealed }: { levelUp: LevelUp; onRe
     shuffling: '섞는 중...',
     pick: '카드를 한 장 골라 주세요',
     'reveal-picked': '두근두근...',
-    'reveal-all': picked !== null && faces[picked] === 'COUPON' ? '🎉 쿠폰 당첨!' : '보상을 받았어요!',
+    'reveal-all':
+      picked !== null && faces[picked] === 'COUPON'
+        ? levelUp.reward.type === 'VOUCHER'
+          ? '🎟 쿠폰 교환권을 받았어요!'
+          : '🎉 쿠폰 당첨!'
+        : '보상을 받았어요!',
   }[phase]
 
   return (
@@ -173,6 +178,8 @@ function CardFront({
   dimmed: boolean
 }) {
   const coupon = kind === 'COUPON'
+  // 쿠폰 카드를 뽑았지만 쿠폰을 내놓은 가게가 없어 교환권으로 받음
+  const voucher = coupon && reward?.type === 'VOUCHER'
   return (
     <span
       className={`absolute inset-0 flex flex-col items-center justify-center rounded-2xl border-2 px-1.5 transition-opacity duration-300 ${
@@ -191,7 +198,7 @@ function CardFront({
       )}
       {coupon && <span className="text-[34px] leading-none">🎟</span>}
       <span className={`mt-2 text-[14px] font-bold ${coupon ? 'text-point-red-dark' : 'text-q-text'}`}>
-        {kind === 'FEED1' ? '먹이 1개' : kind === 'FEED2' ? '먹이 2개' : '쿠폰'}
+        {kind === 'FEED1' ? '먹이 1개' : kind === 'FEED2' ? '먹이 2개' : voucher ? '쿠폰 교환권' : '쿠폰'}
       </span>
       {odds && <span className="mt-0.5 text-[11px] text-q-muted">{odds}</span>}
       {reward?.type === 'COUPON' && reward.userCoupon && (

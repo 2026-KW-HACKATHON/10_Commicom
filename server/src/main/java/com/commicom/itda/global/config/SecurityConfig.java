@@ -19,6 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Configuration
 public class SecurityConfig {
@@ -28,6 +29,7 @@ public class SecurityConfig {
             "/h2-console/**",
             "/error",
             "/api/members/signup", "/api/members/login",
+            "/api/feedback",
             "/api/members/email-verifications", "/api/members/email-verifications/confirm",
     };
 
@@ -36,12 +38,19 @@ public class SecurityConfig {
             "/api/stores", "/api/stores/**",
             "/api/shortforms", "/api/shortforms/**",
             "/api/quests",
+            "/api/coupons/pigeon-reward-pool",
+            "/api/events/**",
+            "/api/notices", "/api/notices/*",
             "/api/members/*/profile",
             "/api/members/check-email", "/api/members/check-nickname",
     };
 
     @Value("${cors.allowed-origins}")
     private List<String> allowedOrigins;
+
+    /** 배포된 화면 주소 (환경변수와 별개로 항상 허용) */
+    @Value("${cors.public-origins:}")
+    private List<String> publicOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtProvider jwtProvider,
@@ -58,6 +67,8 @@ public class SecurityConfig {
                         .accessDeniedHandler(securityErrorResponder))
                 .addFilterBefore(new JwtAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
+                        // 관리자 화면 API
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/stores/me", "/api/stores/*/quest-templates", "/api/stores/*/quest-qr",
                                 "/api/stores/*/coupons", "/api/stores/*/coupon-settlements", "/api/stores/*/pro").authenticated()
                         .requestMatchers(PUBLIC_PATHS).permitAll()
@@ -74,7 +85,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(allowedOrigins);
+        config.setAllowedOrigins(Stream.concat(allowedOrigins.stream(), publicOrigins.stream())
+                .filter(origin -> !origin.isBlank()).distinct().toList());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

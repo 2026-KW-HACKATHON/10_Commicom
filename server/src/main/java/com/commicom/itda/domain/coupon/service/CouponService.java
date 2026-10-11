@@ -23,6 +23,7 @@ import com.commicom.itda.domain.coupon.entity.UserCouponStatus;
 import com.commicom.itda.domain.coupon.repository.CouponRedemptionRepository;
 import com.commicom.itda.domain.coupon.repository.CouponRepository;
 import com.commicom.itda.domain.coupon.repository.UserCouponRepository;
+import com.commicom.itda.domain.event.service.EarlyOwnerEventService;
 import com.commicom.itda.domain.store.entity.Store;
 import com.commicom.itda.domain.store.repository.StoreRepository;
 import com.commicom.itda.global.exception.BusinessException;
@@ -71,6 +72,7 @@ public class CouponService {
     private final UserCouponRepository userCouponRepository;
     private final CouponRedemptionRepository redemptionRepository;
     private final StoreRepository storeRepository;
+    private final EarlyOwnerEventService earlyOwnerEventService;
 
     /* ── 사장님 ── */
 
@@ -94,7 +96,9 @@ public class CouponService {
                 .validDays(request.validDays())
                 .useAsPigeonReward(Boolean.TRUE.equals(request.useAsPigeonReward()))
                 .build());
-        return new CreateResponse(coupon.getId(), coupon.getStatus(), KstTime.offset(KstTime.now()));
+        // 초기 사장님 이벤트: 비둘기 보상 쿠폰을 처음 발행한 선착순 10곳에 PRO·퀘스트 가게 혜택
+        boolean earlyOwnerReward = coupon.isUseAsPigeonReward() && earlyOwnerEventService.onPigeonRewardCouponCreated(storeId, coupon.getId());
+        return new CreateResponse(coupon.getId(), coupon.getStatus(), KstTime.offset(KstTime.now()), earlyOwnerReward);
     }
 
     public OwnerCouponList ownerList(Long memberId, Long storeId, CouponStatus status) {
@@ -236,15 +240,25 @@ public class CouponService {
                 .collect(Collectors.toMap(r -> (Long) r[0], r -> ((Number) r[1]).intValue()));
     }
 
+    /** 비둘기 레벨업 보상으로 나갈 수 있는 쿠폰이 하나라도 있는지 (사장님이 "비둘기 보상"으로 내놓고 아직 남은 쿠폰) */
+    @Transactional(readOnly = true)
+    public boolean hasPigeonRewardPool() {
+        return !pigeonRewardPool().isEmpty();
+    }
+
+    private List<Coupon> pigeonRewardPool() {
+        return couponRepository.findAllByStatusAndUseAsPigeonRewardTrue(CouponStatus.ACTIVE).stream()
+                .filter(Coupon::isIssuable)
+                .toList();
+    }
+
     /**
      * 비둘기 레벨업 보상: 사장님들이 비둘기 보상으로 내놓은 쿠폰 중 1장 (아직 안 가진 쿠폰을 먼저).
      * 풀이 비었으면 empty
      */
     @Transactional
     public Optional<UserCoupon> issuePigeonReward(Long memberId) {
-        List<Coupon> pool = couponRepository.findAllByStatusAndUseAsPigeonRewardTrue(CouponStatus.ACTIVE).stream()
-                .filter(Coupon::isIssuable)
-                .toList();
+        List<Coupon> pool = pigeonRewardPool();
         if (pool.isEmpty()) {
             return Optional.empty();
         }
@@ -252,10 +266,26 @@ public class CouponService {
                 .map(UserCoupon::getCouponId).collect(Collectors.toSet());
         List<Coupon> fresh = pool.stream().filter(c -> !mine.contains(c.getId())).toList();
         List<Coupon> candidates = fresh.isEmpty() ? pool : fresh;
-        Coupon picked = couponRepository.findByIdForUpdate(candidates.get(ThreadLocalRandom.current().nextInt(candidates.size())).getId())
+        Coupon picked = couponRepository.findByIdForUpdate(pickByRemaining(candidates).getId())
                 .filter(Coupon::isIssuable)
                 .orElse(null);
         return picked == null ? Optional.empty() : Optional.of(issue(memberId, picked, UserCouponSource.PIGEON_REWARD));
+    }
+
+    /**
+     * 남은 수량만큼 추첨권: A 30장·B 30장·C 30장이면 90장 중 1장.
+     * 쿠폰을 많이 내놓은 가게일수록 비둘기 보상으로 손님에게 나갈 확률이 높음
+     */
+    private static Coupon pickByRemaining(List<Coupon> candidates) {
+        int total = candidates.stream().mapToInt(Coupon::remainingQuantity).sum();
+        int ticket = ThreadLocalRandom.current().nextInt(total);
+        for (Coupon c : candidates) {
+            ticket -= c.remainingQuantity();
+            if (ticket < 0) {
+                return c;
+            }
+        }
+        return candidates.getLast();
     }
 
     public List<UserCoupon> findUserCoupons(Collection<Long> ids) {

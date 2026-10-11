@@ -1,4 +1,5 @@
 import { ApiError } from '@/shared/api/client'
+import { BETA_MEMBER, IS_BETA } from '@/shared/lib/beta'
 import type { LoginResult, MemberInfo, SignupRequest } from './schema'
 
 /**
@@ -11,7 +12,9 @@ interface MockMember extends MemberInfo {
 
 const KEY = 'itda-mock-members'
 const SEED: MockMember[] = [
-  { memberId: 1, email: 'owner@test.com', password: 'password1234', nickname: '광운 카페', role: 'OWNER', roleName: '사장님', profileImageUrl: null },
+  IS_BETA
+    ? { ...BETA_MEMBER, password: 'password1234', roleName: '사장님' }
+    : { memberId: 1, email: 'owner@test.com', password: 'password1234', nickname: '광운 카페', role: 'OWNER', roleName: '사장님', profileImageUrl: null },
   { memberId: 2, email: 'resident@test.com', password: 'password1234', nickname: '월계동불주먹', role: 'RESIDENT', roleName: '주민', profileImageUrl: null },
 ]
 

@@ -74,8 +74,11 @@ export function SignupFlow({ initialRole }: { initialRole?: Role }) {
 
   const checkNickname = async () => {
     setChecking(true)
+    setError(null)
     try {
       setNickChecked((await isNicknameTaken(nickname)) ? 'taken' : 'ok')
+    } catch (e) {
+      setError(errorMessage(e))
     } finally {
       setChecking(false)
     }
@@ -149,7 +152,7 @@ export function SignupFlow({ initialRole }: { initialRole?: Role }) {
   const accountReady = emailVerified && password.length >= PASSWORD_MIN && (owner || nickChecked === 'ok')
 
   return (
-    <div className="mx-auto flex h-full max-w-[430px] flex-col bg-white">
+    <div className="mx-auto flex h-full max-w-[430px] flex-col bg-app">
       {step !== 'welcome' && (
         <header className="flex h-[68px] shrink-0 items-center justify-between px-[18px] pt-[env(safe-area-inset-top)]">
           <span className="size-[44px]" />
@@ -273,6 +276,11 @@ export function SignupFlow({ initialRole }: { initialRole?: Role }) {
             />
           </Field>
           <p className="mt-2 text-xs text-q-muted">손님에게 보이는 가게 이름이에요. 로그인 후 프로필에서 바꿀 수 있어요.</p>
+          {error && (
+            <p role="alert" className="mt-4 text-center text-[13px] font-medium text-point-red-dark">
+              {error}
+            </p>
+          )}
         </Screen>
       )}
 

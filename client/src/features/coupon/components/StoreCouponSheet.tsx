@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { errorMessage } from '@/shared/lib/error'
+import { num } from '@/shared/lib/format'
 import { ConfettiBurst } from '@/shared/ui/Confetti'
 import { Sheet } from '@/shared/ui/Sheet'
 import { useAvailableCoupons, useDownloadCoupon } from '../hooks'
@@ -41,7 +42,7 @@ export function StoreCouponSheet({
               discountType={c.discountType}
               discountValue={c.discountValue}
               title={c.title}
-              lines={[minOrderText(c.minOrderAmount), `받은 날부터 ${c.validDays}일 · 남은 ${c.remainingQuantity}장`]}
+              lines={[minOrderText(c.minOrderAmount), `받은 날부터 ${c.validDays}일 · 남은 ${num(c.remainingQuantity)}장`]}
               action={
                 <button
                   type="button"

@@ -19,6 +19,8 @@ export interface StoreSummary {
   /** 지도 5-1 확장 필드 (store 담당과 합의 전이라 선택값) */
   isQuestStore?: boolean
   availableCouponCount?: number
+  /** 영업시간 원문 ("영업 중" 표시용) */
+  businessHours?: string | null
 }
 
 /** GET /api/stores/{storeId} */

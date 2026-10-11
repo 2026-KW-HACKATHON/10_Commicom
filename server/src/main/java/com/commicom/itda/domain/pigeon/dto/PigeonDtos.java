@@ -1,5 +1,6 @@
 package com.commicom.itda.domain.pigeon.dto;
 
+import com.commicom.itda.domain.pigeon.entity.CouponVoucher;
 import com.commicom.itda.domain.pigeon.entity.Pigeon;
 import com.commicom.itda.domain.pigeon.entity.PigeonBreed;
 import com.commicom.itda.domain.pigeon.entity.PigeonGraduation;
@@ -70,13 +71,32 @@ public final class PigeonDtos {
     public record RewardCoupon(Long userCouponId, String storeName, String title, OffsetDateTime expiresAt) {
     }
 
-    public record Reward(String type, int feedAmount, RewardCoupon userCoupon) {
+    /** 쿠폰 교환권 (status ISSUED: 바꿀 수 있음 / EXCHANGED: 쿠폰으로 바꿈 / EXPIRED: 기한이 지나 먹이로 바뀜) */
+    public record RewardVoucher(Long voucherId, String status, OffsetDateTime expiresAt, RewardCoupon userCoupon) {
+        public static RewardVoucher of(CouponVoucher v, RewardCoupon coupon) {
+            return new RewardVoucher(v.getId(), v.getStatus().name(), KstTime.offset(v.getExpiresAt()), coupon);
+        }
+    }
+
+    /** type FEED·COUPON·VOUCHER — VOUCHER 면 voucher 에 교환권 */
+    public record Reward(String type, int feedAmount, RewardCoupon userCoupon, RewardVoucher voucher) {
     }
 
     public record LevelUp(int fromLevel, int toLevel, Reward reward) {
-        public static LevelUp of(PigeonLevelHistory h, RewardCoupon coupon) {
-            return new LevelUp(h.getFromLevel(), h.getToLevel(), new Reward(h.getRewardType().name(), h.getFeedAmount(), coupon));
+        public static LevelUp of(PigeonLevelHistory h, RewardCoupon coupon, RewardVoucher voucher) {
+            return new LevelUp(h.getFromLevel(), h.getToLevel(), new Reward(h.getRewardType().name(), h.getFeedAmount(), coupon, voucher));
         }
+    }
+
+    /**
+     * GET /api/pigeon/vouchers — 내 교환권 (기한 지난 건 이때 먹이로 바뀜).
+     * poolAvailable: 지금 바꿀 쿠폰이 있는지, validDays·expiryFeed: 안내 문구용
+     */
+    public record VoucherList(List<RewardVoucher> vouchers, boolean poolAvailable, int validDays, int expiryFeed) {
+    }
+
+    /** POST /api/pigeon/vouchers/{id}/exchange — 바꾼 쿠폰 (기한이 이미 지났으면 feedGained 만큼 먹이로 바뀜) */
+    public record VoucherExchangeResult(RewardVoucher voucher, int feedGained, int feedBalance) {
     }
 
     /** POST /api/pigeon/feeds/daily, /feeds/ad — 먹이는 보유 먹이에 쌓이고 레벨업은 없음 */

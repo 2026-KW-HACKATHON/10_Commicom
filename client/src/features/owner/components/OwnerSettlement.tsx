@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useSettlement } from '@/features/coupon/hooks'
+import { num } from '@/shared/lib/format'
 import { useMyStoreId } from '../hooks'
 import { currentMonth, dateTimeText, shiftMonth } from '../date'
 import { OwnerCard, OwnerScreen } from './OwnerUi'
@@ -42,7 +43,7 @@ export function OwnerSettlement() {
             <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
               <div className="rounded-xl bg-white/15 px-3 py-2">
                 <p className="text-[11px] opacity-80">쿠폰 사용</p>
-                <p className="font-bold">{data.usedCount}건</p>
+                <p className="font-bold">{num(data.usedCount)}건</p>
               </div>
               <div className="rounded-xl bg-white/15 px-3 py-2">
                 <p className="text-[11px] opacity-80">손님 할인 (사장님 부담)</p>
@@ -51,7 +52,7 @@ export function OwnerSettlement() {
             </div>
           </section>
 
-          <OwnerCard title="사용 내역" className="mt-3" aside={<span className="text-xs text-q-muted">{data.items.length}건</span>}>
+          <OwnerCard title="사용 내역" className="mt-3" aside={<span className="text-xs text-q-muted">{num(data.items.length)}건</span>}>
             {data.items.length === 0 ? (
               <p className="py-4 text-center text-sm text-q-muted">이 달에 사용된 쿠폰이 없어요</p>
             ) : (
@@ -64,7 +65,7 @@ export function OwnerSettlement() {
                     </div>
                     <div className="shrink-0 text-right text-xs">
                       <p className="text-q-sub">할인 {item.discountValue.toLocaleString()}원</p>
-                      <p className="font-bold text-q-green">수수료 {item.fee}원</p>
+                      <p className="font-bold text-q-green">수수료 {num(item.fee)}원</p>
                     </div>
                   </li>
                 ))}

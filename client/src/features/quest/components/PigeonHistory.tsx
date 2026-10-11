@@ -1,4 +1,5 @@
 import { untilText } from '@/features/coupon/schema'
+import { num } from '@/shared/lib/format'
 import { usePigeonAccess, usePigeonHistory } from '../hooks'
 import { pigeonImage, type HistoryItem } from '../schema'
 import { FeedIcon } from './QuestUi'
@@ -53,10 +54,23 @@ function RewardText({ item }: { item: HistoryItem }) {
       </p>
     )
   }
+  if (reward.type === 'VOUCHER') {
+    const v = reward.voucher
+    return (
+      <p className="mt-1 text-[13px] font-medium text-point-red-dark">
+        🎟 쿠폰 교환권{' '}
+        {v?.status === 'EXCHANGED' && v.userCoupon
+          ? `→ ${v.userCoupon.storeName} · ${v.userCoupon.title}`
+          : v?.status === 'EXPIRED'
+            ? '→ 기한이 지나 먹이로 바뀜'
+            : `(${v ? untilText(v.expiresAt) : '쿠폰함에서 확인'})`}
+      </p>
+    )
+  }
   return (
     <p className="mt-1 flex items-center gap-1 text-[13px] text-q-sub">
       <FeedIcon className="size-4" />
-      {reward.feedAmount > 0 ? `먹이 ${reward.feedAmount}개 획득` : '보상 없음'}
+      {reward.feedAmount > 0 ? `먹이 ${num(reward.feedAmount)}개 획득` : '보상 없음'}
     </p>
   )
 }

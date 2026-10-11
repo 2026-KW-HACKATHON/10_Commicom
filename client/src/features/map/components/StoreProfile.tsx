@@ -5,6 +5,7 @@ import { useStoreShortforms } from '@/features/feed/hooks'
 import type { Shortform } from '@/features/feed/schema'
 import { useQuestEvent } from '@/features/quest/hooks'
 import { errorMessage } from '@/shared/lib/error'
+import { num } from '@/shared/lib/format'
 import { shareLink } from '@/shared/lib/share'
 import { LocationIcon, PhotoIcon, ShareIcon, TicketSmallIcon } from '@/shared/ui/icons'
 import { StoreAvatar } from '@/shared/ui/StoreAvatar'
@@ -55,7 +56,7 @@ export function StoreProfile({ storeId }: { storeId: number }) {
             <LocationIcon />
           </Action>
           {couponCount > 0 && (
-            <Action label={`쿠폰 ${couponCount}장`} accent onClick={() => setCouponOpen(true)}>
+            <Action label={`쿠폰 ${num(couponCount)}장`} accent onClick={() => setCouponOpen(true)}>
               <TicketSmallIcon />
             </Action>
           )}

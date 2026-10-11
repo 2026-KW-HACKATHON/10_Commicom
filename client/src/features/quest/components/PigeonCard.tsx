@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { errorMessage } from '@/shared/lib/error'
+import { num } from '@/shared/lib/format'
 import { useAdFeed, useDailyFeed, useFeedPigeon, useGraduate, usePigeon, usePigeonAccess } from '../hooks'
 import { breedLabel, levelLabel, MAX_LEVEL, pigeonImage, type AlbumItem, type FeedPigeonResult, type LevelUp } from '../schema'
 import { AdRewardModal } from './AdRewardModal'
@@ -40,14 +41,14 @@ export function PigeonCard() {
   const busy = daily.isPending || ad.isPending || feed.isPending
   const remaining = (pigeon.requiredFeed ?? 0) - pigeon.currentFeed
   const fail = (e: unknown) => setToast(errorMessage(e))
-  const gained = (r: { feedGained: number }) => setToast(`먹이 ${r.feedGained}개를 획득했습니다`)
+  const gained = (r: { feedGained: number }) => setToast(`먹이 ${num(r.feedGained)}개를 획득했습니다`)
   const giveFeed = (amount: number) =>
     feed.mutate(amount, {
       onSuccess: (r) => {
         setEatTick((t) => t + 1)
         if (r.hatched) setHatched({ result: r, next: r.levelUps })
         else if (r.levelUps.length > 0) setLevelUps(r.levelUps)
-        else setToast(`냠냠! 먹이 ${r.fed}개를 먹었어요`)
+        else setToast(`냠냠! 먹이 ${num(r.fed)}개를 먹었어요`)
       },
       onError: fail,
     })
@@ -126,7 +127,7 @@ export function PigeonCard() {
           </div>
           <ProgressBar value={pigeon.currentFeed} max={pigeon.requiredFeed ?? 1} className="mt-1.5 h-2" />
           <p className="mt-1.5 text-xs text-q-muted">
-            먹이 {remaining}개 더 주면 Lv. {pigeon.level + 1} · 레벨업마다 보상 뽑기!
+            먹이 {num(remaining)}개 더 주면 Lv. {pigeon.level + 1} · 레벨업마다 보상 뽑기!
           </p>
         </div>
       )}
@@ -137,7 +138,7 @@ export function PigeonCard() {
           <FeedBowlIcon className="h-11 w-12" />
           <div className="flex-1">
             <p className="text-[11px] text-q-muted">보유 먹이</p>
-            <p className="text-xl leading-tight font-bold text-q-text tabular-nums">{feedBalance}개</p>
+            <p className="text-xl leading-tight font-bold text-q-text tabular-nums">{num(feedBalance)}개</p>
           </div>
           <div className="flex flex-col items-end gap-1">
             <button
@@ -155,7 +156,7 @@ export function PigeonCard() {
                 onClick={() => giveFeed(Math.min(feedBalance, remaining))}
                 className="text-[11px] font-medium text-q-green underline"
               >
-                {feedBalance >= remaining ? `레벨업까지 ${remaining}개 주기` : `${feedBalance}개 모두 주기`}
+                {feedBalance >= remaining ? `레벨업까지 ${num(remaining)}개 주기` : `${num(feedBalance)}개 모두 주기`}
               </button>
             )}
           </div>
@@ -165,7 +166,7 @@ export function PigeonCard() {
       {/* 최고 레벨이어도 먹이는 모아 둘 수 있음 (새 비둘기에게 이어짐) */}
       {pigeon.isMaxLevel && (
         <p className="mt-4 text-center text-[13px] text-q-sub">
-          보유 먹이 <b className="text-q-text">{feedBalance}개</b>
+          보유 먹이 <b className="text-q-text">{num(feedBalance)}개</b>
         </p>
       )}
       <div className="mt-2 grid grid-cols-2 gap-2">

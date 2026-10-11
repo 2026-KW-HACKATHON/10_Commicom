@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import pigeonWalk from '@/assets/map/pigeon-walk.png'
 import { StoreCouponSheet } from '@/features/coupon/components/StoreCouponSheet'
 import { useFilteredStores, useMyLocation, useStoreGroups, useStores } from '../hooks'
+import { openStatus } from '../openStatus'
 import { KAKAO_KEY, KAKAO_LOADER_OPTIONS } from '../kakao'
 import { DEFAULT_CENTER, type MapCategoryKey, type StoreSummary } from '../schema'
 import { MapBottomSheet } from './MapBottomSheet'
@@ -12,6 +13,10 @@ import { StoreMarker } from './StoreMarker'
 
 /** 지도 기본 배율 (카카오 level, 작을수록 확대) */
 const DEFAULT_LEVEL = 3
+/** 핀 끝에서 창 위까지 높이(쿠폰 버튼 포함) + 위쪽 메뉴·퀘스트 필터 자리 */
+const POPUP_TOP = 380
+/** 창 너비(216px)의 절반 + 여백 */
+const POPUP_SIDE = 124
 
 /** 잇다 맵 화면 */
 export function StoreMapView() {
@@ -43,14 +48,28 @@ function KakaoStoreMap() {
   const [category, setCategory] = useState<MapCategoryKey | null>(null)
   const [keyword, setKeyword] = useState('')
   const [questOnly, setQuestOnly] = useState(false)
+  const [openOnly, setOpenOnly] = useState(false)
   const [couponStore, setCouponStore] = useState<StoreSummary | null>(null)
 
   const { data: stores, isError } = useStores(questOnly)
-  const filtered = useFilteredStores(stores, category, keyword)
+  const categoryFiltered = useFilteredStores(stores, category, keyword)
+  // "영업 중만": 영업시간을 못 읽는 가게는 빼지 않음
+  const filtered = openOnly ? categoryFiltered.filter((s) => openStatus(s.businessHours) !== 'CLOSED') : categoryFiltered
   const groups = useStoreGroups(map, filtered, viewVersion)
   const location = useMyLocation()
 
-  const panTo = (lat: number, lng: number) => map?.panTo(new kakao.maps.LatLng(lat, lng))
+  /**
+   * 핀을 누르면 지도는 그대로 두고 핀 위에 창을 띄움.
+   * 창이 화면 위·옆으로 잘릴 때만 잘리지 않을 만큼 지도를 밀어 줌
+   */
+  const revealPopup = (lat: number, lng: number) => {
+    if (!map) return
+    const point = map.getProjection().containerPointFromCoords(new kakao.maps.LatLng(lat, lng))
+    const width = map.getNode().clientWidth
+    const dx = point.x < POPUP_SIDE ? point.x - POPUP_SIDE : point.x > width - POPUP_SIDE ? point.x - (width - POPUP_SIDE) : 0
+    const dy = point.y < POPUP_TOP ? point.y - POPUP_TOP : 0
+    if (dx || dy) map.panBy(dx, dy)
+  }
 
   /** 내 위치로: 확대·축소해 둔 배율을 기본으로 되돌리고 지금 위치를 가운데로 */
   const goToMe = () => {
@@ -86,7 +105,7 @@ function KakaoStoreMap() {
   const selectStore = (store: StoreSummary) => {
     setSelectedStoreId(store.storeId)
     setOpenGroupKey(null)
-    panTo(store.latitude, store.longitude)
+    revealPopup(store.latitude, store.longitude)
   }
 
   if (sdkError) {
@@ -143,6 +162,18 @@ function KakaoStoreMap() {
         className="absolute top-[78px] left-[14px] z-20 rounded-full border border-green-1 bg-white px-3 py-1.5 text-[13px] font-bold text-ink shadow-sm aria-pressed:border-green-6 aria-pressed:bg-green-6 aria-pressed:text-white"
       >
         🚩 퀘스트 가게만
+      </button>
+
+      <button
+        type="button"
+        aria-pressed={openOnly}
+        onClick={() => {
+          setOpenOnly((v) => !v)
+          clearSelection()
+        }}
+        className="absolute top-[78px] left-[146px] z-20 rounded-full border border-green-1 bg-white px-3 py-1.5 text-[13px] font-bold text-ink shadow-sm aria-pressed:border-green-6 aria-pressed:bg-green-6 aria-pressed:text-white"
+      >
+        🕒 영업 중만
       </button>
 
       {couponStore && (

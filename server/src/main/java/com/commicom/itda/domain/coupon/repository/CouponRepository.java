@@ -12,6 +12,8 @@ import java.util.Optional;
 
 public interface CouponRepository extends JpaRepository<Coupon, Long> {
 
+    long countByStatus(CouponStatus status);
+
     List<Coupon> findAllByStoreIdOrderByIdDesc(Long storeId);
 
     List<Coupon> findAllByStoreIdAndStatusOrderByIdDesc(Long storeId, CouponStatus status);

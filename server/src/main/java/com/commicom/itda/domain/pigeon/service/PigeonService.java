@@ -12,6 +12,10 @@ import com.commicom.itda.domain.pigeon.dto.PigeonDtos.LevelUp;
 import com.commicom.itda.domain.pigeon.dto.PigeonDtos.PigeonChange;
 import com.commicom.itda.domain.pigeon.dto.PigeonDtos.PigeonResponse;
 import com.commicom.itda.domain.pigeon.dto.PigeonDtos.RewardCoupon;
+import com.commicom.itda.domain.pigeon.dto.PigeonDtos.RewardVoucher;
+import com.commicom.itda.domain.pigeon.dto.PigeonDtos.VoucherExchangeResult;
+import com.commicom.itda.domain.pigeon.dto.PigeonDtos.VoucherList;
+import com.commicom.itda.domain.pigeon.entity.CouponVoucher;
 import com.commicom.itda.domain.pigeon.entity.FeedLog;
 import com.commicom.itda.domain.pigeon.entity.FeedSource;
 import com.commicom.itda.domain.pigeon.entity.Pigeon;
@@ -20,6 +24,7 @@ import com.commicom.itda.domain.pigeon.entity.PigeonGraduation;
 import com.commicom.itda.domain.pigeon.entity.PigeonLevel;
 import com.commicom.itda.domain.pigeon.entity.PigeonLevelHistory;
 import com.commicom.itda.domain.pigeon.entity.PigeonLevelHistory.RewardType;
+import com.commicom.itda.domain.pigeon.repository.CouponVoucherRepository;
 import com.commicom.itda.domain.pigeon.repository.FeedLogRepository;
 import com.commicom.itda.domain.pigeon.repository.PigeonGraduationRepository;
 import com.commicom.itda.domain.pigeon.repository.PigeonLevelHistoryRepository;
@@ -40,6 +45,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 비둘기 1마리 키우기.
@@ -53,16 +60,22 @@ public class PigeonService {
 
     public static final int AD_FEED_LIMIT = 3;
     public static final int HISTORY_MAX_SIZE = 50;
+    /** 쿠폰 교환권 기한 (3주) */
+    public static final int VOUCHER_DAYS = 21;
+    /** 교환권을 기한 안에 못 바꾸면 대신 주는 먹이 (기다린 만큼 쿠폰 대체 먹이보다 조금 더) */
+    public static final int VOUCHER_EXPIRY_FEED = 4;
 
     private final PigeonRepository pigeonRepository;
     private final FeedLogRepository feedLogRepository;
     private final PigeonLevelHistoryRepository historyRepository;
     private final PigeonGraduationRepository graduationRepository;
     private final PigeonRewardCouponIssuer rewardCouponIssuer;
+    private final CouponVoucherRepository voucherRepository;
 
     @Transactional
     public PigeonResponse getPigeon(Long memberId) {
         Pigeon pigeon = pigeonOf(memberId);
+        expireVouchers(pigeon);
         LocalDate today = KstTime.today();
         return PigeonResponse.of(pigeon, new PigeonResponse.Today(
                 feedLogRepository.existsByMemberIdAndSourceAndFeedDate(memberId, FeedSource.DAILY, today),
@@ -135,7 +148,7 @@ public class PigeonService {
             PigeonLevelHistory history = historyRepository.save(drawn.history());
             // 뽑기로 나온 먹이도 바로 먹이지 않고 보유 먹이에 쌓음
             pigeon.addBalance(history.getFeedAmount());
-            levelUps.add(LevelUp.of(history, drawn.coupon()));
+            levelUps.add(LevelUp.of(history, drawn.coupon(), drawn.voucher() == null ? null : RewardVoucher.of(drawn.voucher(), null)));
         }
         return new FeedPigeonResult(amount, PigeonChange.of(levelBefore, pigeon), hatched, levelUps, pigeon.getFeedBalance());
     }
@@ -171,19 +184,74 @@ public class PigeonService {
                 .map(PigeonLevelHistory::getUserCouponId)
                 .filter(Objects::nonNull)
                 .toList());
+        Map<Long, CouponVoucher> vouchers = voucherRepository.findAllByIdIn(slice.getContent().stream()
+                        .map(PigeonLevelHistory::getVoucherId)
+                        .filter(Objects::nonNull)
+                        .toList()).stream()
+                .collect(Collectors.toMap(CouponVoucher::getId, Function.identity()));
         List<HistoryItem> items = slice.getContent().stream()
                 .map(h -> {
-                    LevelUp l = LevelUp.of(h, h.getUserCouponId() == null ? null : coupons.get(h.getUserCouponId()));
+                    CouponVoucher v = h.getVoucherId() == null ? null : vouchers.get(h.getVoucherId());
+                    RewardVoucher voucher = v == null ? null : RewardVoucher.of(v, null);
+                    LevelUp l = LevelUp.of(h, h.getUserCouponId() == null ? null : coupons.get(h.getUserCouponId()), voucher);
                     return new HistoryItem(h.getId(), h.getGeneration(), l.fromLevel(), l.toLevel(), l.reward(), KstTime.fromServerTime(h.getCreatedAt()));
                 })
                 .toList();
         return new HistoryPage(items, page, size, slice.hasNext());
     }
 
+    /** 내 교환권 (기한 지난 건 먹이로 바꾼 뒤 보여 줌) */
+    @Transactional
+    public VoucherList getVouchers(Long memberId) {
+        expireVouchers(pigeonOf(memberId));
+        List<CouponVoucher> vouchers = voucherRepository.findAllByMemberIdOrderByIdDesc(memberId);
+        Map<Long, RewardCoupon> coupons = rewardCouponIssuer.describe(vouchers.stream()
+                .map(CouponVoucher::getUserCouponId)
+                .filter(Objects::nonNull)
+                .toList());
+        return new VoucherList(vouchers.stream()
+                .map(v -> RewardVoucher.of(v, v.getUserCouponId() == null ? null : coupons.get(v.getUserCouponId())))
+                .toList(), rewardCouponIssuer.hasPool(), VOUCHER_DAYS, VOUCHER_EXPIRY_FEED);
+    }
+
+    /** 교환권 → 쿠폰 (쿠폰 풀에서 남은 수량 비례 추첨). 기한이 이미 지났으면 먹이로 바꿔 줌 */
+    @Transactional
+    public VoucherExchangeResult exchangeVoucher(Long memberId, Long voucherId) {
+        Pigeon pigeon = pigeonOf(memberId);
+        CouponVoucher voucher = voucherRepository.findById(voucherId)
+                .filter(v -> v.getMemberId().equals(memberId))
+                .orElseThrow(() -> new BusinessException(ErrorCode.VOUCHER_NOT_FOUND));
+        if (voucher.isDue(KstTime.now())) {
+            expire(pigeon, voucher);
+            return new VoucherExchangeResult(RewardVoucher.of(voucher, null), VOUCHER_EXPIRY_FEED, pigeon.getFeedBalance());
+        }
+        if (voucher.getStatus() != CouponVoucher.Status.ISSUED) {
+            throw new BusinessException(ErrorCode.VOUCHER_ALREADY_USED);
+        }
+        RewardCoupon coupon = rewardCouponIssuer.issue(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.VOUCHER_NO_COUPON));
+        voucher.exchange(coupon.userCouponId());
+        return new VoucherExchangeResult(RewardVoucher.of(voucher, coupon), 0, pigeon.getFeedBalance());
+    }
+
+    /** 기한 지난 교환권을 먹이로 */
+    private void expireVouchers(Pigeon pigeon) {
+        LocalDateTime now = KstTime.now();
+        voucherRepository.findAllByMemberIdAndStatus(pigeon.getMemberId(), CouponVoucher.Status.ISSUED).stream()
+                .filter(v -> v.isDue(now))
+                .forEach(v -> expire(pigeon, v));
+    }
+
+    private void expire(Pigeon pigeon, CouponVoucher voucher) {
+        voucher.expire();
+        grant(pigeon, VOUCHER_EXPIRY_FEED, FeedSource.VOUCHER, null);
+    }
+
     /** 회원 탈퇴 */
     @Transactional
     public void deleteAllOf(Long memberId) {
         historyRepository.deleteByMemberId(memberId);
+        voucherRepository.deleteByMemberId(memberId);
         graduationRepository.deleteByMemberId(memberId);
         feedLogRepository.deleteByMemberId(memberId);
         pigeonRepository.deleteByMemberId(memberId);
@@ -202,7 +270,7 @@ public class PigeonService {
         pigeon.addBalance(amount);
     }
 
-    private record Drawn(PigeonLevelHistory history, RewardCoupon coupon) {
+    private record Drawn(PigeonLevelHistory history, RewardCoupon coupon, CouponVoucher voucher) {
     }
 
     /** 레벨업 뽑기: 쿠폰 / 먹이 1개 / 먹이 2개 */
@@ -211,12 +279,13 @@ public class PigeonService {
         if (r < row.getCouponRate()) {
             RewardCoupon coupon = rewardCouponIssuer.issue(memberId).orElse(null);
             if (coupon != null) {
-                return new Drawn(new PigeonLevelHistory(memberId, generation, toLevel - 1, toLevel, RewardType.COUPON, 0, coupon.userCouponId()), coupon);
+                return new Drawn(new PigeonLevelHistory(memberId, generation, toLevel - 1, toLevel, RewardType.COUPON, 0, coupon.userCouponId()), coupon, null);
             }
-            // 쿠폰 풀이 비었을 때: 중간 레벨은 먹이 2개로 대체. Lv.10 확정 쿠폰은 미정 → 먹이 0
-            return new Drawn(new PigeonLevelHistory(memberId, generation, toLevel - 1, toLevel, RewardType.FEED, toLevel >= PigeonLevel.MAX_LEVEL ? 0 : 2, null), null);
+            // 쿠폰 풀이 비었을 때(쿠폰을 내놓은 사장님이 없음): Lv.10 확정 쿠폰도 포함해 교환권 — 3주 안에 쿠폰이 생기면 바꾸고, 지나면 먹이
+            CouponVoucher voucher = voucherRepository.save(new CouponVoucher(memberId, KstTime.endOfDay(KstTime.today().plusDays(VOUCHER_DAYS))));
+            return new Drawn(new PigeonLevelHistory(memberId, generation, toLevel - 1, toLevel, RewardType.VOUCHER, 0, null).voucher(voucher.getId()), null, voucher);
         }
         int feed = r < row.getCouponRate() + row.getFeed1Rate() ? 1 : 2;
-        return new Drawn(new PigeonLevelHistory(memberId, generation, toLevel - 1, toLevel, RewardType.FEED, feed, null), null);
+        return new Drawn(new PigeonLevelHistory(memberId, generation, toLevel - 1, toLevel, RewardType.FEED, feed, null), null, null);
     }
 }

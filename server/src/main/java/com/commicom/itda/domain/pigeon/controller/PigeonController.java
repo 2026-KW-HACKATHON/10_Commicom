@@ -8,6 +8,8 @@ import com.commicom.itda.domain.pigeon.dto.PigeonDtos.FeedRequest;
 import com.commicom.itda.domain.pigeon.dto.PigeonDtos.FeedResult;
 import com.commicom.itda.domain.pigeon.dto.PigeonDtos.HistoryPage;
 import com.commicom.itda.domain.pigeon.dto.PigeonDtos.PigeonResponse;
+import com.commicom.itda.domain.pigeon.dto.PigeonDtos.VoucherExchangeResult;
+import com.commicom.itda.domain.pigeon.dto.PigeonDtos.VoucherList;
 import com.commicom.itda.domain.pigeon.service.PigeonService;
 import com.commicom.itda.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +19,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -65,6 +68,24 @@ public class PigeonController {
     @PostMapping("/graduate")
     public ApiResponse<GraduateResult> graduate(@Parameter(hidden = true) @AuthenticationPrincipal Long memberId) {
         return ApiResponse.onSuccess(pigeonService.graduate(memberId));
+    }
+
+    @Operation(summary = "내 쿠폰 교환권",
+            description = "레벨업 뽑기에서 쿠폰이 나왔는데 쿠폰 풀이 비어 받은 교환권. 3주 안에 쿠폰으로 바꿀 수 있고, 기한이 지나면 먹이 4개로 바뀐다"
+                    + " (조회할 때 처리). poolAvailable: 지금 바꿀 쿠폰이 있는지")
+    @GetMapping("/vouchers")
+    public ApiResponse<VoucherList> getVouchers(@Parameter(hidden = true) @AuthenticationPrincipal Long memberId) {
+        return ApiResponse.onSuccess(pigeonService.getVouchers(memberId));
+    }
+
+    @Operation(summary = "교환권을 쿠폰으로 바꾸기",
+            description = "사장님들이 내놓은 비둘기 보상 쿠폰 중 남은 수량 비례로 1장. 쿠폰이 없으면 VOUCHER409_2, 이미 바꿨으면 VOUCHER409."
+                    + " 기한이 이미 지났으면 먹이로 바뀌고 feedGained 에 담김")
+    @PostMapping("/vouchers/{voucherId}/exchange")
+    public ApiResponse<VoucherExchangeResult> exchangeVoucher(
+            @Parameter(hidden = true) @AuthenticationPrincipal Long memberId,
+            @PathVariable Long voucherId) {
+        return ApiResponse.onSuccess(pigeonService.exchangeVoucher(memberId, voucherId));
     }
 
     @Operation(summary = "내 비둘기 앨범", description = "졸업한 비둘기 (최근 순): 기수·종류·키운 기간·받은 쿠폰 수")

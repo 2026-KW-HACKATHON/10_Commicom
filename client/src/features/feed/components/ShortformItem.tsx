@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MAP_CATEGORIES } from '@/features/map/schema'
+import { num } from '@/shared/lib/format'
 import { shareLink } from '@/shared/lib/share'
 import { BookmarkIcon, LocationIcon, ShareIcon, TicketSmallIcon } from '@/shared/ui/icons'
 import { toast } from '@/stores/toastStore'
@@ -38,7 +39,7 @@ export function ShortformItem({ item, couponCount, onOpenCoupons }: Props) {
   }
 
   return (
-    <article className="flex h-full flex-col bg-white" aria-label={`${item.storeName} 홍보 게시물`}>
+    <article className="flex h-full flex-col bg-app" aria-label={`${item.storeName} 홍보 게시물`}>
       {/* 가게 프로필 */}
       <header className="flex shrink-0 items-center gap-2.5 px-4 py-2.5">
         <Link
@@ -101,7 +102,7 @@ export function ShortformItem({ item, couponCount, onOpenCoupons }: Props) {
             <span className="scale-[0.8]">
               <TicketSmallIcon />
             </span>
-            쿠폰 {couponCount}장
+            쿠폰 {num(couponCount)}장
           </button>
         )}
       </div>

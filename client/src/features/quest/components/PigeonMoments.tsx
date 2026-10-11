@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { ConfettiBurst } from '@/shared/ui/Confetti'
+import { num } from '@/shared/lib/format'
 import { PIGEON_BREEDS, PIGEON_EGG_IMAGE, type AlbumItem, type PigeonBreed } from '../schema'
 import { CelebrationScreen, OutlineButton, PrimaryButton } from './QuestUi'
 
@@ -39,10 +40,10 @@ export function GraduationScreen({ graduated, onDone }: { graduated: AlbumItem; 
       subtitle={
         <>
           <p className="text-[17px] font-bold text-q-text">
-            {b.emoji} {b.name} 비둘기와 {graduated.days}일을 함께했어요
+            {b.emoji} {b.name} 비둘기와 {num(graduated.days)}일을 함께했어요
           </p>
           {graduated.rewardCouponCount > 0 && (
-            <p className="mt-1 text-xs text-q-muted">레벨업 쿠폰을 {graduated.rewardCouponCount}장 받았어요</p>
+            <p className="mt-1 text-xs text-q-muted">레벨업 쿠폰을 {num(graduated.rewardCouponCount)}장 받았어요</p>
           )}
         </>
       }

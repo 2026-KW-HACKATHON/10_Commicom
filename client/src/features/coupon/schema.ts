@@ -20,6 +20,8 @@ export interface CreateCouponResult {
   couponId: number
   status: CouponStatus
   createdAt: string
+  /** 이 발행으로 초기 사장님 이벤트 혜택(PRO·퀘스트 가게)을 받았는지 */
+  earlyOwnerReward?: boolean
 }
 
 /** GET /api/stores/{storeId}/coupons 의 coupons[] (사장님) */

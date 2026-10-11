@@ -48,7 +48,7 @@ export function OwnerStoreRegister() {
   }
 
   return (
-    <div className="mx-auto flex h-full max-w-[430px] flex-col bg-white pt-[env(safe-area-inset-top)]">
+    <div className="mx-auto flex h-full max-w-[430px] flex-col bg-app pt-[env(safe-area-inset-top)]">
       <Screen
         hero={<Hero sub={'아직 등록한 가게가 없어요\n가게 정보를 알려 주세요'} plain />}
         next={{ label: submitting ? '등록 중...' : '가게 등록하기', onClick: submit, disabled: !ready || submitting }}

@@ -1,3 +1,5 @@
+import pigeonStar from '@/assets/event/pigeon-star.png'
+import { EarlyOwnerPopup } from '@/features/event/components/EarlyOwnerPopup'
 import { Link, useNavigate } from 'react-router-dom'
 import pigeonWalk from '@/assets/map/pigeon-walk.png'
 import { useLogout } from '@/features/auth/hooks'
@@ -6,7 +8,7 @@ import { OwnerStoreRegister } from '@/features/owner/components/OwnerStoreRegist
 import { useMyStoreQuery } from '@/features/owner/hooks'
 import { OWNER_ILLUST } from '@/features/owner/illustrations'
 import { errorCode, errorMessage } from '@/shared/lib/error'
-import { CreateNavIcon, FlagNavIcon, HomeNavIcon, ScanNavIcon, TicketNavIcon } from '@/shared/ui/icons'
+import { CreateNavIcon, FlagNavIcon, HomeNavIcon, TicketNavIcon } from '@/shared/ui/icons'
 import { useMe } from '@/stores/authStore'
 import { useModeStore } from '@/stores/modeStore'
 import { AppShell, type TabItem } from './AppShell'
@@ -17,12 +19,12 @@ const TABS: TabItem[] = [
   { to: '/owner/quests', label: '퀘스트', Icon: FlagNavIcon },
   // 피드 제작이 주 동작이라 가운데 (예전엔 우상단 + 로만 만들 수 있었음)
   { to: '/owner/create', label: '제작', Icon: CreateNavIcon },
-  { to: '/owner/redeem', label: '사용 처리', Icon: ScanNavIcon },
   // 쿠폰 관리 + 정산
   { to: '/owner/coupons', label: '쿠폰', Icon: TicketNavIcon },
 ]
 
 const MENU: MenuItem[] = [
+  { to: '/owner/events', label: '이벤트 · 공지사항', icon: '⭐', image: pigeonStar },
   { to: '/owner/profile', label: '가게 정보 · 프로필', icon: '🏪', image: pigeonWalk },
   { to: '/owner/create', label: '게시물 제작', icon: '📸', image: OWNER_ILLUST.videoEdit },
   { to: '/owner/quest-store', label: '퀘스트 가게 · 방문 QR', icon: '📍', image: OWNER_ILLUST.qr },
@@ -32,7 +34,7 @@ const MENU: MenuItem[] = [
 ]
 
 /**
- * 사장님 모드: 홈 / 퀘스트 / 쿠폰 / 사용 처리 / 정산.
+ * 사장님 모드: 홈(쿠폰 사용 처리 포함) / 퀘스트 / 제작 / 쿠폰(관리·정산).
  * 손님 계정으로 로그인했으면 들어오지 못하게 안내 (로그인 전에는 시연용으로 열어 둠).
  */
 export function OwnerLayout() {
@@ -40,11 +42,18 @@ export function OwnerLayout() {
   const myStore = useMyStoreQuery()
   if (!canUseOwnerMode(me)) return <OwnerAccountNotice nickname={me?.nickname ?? ''} />
   // 서버의 내 가게를 불러오는 동안엔 샘플 가게 화면이 잠깐 보이지 않게 기다림
-  if (myStore.isLoading) return <div className="mx-auto h-full max-w-[430px] animate-pulse bg-white" />
-  if (errorCode(myStore.error) === 'STORE404_2') return <OwnerStoreRegister />
+  if (myStore.isLoading) return <div className="mx-auto h-full max-w-[430px] animate-pulse bg-app" />
+  if (errorCode(myStore.error) === 'STORE404_2') {
+    return (
+      <>
+        <OwnerStoreRegister />
+        <EarlyOwnerPopup canOpenDetail={false} />
+      </>
+    )
+  }
   if (myStore.isError) {
     return (
-      <div className="mx-auto flex h-full max-w-[430px] flex-col items-center justify-center gap-3 bg-white px-6 text-center">
+      <div className="mx-auto flex h-full max-w-[430px] flex-col items-center justify-center gap-3 bg-app px-6 text-center">
         <p className="text-[15px] text-ink">{errorMessage(myStore.error, '내 가게 정보를 불러오지 못했어요')}</p>
         <button type="button" onClick={() => myStore.refetch()} className="h-11 rounded-xl bg-green-4 px-5 text-[14px] font-bold text-white">
           다시 불러오기
@@ -52,7 +61,13 @@ export function OwnerLayout() {
       </div>
     )
   }
-  return <AppShell tabs={TABS} menuItems={MENU} modeBadge="사장님" />
+  return (
+    <>
+      <AppShell tabs={TABS} menuItems={MENU} modeBadge="사장님" />
+      {/* 사장님 화면에 들어오면 초기 사장님 이벤트 안내 (닫기: 다음 접속 때 또 / 다시 보지 않기: 계속 숨김) */}
+      <EarlyOwnerPopup />
+    </>
+  )
 }
 
 function OwnerAccountNotice({ nickname }: { nickname: string }) {
@@ -61,7 +76,7 @@ function OwnerAccountNotice({ nickname }: { nickname: string }) {
   const logout = useLogout()
 
   return (
-    <div className="mx-auto flex h-full max-w-[430px] flex-col items-center bg-white px-6 pt-[max(72px,env(safe-area-inset-top))] pb-[max(20px,env(safe-area-inset-bottom))] text-center">
+    <div className="mx-auto flex h-full max-w-[430px] flex-col items-center bg-app px-6 pt-[max(72px,env(safe-area-inset-top))] pb-[max(20px,env(safe-area-inset-bottom))] text-center">
       <img src={OWNER_ILLUST.pro} alt="" className="h-[150px] w-auto object-contain" />
       <h1 className="mt-6 text-[22px] font-bold text-ink">사장님 계정으로 이용해 주세요</h1>
       <p className="mt-2 text-[14px] leading-relaxed text-q-muted">

@@ -3,7 +3,8 @@ import pigeonWalk from '@/assets/map/pigeon-walk.png'
 import pigeonGps from '@/assets/quest/pigeon-gps.png'
 import { OWNER_ILLUST } from '@/features/owner/illustrations'
 import { useMyCoupons } from '@/features/coupon/hooks'
-import { usePigeonAccess, useQuests } from '../hooks'
+import { num } from '@/shared/lib/format'
+import { usePigeonAccess, useQuests, useVoucherReady } from '../hooks'
 import { questTemplate, type Quest } from '../schema'
 import { PigeonCard } from './PigeonCard'
 import { FeedIcon, ProgressBar, SectionTitle } from './QuestUi'
@@ -12,6 +13,7 @@ import { FeedIcon, ProgressBar, SectionTitle } from './QuestUi'
 export function QuestHome() {
   const { data: quests, isLoading, isError } = useQuests()
   const { data: coupons } = useMyCoupons('AVAILABLE')
+  const voucherReady = useVoucherReady()
 
   const ongoing = quests?.filter((q) => q.status === 'IN_PROGRESS') ?? []
   const done = quests?.filter((q) => q.status === 'COMPLETED') ?? []
@@ -29,9 +31,12 @@ export function QuestHome() {
         to="/coupons"
         className="mt-3 flex items-center justify-between rounded-2xl border border-q-line bg-white px-4 py-3"
       >
-        <span className="text-[15px] font-bold text-q-text">내 쿠폰함</span>
+        <span className="flex items-center gap-1.5 text-[15px] font-bold text-q-text">
+          내 쿠폰함
+          {voucherReady && <span className="animate-pulse rounded-full bg-point-red px-2 py-0.5 text-[10px] font-bold text-white">교환권을 쿠폰으로 바꿀 수 있어요!</span>}
+        </span>
         <span className="text-[13px] font-medium text-q-green">
-          사용 가능 {coupons?.length ?? 0}장 ›
+          사용 가능 {num(coupons?.length ?? 0)}장 ›
         </span>
       </Link>
 
@@ -117,7 +122,7 @@ function QuestCard({ quest }: { quest: Quest }) {
           <ProgressBar value={quest.currentCount} max={quest.targetCount} className="h-1 w-[116px]" />
           <span className="ml-auto flex shrink-0 items-center gap-1 text-[13px] font-bold text-q-green">
             <FeedIcon className="size-5" />
-            먹이 {quest.rewardFeed}개
+            먹이 {num(quest.rewardFeed)}개
           </span>
         </div>
       </div>

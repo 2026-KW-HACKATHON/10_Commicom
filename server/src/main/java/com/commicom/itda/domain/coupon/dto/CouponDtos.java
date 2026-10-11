@@ -49,7 +49,8 @@ public final class CouponDtos {
     ) {
     }
 
-    public record CreateResponse(Long couponId, CouponStatus status, OffsetDateTime createdAt) {
+    /** earlyOwnerReward: 이 발행으로 초기 사장님 이벤트 혜택(PRO·퀘스트 가게 30일)을 받았는지 */
+    public record CreateResponse(Long couponId, CouponStatus status, OffsetDateTime createdAt, boolean earlyOwnerReward) {
     }
 
     /** 사장님 쿠폰 목록 */
@@ -97,6 +98,10 @@ public final class CouponDtos {
     }
 
     public record AvailableCouponList(List<AvailableCoupon> coupons) {
+    }
+
+    /** 비둘기 보상 쿠폰 풀: available=false 면 레벨업 뽑기의 쿠폰이 교환권으로 나감 */
+    public record PigeonRewardPool(boolean available) {
     }
 
     public record DownloadResponse(Long userCouponId, String redeemCode, OffsetDateTime expiresAt) {

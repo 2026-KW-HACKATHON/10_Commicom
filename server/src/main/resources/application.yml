@@ -81,6 +81,8 @@ runway:
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  # 배포된 화면(Vercel) 주소 — 서버 환경변수(CORS_ALLOWED_ORIGINS)와 상관없이 항상 허용
+  public-origins: https://itda-kappa.vercel.app
 
 springdoc:
   swagger-ui:

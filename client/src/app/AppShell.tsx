@@ -1,7 +1,9 @@
 import type { ComponentType, CSSProperties } from 'react'
 import { Navigate, NavLink, Outlet, useLocation, useMatches, useNavigate } from 'react-router-dom'
+import { IS_BETA } from '@/shared/lib/beta'
 import { BackIcon, PlusIcon } from '@/shared/ui/icons'
 import { useModeStore } from '@/stores/modeStore'
+import { BetaIntro } from './BetaIntro'
 import { SettingsDrawer, type MenuItem } from './SettingsDrawer'
 import { useShrinkOnScroll } from './useShrinkOnScroll'
 
@@ -21,7 +23,7 @@ export interface RouteHandle {
   overlayNav?: boolean
   /** 한 장씩 넘기는 피드: 스크롤해도 탭 바를 줄이지 않음 (줄면 내용 높이가 바뀌어 넘김 위치가 어긋남) */
   fixedNav?: boolean
-  /** 탭 화면 우상단 + 버튼. 없으면(undefined) 숏폼 만들기, null 이면 버튼 없음 */
+  /** 탭 화면 우상단 + 버튼. 없으면(undefined) 사장님 모드에서만 게시물 만들기, null 이면 버튼 없음 */
   action?: { label: string; to: string } | null
 }
 
@@ -53,11 +55,14 @@ export function AppShell({
   const overlayNav = Boolean(handle?.overlayNav)
   // 탭 루트가 아닌 하위 화면(예: 지도 → 홍보 영상)이면 우상단을 뒤로가기로
   const showBack = !tabs.some((tab) => tab.to === pathname)
-  const action = handle?.action === undefined ? DEFAULT_ACTION : handle.action
   const mode = useModeStore((s) => s.mode)
+  // 게시물 만들기는 사장님만 쓰는 기능이라 손님 화면에는 + 를 두지 않음
+  const action = handle?.action === undefined ? (mode === 'OWNER' ? DEFAULT_ACTION : null) : handle.action
   // 탭이 많으면(사장님 5개) 선택된 탭도 아이콘 위·글자 아래로
   const compact = tabs.length >= 5
   const { shrunk, onScrollCapture } = useShrinkOnScroll(pathname)
+  // 베타 체험 중이면 제목 위에 BETA 표시 (사장님 모드면 "BETA · 사장님")
+  const badge = [IS_BETA && 'BETA', modeBadge].filter(Boolean).join(' · ')
 
   // 처음 실행이면 손님/사장님 선택부터 (QR로 들어온 경우 고른 뒤 돌아오도록 next)
   if (!mode) return <Navigate to={`/welcome?next=${encodeURIComponent(pathname + search)}`} replace />
@@ -65,19 +70,18 @@ export function AppShell({
   if (mode === 'OWNER' && pathname === '/') return <Navigate to="/owner" replace />
 
   return (
-    <div className="relative mx-auto flex h-full max-w-[430px] flex-col bg-white">
+    <div className="relative mx-auto flex h-full max-w-[430px] flex-col bg-app">
       <header
         className={`flex h-[76px] shrink-0 items-center justify-between gap-2 px-[18px] pt-[env(safe-area-inset-top)] ${
-          immersive ? 'absolute inset-x-0 top-0 z-30' : 'border-b border-green-1 bg-white'
+          immersive ? 'absolute inset-x-0 top-0 z-30' : 'border-b border-green-1 bg-app'
         }`}
       >
         <SettingsDrawer buttonClassName={circleButton} items={menuItems} />
         <div className="flex min-w-0 flex-col items-center">
-          {modeBadge && (
-            <span className="mb-0.5 rounded-full bg-green-6 px-2 py-px text-[10px] font-bold text-white">{modeBadge}</span>
-          )}
+          {/* 화면 전체를 쓰는 탭(지도·퀘스트)은 제목 자리에 동네 이름이 있어 겹치므로 생략 */}
+          {badge && !immersive && <span className="mb-0.5 rounded-full bg-green-6 px-2 py-px text-[10px] font-bold text-white">{badge}</span>}
           {!immersive && (
-            <h1 className={`truncate font-bold text-ink ${modeBadge ? 'text-[21px] leading-tight' : 'text-[25px]'}`}>{title}</h1>
+            <h1 className={`truncate font-bold text-ink ${badge ? 'text-[21px] leading-tight' : 'text-[25px]'}`}>{title}</h1>
           )}
         </div>
         {showBack ? (
@@ -111,7 +115,7 @@ export function AppShell({
           shrunk ? 'px-12 pt-1.5' : 'px-5 pt-3'
         } ${
           // 영상 위(z-10~20)에는 뜨되, 설정 서랍이 들어 있는 상단 바(z-30)보다는 아래
-          overlayNav ? 'absolute inset-x-0 bottom-0 z-[25] bg-transparent' : 'bg-white'
+          overlayNav ? 'absolute inset-x-0 bottom-0 z-[25] bg-transparent' : 'bg-app'
         }`}
       >
         <div
@@ -152,6 +156,8 @@ export function AppShell({
           ))}
         </div>
       </nav>
+
+      {IS_BETA && <BetaIntro />}
     </div>
   )
 }

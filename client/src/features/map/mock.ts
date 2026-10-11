@@ -2,22 +2,32 @@ import { STORE_CATEGORIES, type StoreEdit, type StoreSummary } from './schema'
 
 /** VITE_USE_MOCK=true 일 때 쓰는 샘플 가게 (서버 없이 UI 확인용) */
 export const MOCK_STORES: StoreSummary[] = [
-  { storeId: 1, name: '월계 분식', category: 'RESTAURANT', categoryName: '음식점', address: '서울 노원구 월계동', latitude: 37.6195, longitude: 127.06, thumbnailUrl: null, stepFree: true },
+  { storeId: 1, name: '청년다방 광운대점', category: 'RESTAURANT', categoryName: '음식점', address: '서울 노원구 광운로 20', latitude: 37.6195, longitude: 127.06, thumbnailUrl: null, stepFree: true },
   { storeId: 2, name: '광운 카페', category: 'CAFE_BAKERY_PUB', categoryName: '카페·베이커리·주점', address: '서울 노원구 월계동', latitude: 37.6202, longitude: 127.0578, thumbnailUrl: null, stepFree: false },
-  { storeId: 3, name: '김가네 광운대점', category: 'RESTAURANT', categoryName: '음식점', address: '서울 노원구 광운로', latitude: 37.6188, longitude: 127.0585, thumbnailUrl: null, stepFree: true },
-  { storeId: 4, name: '광운 꽃집', category: 'LIVING', categoryName: '생활·리빙', address: '서울 노원구 광운로', latitude: 37.61883, longitude: 127.05856, thumbnailUrl: null, stepFree: false },
-  { storeId: 5, name: '헤어살롱 잇다', category: 'BEAUTY', categoryName: '뷰티', address: '서울 노원구 석계로', latitude: 37.6175, longitude: 127.0612, thumbnailUrl: null, stepFree: true },
+  { storeId: 3, name: '월계 해장국', category: 'RESTAURANT', categoryName: '음식점', address: '서울 노원구 월계동', latitude: 37.6178, longitude: 127.0612, thumbnailUrl: null, stepFree: true },
+  { storeId: 4, name: '춘리마라탕', category: 'RESTAURANT', categoryName: '음식점', address: '서울 노원구 광운로 30', latitude: 37.6188, longitude: 127.0585, thumbnailUrl: null, stepFree: false },
+  { storeId: 5, name: '헤어살롱 잇다', category: 'BEAUTY', categoryName: '뷰티', address: '서울 노원구 석계로', latitude: 37.6168, longitude: 127.0575, thumbnailUrl: null, stepFree: true },
   { storeId: 6, name: '월계 정육마트', category: 'FOOD_RETAIL', categoryName: '식품 판매', address: '서울 노원구 월계로', latitude: 37.6215, longitude: 127.0625, thumbnailUrl: null, stepFree: true },
+  { storeId: 7, name: '월계 통닭', category: 'RESTAURANT', categoryName: '음식점', address: '서울 노원구 광운로 12', latitude: 37.6208, longitude: 127.0596, thumbnailUrl: null, stepFree: true },
+  { storeId: 8, name: '광운반점', category: 'RESTAURANT', categoryName: '음식점', address: '서울 노원구 광운로 41', latitude: 37.6181, longitude: 127.0603, thumbnailUrl: null, stepFree: false },
+  { storeId: 9, name: '스시 월계', category: 'RESTAURANT', categoryName: '음식점', address: '서울 노원구 월계로 52', latitude: 37.6199, longitude: 127.0624, thumbnailUrl: null, stepFree: true },
+  { storeId: 10, name: '라 피아짜', category: 'RESTAURANT', categoryName: '음식점', address: '서울 노원구 석계로 18', latitude: 37.6171, longitude: 127.0592, thumbnailUrl: null, stepFree: true },
+  { storeId: 11, name: '광운 동네마트', category: 'FOOD_RETAIL', categoryName: '식품 판매', address: '서울 노원구 월계로 30', latitude: 37.6212, longitude: 127.0611, thumbnailUrl: null, stepFree: true },
 ]
 
 /** 가게 상세 조회에만 있는 값 (명세 GET /api/stores/{storeId}) */
 export const MOCK_STORE_DETAILS: Record<number, { phone: string | null; businessHours: string; description: string; elevator: boolean }> = {
-  1: { phone: '02-000-0001', businessHours: '매일 11:00-21:00', description: '광운대 앞 30년 분식집. 떡볶이와 튀김이 맛있어요.', elevator: false },
+  1: { phone: '02-000-0001', businessHours: '매일 11:00-22:00', description: '치즈 이불 덮은 떡볶이 한 판! 튀김·메추리알까지 푸짐한 떡볶이집이에요.', elevator: false },
   2: { phone: '02-000-0002', businessHours: '평일 08:00-22:00 · 주말 10:00-20:00', description: '공강 시간에 쉬어 가기 좋은 동네 카페. 크로플이 인기예요.', elevator: false },
-  3: { phone: '02-000-0003', businessHours: '매일 10:00-22:00', description: '든든한 한 끼, 돈까스와 김밥이 있는 김가네 광운대점.', elevator: true },
-  4: { phone: null, businessHours: '화-일 10:00-19:00 (월 휴무)', description: '졸업·생일 꽃다발을 당일 제작해 드려요.', elevator: false },
+  3: { phone: '02-000-0003', businessHours: '24시간 영업', description: '푸짐한 뼈다귀에 우거지 가득, 진하고 얼큰한 동네 해장국집.', elevator: true },
+  4: { phone: '02-000-0004', businessHours: '매일 11:00-21:30', description: '원하는 재료를 골라 담는 마라탕. 맵기는 입맛대로 골라 보세요.', elevator: false },
   5: { phone: '02-000-0005', businessHours: '매일 10:00-20:00 (예약 우선)', description: '학생 할인 있는 동네 미용실. 예약 없이도 방문 가능해요.', elevator: true },
   6: { phone: '02-000-0006', businessHours: '매일 09:00-21:00', description: '매일 아침 들여오는 신선한 고기를 파는 정육점.', elevator: false },
+  7: { phone: '02-000-0007', businessHours: '매일 16:00-02:00', description: '후라이드·양념·간장치킨을 갓 튀겨 드리는 동네 치킨집. 배달도 돼요.', elevator: false },
+  8: { phone: '02-000-0008', businessHours: '매일 11:00-21:00 (브레이크 15:00-16:30)', description: '짜장면·짬뽕·탕수육·볶음밥·군만두가 맛있는 동네 중화요리집.', elevator: false },
+  9: { phone: '02-000-0009', businessHours: '화-일 11:30-22:00 (월 휴무)', description: '신선한 재료로 만드는 바른 초밥. 연어·참치·장어·새우 초밥이 있어요.', elevator: true },
+  10: { phone: '02-000-0010', businessHours: '매일 11:30-22:00', description: '피자·파스타·리조또·샐러드를 내는 이탈리안 레스토랑.', elevator: true },
+  11: { phone: '02-000-0011', businessHours: '매일 08:00-23:00', description: '생필품·간식·신선식품·음료까지, 좋은 상품 착한 가격의 동네마트.', elevator: false },
 }
 
 /**

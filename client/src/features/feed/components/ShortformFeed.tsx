@@ -6,6 +6,7 @@ import pigeonUploaded from '@/assets/generation/pigeon-uploaded.png'
 import { StoreCouponSheet } from '@/features/coupon/components/StoreCouponSheet'
 import { useStores } from '@/features/map/hooks'
 import { useQuestEvent } from '@/features/quest/hooks'
+import { num } from '@/shared/lib/format'
 import { useShortformFeed } from '../hooks'
 import type { Shortform } from '../schema'
 import { ShortformItem } from './ShortformItem'
@@ -78,7 +79,7 @@ export function ShortformFeed({ storeId, startId }: { storeId?: number; startId?
   const couponCount = (id: number) => stores?.find((s) => s.storeId === id)?.availableCouponCount ?? 0
 
   return (
-    <div className="relative h-full bg-white">
+    <div className="relative h-full bg-app">
       <div ref={containerRef} className="h-full snap-y snap-mandatory overflow-y-auto overscroll-contain [scrollbar-width:none]">
         {items.map((item, i) => (
           <div key={item.shortformId} data-index={i} className="h-full snap-start snap-always">
@@ -100,7 +101,7 @@ export function ShortformFeed({ storeId, startId }: { storeId?: number; startId?
             <img src={pigeonUploaded} alt="" className="h-[150px] w-auto object-contain" />
             <p className="mt-5 text-[20px] font-bold">게시물을 다 봤어요!</p>
             <p className="mt-1.5 text-[14px] text-q-muted">
-              {storeId ? '이 가게 게시물은 여기까지예요' : `동네 가게 게시물 ${items.length}개를 모두 구경했어요`}
+              {storeId ? '이 가게 게시물은 여기까지예요' : `동네 가게 게시물 ${num(items.length)}개를 모두 구경했어요`}
             </p>
             <div className="mt-7 flex w-full max-w-[280px] flex-col gap-2.5">
               <button

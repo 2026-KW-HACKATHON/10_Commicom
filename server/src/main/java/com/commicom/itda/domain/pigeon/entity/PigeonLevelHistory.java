@@ -48,6 +48,9 @@ public class PigeonLevelHistory extends BaseTimeEntity {
     /** 쿠폰 보상이면 받은 쿠폰 (쿠폰 API 연동 후 채움) */
     private Long userCouponId;
 
+    /** 교환권 보상이면 받은 교환권 */
+    private Long voucherId;
+
     public PigeonLevelHistory(Long memberId, int generation, int fromLevel, int toLevel, RewardType rewardType, int feedAmount, Long userCouponId) {
         this.memberId = memberId;
         this.generation = generation;
@@ -58,8 +61,15 @@ public class PigeonLevelHistory extends BaseTimeEntity {
         this.userCouponId = userCouponId;
     }
 
+    public PigeonLevelHistory voucher(Long voucherId) {
+        this.voucherId = voucherId;
+        return this;
+    }
+
     public enum RewardType {
         FEED,
-        COUPON
+        COUPON,
+        /** 쿠폰이 나왔지만 풀이 비어 교환권으로 받음 */
+        VOUCHER
     }
 }

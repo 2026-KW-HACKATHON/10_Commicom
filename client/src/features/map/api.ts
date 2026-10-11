@@ -21,7 +21,7 @@ function withMockParts<T extends StoreSummary>(s: T): T {
 /** GET /api/stores (questOnly: 지도 5-1 확장 쿼리) */
 export async function fetchStores(questOnly = false): Promise<StoreListResult> {
   if (USE_MOCK) {
-    const stores = MOCK_STORES.map((s) => ({ ...s, ...mockStoreExtras(s.storeId) })).filter(
+    const stores = MOCK_STORES.map((s) => ({ ...s, ...mockStoreExtras(s.storeId), businessHours: MOCK_STORE_DETAILS[s.storeId]?.businessHours ?? null })).filter(
       (s) => !questOnly || s.isQuestStore,
     )
     return { count: stores.length, stores }

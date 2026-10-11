@@ -3,11 +3,16 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import logo from '@/assets/logo-itda.svg'
 import pigeonWalk from '@/assets/map/pigeon-walk.png'
+import pigeonFeedback from '@/assets/quest/pigeon-verified.png'
 import { LoginForm } from '@/features/auth/components/LoginForm'
 import { useLogout } from '@/features/auth/hooks'
 import { canUseOwnerMode, modeOfRole } from '@/features/auth/schema'
+import { FeedbackSheet } from '@/features/feedback/FeedbackSheet'
+import { OWNER_ILLUST } from '@/features/owner/illustrations'
 import { addTestFeed } from '@/features/quest/api'
+import { useVoucherReady } from '@/features/quest/hooks'
 import { HAS_MOCK, resetAllLocalData, USE_MOCK } from '@/mocks/db'
+import { endBeta, IS_BETA, startBeta } from '@/shared/lib/beta'
 import { errorMessage } from '@/shared/lib/error'
 import { CloseIcon, MenuIcon } from '@/shared/ui/icons'
 import { toast } from '@/stores/toastStore'
@@ -33,6 +38,40 @@ const MODES: { mode: AppMode; label: string; desc: string }[] = [
 function AccountSection({ onLoggedIn, onLoggedOut }: { onLoggedIn: (mode: AppMode) => void; onLoggedOut: () => void }) {
   const me = useMe()
   const logout = useLogout()
+  const mode = useModeStore((s) => s.mode)
+
+  // 베타 체험: 로그인·로그아웃 없이 체험 계정 하나로 손님·사장님을 오감
+  if (IS_BETA) {
+    return (
+      <section className="mt-6 px-5">
+        <h2 className="text-xs font-bold text-q-muted">계정</h2>
+        <div className="mt-2 flex items-center gap-3 rounded-2xl bg-q-panel px-4 py-3">
+          <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white">
+            <img src={pigeonWalk} alt="" className="size-9 object-contain" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-1.5 text-[15px] font-bold text-ink">
+              베타 테스터 님
+              <span className="rounded-full bg-green-6 px-1.5 py-px text-[9px] font-bold tracking-wider text-white">BETA</span>
+            </span>
+            <span className="block truncate text-[11px] text-q-muted">로그인 없이 체험 중 · 데이터는 이 기기에만 저장돼요</span>
+          </span>
+        </div>
+        <ul className="mt-1 text-[15px] text-ink">
+          <li>
+            <Link to={mode === 'OWNER' ? '/owner/profile' : '/profile'} className="flex justify-between border-b border-q-line py-3.5">
+              프로필 <span className="text-q-muted">›</span>
+            </Link>
+          </li>
+          <li>
+            <Link to="/scraps" className="flex justify-between border-b border-q-line py-3.5">
+              스크랩 <span className="text-q-muted">›</span>
+            </Link>
+          </li>
+        </ul>
+      </section>
+    )
+  }
 
   if (!me) {
     return (
@@ -128,6 +167,9 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
   const logout = useLogout()
   // 손님 계정으로 로그인한 채 사장님 모드를 고르면 막고 안내
   const [ownerBlocked, setOwnerBlocked] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
+  // 쿠폰이 생겨서 교환권을 쿠폰으로 바꿀 수 있으면 내 쿠폰함에 표시
+  const voucherReady = useVoucherReady()
 
   const switchMode = (next: AppMode) => {
     if (next === 'OWNER' && !canUseOwnerMode(me)) return setOwnerBlocked(true)
@@ -220,10 +262,40 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
                           {item.image ? <img src={item.image} alt="" className="size-8 object-contain" /> : item.icon}
                         </span>
                         <span className="flex-1">{item.label}</span>
+                        {item.to === '/coupons' && voucherReady && (
+                          <span className="rounded-full bg-point-red px-2 py-0.5 text-[10px] font-bold text-white">교환권 바꾸기</span>
+                        )}
                         <span className="text-q-muted">›</span>
                       </Link>
                     </li>
                   ))}
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpen(false)
+                        setFeedbackOpen(true)
+                      }}
+                      className="flex w-full items-center gap-3 border-b border-q-line py-3.5 text-left text-[15px] font-medium text-ink"
+                    >
+                      <span aria-hidden className="flex size-9 items-center justify-center overflow-hidden rounded-xl bg-q-mint">
+                        <img src={pigeonFeedback} alt="" className="size-8 object-contain" />
+                      </span>
+                      <span className="flex-1">의견 남기기</span>
+                      <span className="text-q-muted">›</span>
+                    </button>
+                  </li>
+                  {me?.role === 'ADMIN' && (
+                    <li>
+                      <Link to="/admin" className="flex items-center gap-3 border-b border-q-line py-3.5 text-[15px] font-medium text-ink">
+                        <span aria-hidden className="flex size-9 items-center justify-center overflow-hidden rounded-xl bg-q-mint">
+                          <img src={OWNER_ILLUST.pro} alt="" className="size-8 object-contain" />
+                        </span>
+                        <span className="flex-1">관리자 화면</span>
+                        <span className="text-q-muted">›</span>
+                      </Link>
+                    </li>
+                  )}
                 </ul>
               </section>
 
@@ -238,19 +310,42 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
               <section className="mt-6 px-5">
                 <h2 className="text-xs font-bold text-q-muted">앱 설정</h2>
                 <ul className="mt-1 text-[15px] text-ink">
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        // 먼저 이동한 뒤 초기화해야 레이아웃이 next=현재 주소로 보내지 않음
-                        navigate('/welcome', { replace: true })
-                        reset()
-                      }}
-                      className="w-full border-b border-q-line py-3.5 text-left"
-                    >
-                      처음 화면(모드 선택) 다시 보기
-                    </button>
-                  </li>
+                  {IS_BETA ? (
+                    <>
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => window.confirm('체험한 내용을 모두 지우고 처음부터 다시 할까요?') && startBeta()}
+                          className="w-full border-b border-q-line py-3.5 text-left"
+                        >
+                          체험 처음부터 다시 하기
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => window.confirm('베타 테스트를 끝낼까요?\n체험한 내용은 이 기기에서 지워져요.') && endBeta()}
+                          className="w-full border-b border-q-line py-3.5 text-left text-q-muted"
+                        >
+                          베타 테스트 끝내기
+                        </button>
+                      </li>
+                    </>
+                  ) : (
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // 먼저 이동한 뒤 초기화해야 레이아웃이 next=현재 주소로 보내지 않음
+                          navigate('/welcome', { replace: true })
+                          reset()
+                        }}
+                        className="w-full border-b border-q-line py-3.5 text-left"
+                      >
+                        처음 화면(모드 선택) 다시 보기
+                      </button>
+                    </li>
+                  )}
                   {/* 테스트 먹이는 로컬 서버 전용 API라 개발 모드(npm run dev)에서만 */}
                   {(import.meta.env.DEV || USE_MOCK) && (
                     <li>
@@ -269,11 +364,11 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
                         }}
                         className="w-full border-b border-q-line py-3.5 text-left"
                       >
-                        테스트용 먹이 1000개 받기
+                        {IS_BETA ? '먹이 1000개 받기 (레벨업 체험용)' : '테스트용 먹이 1000개 받기'}
                       </button>
                     </li>
                   )}
-                  {HAS_MOCK && (
+                  {HAS_MOCK && !IS_BETA && (
                     <li>
                       <button
                         type="button"
@@ -294,6 +389,7 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
           </div>
         </div>
       )}
+      {feedbackOpen && <FeedbackSheet onClose={() => setFeedbackOpen(false)} />}
     </>
   )
 }
