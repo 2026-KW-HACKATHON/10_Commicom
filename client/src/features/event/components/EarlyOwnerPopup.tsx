@@ -1,45 +1,39 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import pigeonStar from '@/assets/event/pigeon-star.png'
 import { useEarlyOwnerEvent } from '../api'
 
 /** 다시 보지 않기 → 이 기기에서 계속 숨김 */
 const HIDDEN_KEY = 'itda-early-owner-popup-hidden'
-/** 닫기 → 이번 접속 동안만 숨김 (앱을 다시 열면 또 뜸) */
-const CLOSED_KEY = 'itda-early-owner-popup-closed'
 
-function read(storage: () => Storage, key: string) {
+function hiddenForever() {
   try {
-    return storage().getItem(key) === '1'
+    return localStorage.getItem(HIDDEN_KEY) === '1'
   } catch {
     return false
   }
 }
 
-function write(storage: () => Storage, key: string) {
-  try {
-    storage().setItem(key, '1')
-  } catch {
-    // 저장 못 해도 이번엔 닫힘
-  }
-}
-
 /**
- * 사장님 화면에 들어오면 초기 사장님 이벤트 팝업 (마감되면 안 뜸).
+ * 사장님 화면에 들어올 때마다 초기 사장님 이벤트 팝업 (마감되면 안 뜸).
+ * 닫기: 지금만 닫음 (사장님 화면에 다시 들어오면 또 뜸) / 다시 보지 않기: 이 기기에서 계속 숨김.
+ * 이벤트 화면의 [사장님으로 참여하기]로 들어온 경우(state.fromEvent)는 이미 이벤트를 봤으니 띄우지 않음
  * canOpenDetail: 가게 등록 전이면 상세 화면 대신 등록부터 하도록 버튼 문구만 바꿈
  */
 export function EarlyOwnerPopup({ canOpenDetail = true }: { canOpenDetail?: boolean }) {
   const { data: event } = useEarlyOwnerEvent()
   const navigate = useNavigate()
-  const [open, setOpen] = useState(() => !read(() => localStorage, HIDDEN_KEY) && !read(() => sessionStorage, CLOSED_KEY))
+  const location = useLocation()
+  const [open, setOpen] = useState(() => !hiddenForever() && !(location.state as { fromEvent?: boolean } | null)?.fromEvent)
   if (!open || !event || event.status === 'CLOSED') return null
 
-  const close = () => {
-    write(() => sessionStorage, CLOSED_KEY)
-    setOpen(false)
-  }
+  const close = () => setOpen(false)
   const hideForever = () => {
-    write(() => localStorage, HIDDEN_KEY)
+    try {
+      localStorage.setItem(HIDDEN_KEY, '1')
+    } catch {
+      // 저장 못 해도 이번엔 닫힘
+    }
     setOpen(false)
   }
 

@@ -51,7 +51,8 @@ export function EarlyOwnerEventDetail() {
     if (mode === 'OWNER') return navigate('/owner/coupons/new')
     if (!canUseOwnerMode(me)) return toast('사장님 계정으로 로그인하면 참여할 수 있어요')
     setMode('OWNER')
-    navigate('/owner/coupons/new')
+    // 이벤트를 보고 사장님 화면으로 가는 거라 사장님 화면의 이벤트 팝업은 띄우지 않음
+    navigate('/owner/coupons/new', { state: { fromEvent: true } })
   }
 
   return (
