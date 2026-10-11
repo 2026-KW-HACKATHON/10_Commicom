@@ -37,6 +37,8 @@ api.interceptors.response.use(
     const body = error.response?.data
     if (error.response?.status === 401) useAuthStore.getState().logout()
     if (body?.code) return Promise.reject(new ApiError(body.code, body.message, body.result))
+    // Vercel 함수 본문 한도(4.5MB)를 넘은 요청
+    if (error.response?.status === 413) return Promise.reject(new ApiError('PAYLOAD_TOO_LARGE', '사진 용량이 너무 커요. 더 작은 사진으로 다시 시도해 주세요'))
     return Promise.reject(new ApiError('NETWORK', '서버에 연결할 수 없어요'))
   },
 )

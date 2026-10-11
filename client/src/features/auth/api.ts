@@ -1,6 +1,7 @@
 import { MOCK_ONLY, USE_MOCK } from '@/mocks/db'
 import { api, ApiError, request, type ApiResponse } from '@/shared/api/client'
 import { errorCode } from '@/shared/lib/error'
+import { shrinkForUpload } from '@/shared/lib/image'
 import { useAuthStore } from '@/stores/authStore'
 import { mockAuthApi } from './mock'
 import type { LoginResult, MemberInfo, SignupRequest } from './schema'
@@ -90,11 +91,11 @@ export async function updatePassword(currentPassword: string, newPassword: strin
 }
 
 /** PATCH /api/members/me/profile-image (multipart image) */
-export function updateProfileImage(file: File, previewDataUrl: string): Promise<MemberInfo> {
+export async function updateProfileImage(file: File, previewDataUrl: string): Promise<MemberInfo> {
   if (USE_MOCK) return mockAuthApi.updateProfileImage(token(), previewDataUrl)
   const form = new FormData()
-  form.append('image', file)
-  return request(api.patch('/api/members/me/profile-image', form))
+  form.append('image', await shrinkForUpload(file))
+  return request(api.patch('/api/members/me/profile-image', form, { timeout: 60_000 }))
 }
 
 /** DELETE /api/members/me — 성공하면 토큰을 바로 지워야 함 (명세) */
