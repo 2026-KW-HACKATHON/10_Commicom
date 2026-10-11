@@ -84,6 +84,8 @@ export const router = createBrowserRouter([
       { path: 'settlement', element: <Navigate to="/owner/coupons?view=settlement" replace /> },
       { path: 'videos', element: <Navigate to="/owner/create" replace /> },
       { path: 'profile', element: <OwnerProfilePage />, handle: { title: '프로필' } },
+      // 관리자 가게 등록은 OwnerLayout 이 그림 — 등록을 마쳤거나 관리자가 아니면 홈으로
+      { path: 'register', element: <Navigate to="/owner" replace /> },
     ],
   },
 ])

@@ -1,6 +1,6 @@
 import pigeonStar from '@/assets/event/pigeon-star.png'
 import { EarlyOwnerPopup } from '@/features/event/components/EarlyOwnerPopup'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import pigeonWalk from '@/assets/map/pigeon-walk.png'
 import { useLogout } from '@/features/auth/hooks'
 import { canUseOwnerMode } from '@/features/auth/schema'
@@ -33,6 +33,9 @@ const MENU: MenuItem[] = [
   { to: '/owner/pro', label: '잇다 PRO', icon: '⭐', image: OWNER_ILLUST.pro },
 ]
 
+/** 가게가 없는 관리자에게만 보이는 메뉴 */
+const ADMIN_REGISTER: MenuItem = { to: '/owner/register', label: '가게 등록 (테스트용 · 손님에게 안 보임)', icon: '🏪', image: pigeonWalk }
+
 /**
  * 사장님 모드: 홈(쿠폰 사용 처리 포함) / 퀘스트 / 제작 / 쿠폰(관리·정산).
  * 손님 계정으로 로그인했으면 들어오지 못하게 안내 (로그인 전에는 시연용으로 열어 둠).
@@ -40,11 +43,14 @@ const MENU: MenuItem[] = [
 export function OwnerLayout() {
   const me = useMe()
   const myStore = useMyStoreQuery()
+  const { pathname } = useLocation()
   if (!canUseOwnerMode(me)) return <OwnerAccountNotice nickname={me?.nickname ?? ''} />
   // 서버의 내 가게를 불러오는 동안엔 샘플 가게 화면이 잠깐 보이지 않게 기다림
   if (myStore.isLoading) return <div className="mx-auto h-full max-w-[430px] animate-pulse bg-app" />
   // 관리자는 가게가 없어도 사장님 화면을 둘러볼 수 있게 (가게 등록 화면으로 막지 않음)
   const adminPreview = me?.role === 'ADMIN' && errorCode(myStore.error) === 'STORE404_2'
+  // 관리자가 메뉴의 '가게 등록 (테스트용)'을 누르면 등록 화면 (등록한 가게는 손님에게 안 보임)
+  if (adminPreview && pathname === '/owner/register') return <OwnerStoreRegister />
   if (errorCode(myStore.error) === 'STORE404_2' && !adminPreview) {
     return (
       <>
@@ -65,7 +71,7 @@ export function OwnerLayout() {
   }
   return (
     <>
-      <AppShell tabs={TABS} menuItems={MENU} modeBadge="사장님" />
+      <AppShell tabs={TABS} menuItems={adminPreview ? [ADMIN_REGISTER, ...MENU] : MENU} modeBadge="사장님" />
       {/* 사장님 화면에 들어오면 초기 사장님 이벤트 안내 (닫기: 다음 접속 때 또 / 다시 보지 않기: 계속 숨김) */}
       <EarlyOwnerPopup />
     </>
