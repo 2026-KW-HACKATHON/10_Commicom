@@ -12,19 +12,21 @@ const DETAILS: Record<number, { menus: string[]; description: string }> = {
   2: { menus: ['아메리카노 - 2,500원', '바닐라라떼 - 4,000원', '크로플 - 4,500원'], description: '매일 아침 직접 내린 원두로 만드는 부드러운 라떼. 공강 시간에 쉬어 가기 좋은 동네 카페예요 ☕' },
   3: { menus: ['뼈해장국 - 10,000원', '감자탕(중) - 32,000원', '순대국 - 9,000원'], description: '푸짐한 뼈다귀에 우거지 가득, 진하고 얼큰한 국물 한 그릇. 나 빼고 다 알고 있던 동네 해장국 맛집이에요.' },
   4: { menus: ['마라탕 100g - 1,800원', '꿔바로우(소) - 12,000원'], description: '원하는 재료를 골라 담는 마라탕. 숙주·푸주·피쉬볼 듬뿍, 맵기는 입맛대로 골라 보세요.' },
-  5: { menus: ['커트 - 15,000원', '펌 - 60,000원~', '염색 - 50,000원~'], description: '학생 할인 있어요! 예약 없이 방문 가능' },
-  6: { menus: ['한우 등심 100g - 12,000원', '삼겹살 100g - 2,900원'], description: '매일 아침 들여오는 신선한 고기' },
+  5: { menus: ['커트 - 15,000원', '펌 - 60,000원~', '염색 - 50,000원~'], description: '커트·펌·염색 모두 OK! 학생 할인 있고 예약 없이도 방문 가능한 동네 미용실이에요 ✂️' },
+  6: { menus: ['한우 꽃등심 1++ 100g - 15,000원', '한우 채끝 1++ 100g - 13,000원', '한우 안심 100g - 16,000원'], description: '매일 아침 들여오는 신선한 국내산 한우! 꽃등심·채끝·안심 모두 1++ 등급으로 준비했어요 🥩' },
 }
 
 const CDN = 'https://d3fsd6ho09c0x2.cloudfront.net/test-feed'
 const unsplash = (id: string) => `https://images.unsplash.com/photo-${id}?w=1080&q=80&fm=jpg&fit=crop&ar=4:5`
 
-/** 시연 피드: 실제 음식 사진 게시물 (가게 사진이 없는 5·6번은 샘플 영상) */
+/** 시연 피드: 가게마다 실제 사진 게시물 (5·6번은 마스코트 일러스트, public/demo) */
 const POST_IMAGES: Record<number, string[]> = {
   1: [`${CDN}/tteokbokki.jpg`],
   2: [unsplash('1534687941688-651ccaafbff8'), unsplash('1747459707229-7b1b7c8367e0')],
   3: [`${CDN}/haejangguk.jpg`],
   4: [`${CDN}/malatang.jpg`],
+  5: ['/demo/salon.jpg'],
+  6: ['/demo/butcher.jpg'],
 }
 
 export const MOCK_SHORTFORMS: Shortform[] = MOCK_STORES.map((store, i) => {
