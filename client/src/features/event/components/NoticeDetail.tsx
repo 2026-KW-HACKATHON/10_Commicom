@@ -39,8 +39,14 @@ export function NoticeDetail() {
               <h3 className="text-[15px] font-bold text-green-6">{s.heading}</h3>
               <ul className="mt-2 flex flex-col gap-2">
                 {s.lines.map((line) => (
-                  <li key={line} className="rounded-2xl bg-q-panel px-4 py-3 text-[13px] leading-relaxed text-q-text">
-                    {line}
+                  <li key={line.title} className="flex items-center gap-3 rounded-2xl bg-q-panel py-2.5 pr-4 pl-2.5">
+                    <span aria-hidden className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white">
+                      <img src={line.image} alt="" className="size-11 object-contain" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[14px] font-bold text-q-text">{line.title}</span>
+                      <span className="block text-[12px] leading-snug text-q-sub">{line.desc}</span>
+                    </span>
                   </li>
                 ))}
               </ul>
