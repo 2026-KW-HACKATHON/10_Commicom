@@ -21,7 +21,7 @@ export interface RouteHandle {
   overlayNav?: boolean
   /** 한 장씩 넘기는 피드: 스크롤해도 탭 바를 줄이지 않음 (줄면 내용 높이가 바뀌어 넘김 위치가 어긋남) */
   fixedNav?: boolean
-  /** 탭 화면 우상단 + 버튼. 없으면(undefined) 숏폼 만들기, null 이면 버튼 없음 */
+  /** 탭 화면 우상단 + 버튼. 없으면(undefined) 사장님 모드에서만 게시물 만들기, null 이면 버튼 없음 */
   action?: { label: string; to: string } | null
 }
 
@@ -53,8 +53,9 @@ export function AppShell({
   const overlayNav = Boolean(handle?.overlayNav)
   // 탭 루트가 아닌 하위 화면(예: 지도 → 홍보 영상)이면 우상단을 뒤로가기로
   const showBack = !tabs.some((tab) => tab.to === pathname)
-  const action = handle?.action === undefined ? DEFAULT_ACTION : handle.action
   const mode = useModeStore((s) => s.mode)
+  // 게시물 만들기는 사장님만 쓰는 기능이라 손님 화면에는 + 를 두지 않음
+  const action = handle?.action === undefined ? (mode === 'OWNER' ? DEFAULT_ACTION : null) : handle.action
   // 탭이 많으면(사장님 5개) 선택된 탭도 아이콘 위·글자 아래로
   const compact = tabs.length >= 5
   const { shrunk, onScrollCapture } = useShrinkOnScroll(pathname)
