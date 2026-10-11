@@ -1,6 +1,7 @@
 import { CustomOverlayMap } from 'react-kakao-maps-sdk'
 import { num } from '@/shared/lib/format'
 import type { StoreGroup } from '../hooks'
+import { openStatus } from '../openStatus'
 import type { StoreSummary } from '../schema'
 import { PinIcon } from './PinIcon'
 
@@ -117,6 +118,7 @@ function StorePopup({
   onOpenCoupons: (store: StoreSummary) => void
 }) {
   const coupons = store.availableCouponCount ?? 0
+  const open = openStatus(store.businessHours)
   return (
     <div role="menu" aria-label={store.name} className="relative mb-2.5 w-[216px]">
       <div className="overflow-hidden rounded-[20px] border border-mint-line bg-white shadow-[0_8px_24px_rgba(8,104,22,0.18)]">
@@ -127,6 +129,8 @@ function StorePopup({
             {store.isQuestStore && (
               <span className="shrink-0 rounded-full bg-green-6 px-1.5 py-px text-[10px] font-bold text-white">퀘스트 가게</span>
             )}
+            {open === 'OPEN' && <span className="shrink-0 rounded-full bg-green-4 px-1.5 py-px text-[10px] font-bold text-white">영업 중</span>}
+            {open === 'CLOSED' && <span className="shrink-0 rounded-full bg-q-line px-1.5 py-px text-[10px] font-bold text-q-muted">영업 종료</span>}
           </div>
         </div>
 

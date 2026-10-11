@@ -378,7 +378,7 @@ Response 예시 (200)
 | API Path | `/api/stores` |
 | Header | 없음 |
 | Request | Query `category` (선택): 업종 코드. 아래 [업종 코드](#업종-코드) 참고 |
-| Response | `count` (Int)<br>`stores` (Array)<br>`stores[].storeId` (Long)<br>`stores[].name` (String)<br>`stores[].category` (String)<br>`stores[].categoryName` (String)<br>`stores[].address` (String)<br>`stores[].latitude` (Double)<br>`stores[].longitude` (Double)<br>`stores[].thumbnailUrl` (String \| null)<br>`stores[].stepFree` (Boolean) |
+| Response | `count` (Int)<br>`stores` (Array)<br>`stores[].storeId` (Long)<br>`stores[].name` (String)<br>`stores[].category` (String)<br>`stores[].categoryName` (String)<br>`stores[].address` (String)<br>`stores[].latitude` (Double)<br>`stores[].longitude` (Double)<br>`stores[].thumbnailUrl` (String \| null)<br>`stores[].stepFree` (Boolean)<br>`stores[].isQuestStore` (Boolean)<br>`stores[].availableCouponCount` (Int)<br>`stores[].businessHours` (String | null, 지도 "영업 중" 표시용) |
 | 로직 간단 설명 | 지도 마커·목록에 쓸 가게 요약 정보를 조회한다. `category`가 있으면 해당 업종만, 없으면 전체를 반환한다.<br><br>**result 필드**<br>`count`: 조회된 가게 수<br>`stores`: 가게 요약 목록<br>`stores[].storeId`: 가게 ID (상세 조회에 사용)<br>`stores[].name`: 가게 이름<br>`stores[].category`: 업종 코드 (예: `CAFE_BAKERY_PUB`)<br>`stores[].categoryName`: 업종 한글 이름 (예: 카페·베이커리·주점)<br>`stores[].address`: 주소<br>`stores[].latitude`: 위도 (지도 마커 위치)<br>`stores[].longitude`: 경도 (지도 마커 위치)<br>`stores[].thumbnailUrl`: 대표 이미지 URL (없으면 `null`)<br>`stores[].stepFree`: 입구에 턱이 없으면 `true` |
 | 상태코드 | COMMON200: 가게 목록 조회 성공<br>COMMON400: 존재하지 않는 업종 코드 |
 
@@ -709,6 +709,24 @@ Response 예시 (404)
 | API | Method · Path | 인증 | 설명 |
 | --- | --- | --- | --- |
 | 초기 사장님 이벤트 현황 | `GET /api/events/early-owner` | 불필요 | 응답 `status(UPCOMING/OPEN/CLOSED), startsAt, limit(10), joined, remaining, benefitDays(30)` |
+
+---
+
+## Feedback · Notice · Admin
+
+> 앱 안 "의견 남기기"와 공지사항. 공지 작성·의견 확인은 관리자 화면(role `ADMIN`, `/api/admin/**`)에서 한다.
+
+| API | Method · Path | 인증 | 설명 |
+| --- | --- | --- | --- |
+| 의견 남기기 | `POST /api/feedback` | 불필요 | Body `rating`(1~5), `good`·`bad`(각 1000자까지, 선택), `mode`(USER/OWNER), `beta`(베타 체험 중인지). 응답 `feedbackId` |
+| 공지 목록 | `GET /api/notices` | 불필요 | 고정 먼저, 최신 순. `notices[]{noticeId, title, body, pinned, createdAt}` |
+| 공지 상세 | `GET /api/notices/{noticeId}` | 불필요 | 없으면 `NOTICE404` |
+| 관리자 현황 | `GET /api/admin/summary` | 관리자 | `residents, owners, stores, shortforms, activeCoupons, rewardPool, vouchersWaiting, feedbacks, averageRating, earlyOwners` |
+| 의견 목록 | `GET /api/admin/feedback?page&size` | 관리자 | 최신 순, size 최대 100 |
+| 이벤트 당첨 가게 | `GET /api/admin/early-owner` | 관리자 | 당첨 순서대로 `[{storeId, storeName, couponId, grantedAt}]` |
+| 공지 작성·수정·삭제 | `POST /api/admin/notices`, `PATCH·DELETE /api/admin/notices/{noticeId}` | 관리자 | Body `title`(100자), `body`(5000자), `pinned` |
+
+관리자가 아니면 403(`COMMON403`), 로그인하지 않으면 401. 관리자 지정은 DB에서 `member.role = 'ADMIN'`.
 
 ---
 

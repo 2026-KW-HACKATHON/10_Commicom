@@ -64,6 +64,7 @@ public enum ErrorCode {
     PIGEON_FEED_SHORTAGE(HttpStatus.CONFLICT, "PIGEON409_4", "먹이가 부족해요"),
     PIGEON_NOT_MAX_LEVEL(HttpStatus.CONFLICT, "PIGEON409_5", "Lv.10이 되어야 졸업할 수 있어요"),
     PIGEON_AD_LIMIT(HttpStatus.TOO_MANY_REQUESTS, "PIGEON429", "오늘 광고 보상을 모두 받았어요"),
+    NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTICE404", "공지사항을 찾을 수 없어요"),
     VOUCHER_NOT_FOUND(HttpStatus.NOT_FOUND, "VOUCHER404", "교환권을 찾을 수 없어요"),
     VOUCHER_ALREADY_USED(HttpStatus.CONFLICT, "VOUCHER409", "이미 쿠폰으로 바꾼 교환권이에요"),
     VOUCHER_NO_COUPON(HttpStatus.CONFLICT, "VOUCHER409_2", "아직 바꿀 수 있는 쿠폰이 없어요. 사장님들이 쿠폰을 내놓으면 바꿀 수 있어요"),

@@ -3,10 +3,14 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import logo from '@/assets/logo-itda.svg'
 import pigeonWalk from '@/assets/map/pigeon-walk.png'
+import pigeonFeedback from '@/assets/quest/pigeon-verified.png'
 import { LoginForm } from '@/features/auth/components/LoginForm'
 import { useLogout } from '@/features/auth/hooks'
 import { canUseOwnerMode, modeOfRole } from '@/features/auth/schema'
+import { FeedbackSheet } from '@/features/feedback/FeedbackSheet'
+import { OWNER_ILLUST } from '@/features/owner/illustrations'
 import { addTestFeed } from '@/features/quest/api'
+import { useVoucherReady } from '@/features/quest/hooks'
 import { HAS_MOCK, resetAllLocalData, USE_MOCK } from '@/mocks/db'
 import { endBeta, IS_BETA, startBeta } from '@/shared/lib/beta'
 import { errorMessage } from '@/shared/lib/error'
@@ -163,6 +167,9 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
   const logout = useLogout()
   // 손님 계정으로 로그인한 채 사장님 모드를 고르면 막고 안내
   const [ownerBlocked, setOwnerBlocked] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
+  // 쿠폰이 생겨서 교환권을 쿠폰으로 바꿀 수 있으면 내 쿠폰함에 표시
+  const voucherReady = useVoucherReady()
 
   const switchMode = (next: AppMode) => {
     if (next === 'OWNER' && !canUseOwnerMode(me)) return setOwnerBlocked(true)
@@ -255,10 +262,40 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
                           {item.image ? <img src={item.image} alt="" className="size-8 object-contain" /> : item.icon}
                         </span>
                         <span className="flex-1">{item.label}</span>
+                        {item.to === '/coupons' && voucherReady && (
+                          <span className="rounded-full bg-point-red px-2 py-0.5 text-[10px] font-bold text-white">교환권 바꾸기</span>
+                        )}
                         <span className="text-q-muted">›</span>
                       </Link>
                     </li>
                   ))}
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpen(false)
+                        setFeedbackOpen(true)
+                      }}
+                      className="flex w-full items-center gap-3 border-b border-q-line py-3.5 text-left text-[15px] font-medium text-ink"
+                    >
+                      <span aria-hidden className="flex size-9 items-center justify-center overflow-hidden rounded-xl bg-q-mint">
+                        <img src={pigeonFeedback} alt="" className="size-8 object-contain" />
+                      </span>
+                      <span className="flex-1">의견 남기기</span>
+                      <span className="text-q-muted">›</span>
+                    </button>
+                  </li>
+                  {me?.role === 'ADMIN' && (
+                    <li>
+                      <Link to="/admin" className="flex items-center gap-3 border-b border-q-line py-3.5 text-[15px] font-medium text-ink">
+                        <span aria-hidden className="flex size-9 items-center justify-center overflow-hidden rounded-xl bg-q-mint">
+                          <img src={OWNER_ILLUST.pro} alt="" className="size-8 object-contain" />
+                        </span>
+                        <span className="flex-1">관리자 화면</span>
+                        <span className="text-q-muted">›</span>
+                      </Link>
+                    </li>
+                  )}
                 </ul>
               </section>
 
@@ -352,6 +389,7 @@ export function SettingsDrawer({ buttonClassName, items }: { buttonClassName: st
           </div>
         </div>
       )}
+      {feedbackOpen && <FeedbackSheet onClose={() => setFeedbackOpen(false)} />}
     </>
   )
 }

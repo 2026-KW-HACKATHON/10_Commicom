@@ -29,6 +29,7 @@ public class SecurityConfig {
             "/h2-console/**",
             "/error",
             "/api/members/signup", "/api/members/login",
+            "/api/feedback",
             "/api/members/email-verifications", "/api/members/email-verifications/confirm",
     };
 
@@ -39,6 +40,7 @@ public class SecurityConfig {
             "/api/quests",
             "/api/coupons/pigeon-reward-pool",
             "/api/events/**",
+            "/api/notices", "/api/notices/*",
             "/api/members/*/profile",
             "/api/members/check-email", "/api/members/check-nickname",
     };
@@ -65,6 +67,8 @@ public class SecurityConfig {
                         .accessDeniedHandler(securityErrorResponder))
                 .addFilterBefore(new JwtAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
+                        // 관리자 화면 API
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/stores/me", "/api/stores/*/quest-templates", "/api/stores/*/quest-qr",
                                 "/api/stores/*/coupons", "/api/stores/*/coupon-settlements", "/api/stores/*/pro").authenticated()
                         .requestMatchers(PUBLIC_PATHS).permitAll()

@@ -1,0 +1,45 @@
+# 화면(client) 자동 배포: main 에 client/** 가 바뀌어 올라오면 Vercel(itda-kappa.vercel.app)에 배포
+# 필요한 저장소 Secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID (client/.vercel/project.json 의 orgId·projectId)
+name: client-deploy
+
+on:
+  push:
+    branches: [main]
+    paths: ['client/**', '.github/workflows/client-deploy.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: client-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: 의존성 설치 + 타입 검사
+        run: |
+          npm ci
+          npx tsc -b --noEmit
+
+      - name: Vercel 프로젝트 설정 받기
+        run: npx vercel@latest pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: 빌드
+        run: npx vercel@latest build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: 배포
+        run: npx vercel@latest deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}

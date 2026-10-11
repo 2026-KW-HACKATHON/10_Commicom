@@ -1,4 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
+import pigeonLv1 from '@/assets/quest/pigeon-lv-01.png'
+import { useServerNotices } from '../api'
 import { NOTICES, noticeDateText } from '../data'
 import { useNewsBase } from '../useNewsBase'
 
@@ -7,6 +9,29 @@ export function NoticeDetail() {
   const { noticeId } = useParams()
   const base = useNewsBase()
   const notice = NOTICES.find((n) => n.id === noticeId)
+  const { data: serverNotices, isLoading } = useServerNotices()
+  const serverNotice = notice ? undefined : serverNotices?.find((n) => String(n.noticeId) === noticeId)
+
+  if (!notice && isLoading) return <div className="mx-5 mt-4 h-64 animate-pulse rounded-3xl bg-q-panel" />
+
+  // 관리자 화면에서 쓴 공지: 제목 + 본문(줄바꿈 그대로)
+  if (serverNotice) {
+    return (
+      <div className="h-full overflow-y-auto px-5 pt-4 pb-10">
+        <article className="overflow-hidden rounded-3xl bg-white shadow-[0_8px_24px_rgba(8,104,22,0.12)]">
+          <header className="flex items-center gap-3 bg-q-mint px-5 py-5">
+            <div className="min-w-0 flex-1">
+              {serverNotice.pinned && <span className="rounded-full bg-point-red px-2 py-0.5 text-[10px] font-bold text-white">공지</span>}
+              <h2 className="mt-1.5 text-[20px] leading-snug font-bold text-q-text">{serverNotice.title}</h2>
+              <p className="mt-1 text-[12px] text-q-muted">잇다 · {noticeDateText(serverNotice.createdAt.slice(0, 10))}</p>
+            </div>
+            <img src={pigeonLv1} alt="" className="size-[72px] shrink-0 object-contain" />
+          </header>
+          <p className="px-5 py-5 text-[14px] leading-relaxed whitespace-pre-line text-q-sub">{serverNotice.body}</p>
+        </article>
+      </div>
+    )
+  }
 
   if (!notice) {
     return (

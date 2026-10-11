@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from 'react-router-dom'
-import { useEarlyOwnerEvent } from '../api'
+import { useEarlyOwnerEvent, useServerNotices } from '../api'
 import { EVENTS, NOTICES, noticeDateText } from '../data'
 import { useNewsBase } from '../useNewsBase'
 
@@ -75,9 +75,15 @@ function EventItems() {
 
 function NoticeItems() {
   const base = useNewsBase()
+  const { data: serverNotices } = useServerNotices()
+  // 관리자가 쓴 공지 + 앱에 들어 있는 출시 공지 (고정 먼저, 그다음 최신 순)
+  const items = [
+    ...(serverNotices ?? []).map((n) => ({ id: String(n.noticeId), title: n.title, date: n.createdAt.slice(0, 10), pinned: n.pinned })),
+    ...NOTICES.map((n) => ({ id: n.id, title: n.title, date: n.date, pinned: Boolean(n.pinned) })),
+  ].sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.date.localeCompare(a.date))
   return (
     <ul className="overflow-hidden rounded-3xl bg-white shadow-[0_6px_18px_rgba(8,104,22,0.1)]">
-      {NOTICES.map((n, i) => (
+      {items.map((n, i) => (
         <li key={n.id} className={i > 0 ? 'border-t border-q-line' : ''}>
           <Link to={`${base}/notices/${n.id}`} className="flex items-center gap-3 px-4 py-4 active:bg-q-panel">
             <span className="min-w-0 flex-1">

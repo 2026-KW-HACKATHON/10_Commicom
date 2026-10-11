@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AppLayout } from './AppLayout'
 import { OwnerLayout } from './OwnerLayout'
 import { WelcomePage } from './WelcomePage'
+import { AdminPage } from '@/pages/AdminPage'
 import { CouponPage } from '@/pages/CouponPage'
 import { LoginPage, MyProfilePage, SignupPage } from '@/pages/AuthPage'
 import { CreatePage, RevisePage } from '@/pages/CreatePage'
@@ -26,6 +27,7 @@ export const router = createBrowserRouter([
   { path: '/welcome', element: <WelcomePage /> },
   // + 버튼: 숏폼 만들기 (화면 전체를 쓰는 단계별 흐름이라 레이아웃 밖)
   { path: '/create', element: <CreatePage /> },
+  { path: '/admin', element: <AdminPage /> },
   // 로그인·회원가입 (Figma 4:189, 3:319~)
   { path: '/login', element: <LoginPage /> },
   { path: '/signup', element: <SignupPage /> },

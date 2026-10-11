@@ -128,7 +128,9 @@ public class LocalDataInitializer implements ApplicationRunner {
                 Member.builder().email("owner@test.com").password(password).nickname("샘플사장님").role(Role.OWNER).build(),
                 Member.builder().email("resident@test.com").password(password).nickname("샘플주민").role(Role.RESIDENT).build(),
                 // 가게를 아직 등록하지 않은 사장님 (가입 직후 상태) — 가게 등록 화면 테스트용, 서버를 켤 때마다 가게 없음으로 돌아감
-                Member.builder().email("newowner@test.com").password(password).nickname("새사장님").role(Role.OWNER).build()
+                Member.builder().email("newowner@test.com").password(password).nickname("새사장님").role(Role.OWNER).build(),
+                // 관리자 화면 테스트용
+                Member.builder().email("admin@test.com").password(password).nickname("잇다관리자").role(Role.ADMIN).build()
         ));
     }
 

@@ -15,7 +15,9 @@ public record StoreSummaryResponse(
         String thumbnailUrl,
         boolean stepFree,
         boolean isQuestStore,
-        int availableCouponCount
+        int availableCouponCount,
+        /** 영업시간 원문 (지도 "영업 중" 표시용, 없으면 null) */
+        String businessHours
 ) {
 
     public static StoreSummaryResponse from(Store store) {
@@ -38,6 +40,7 @@ public record StoreSummaryResponse(
                 store.getThumbnailUrl(),
                 store.isStepFree(),
                 isQuestStore,
-                availableCouponCount);
+                availableCouponCount,
+                store.getBusinessHours());
     }
 }

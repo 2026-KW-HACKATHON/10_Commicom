@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import pigeonWalk from '@/assets/map/pigeon-walk.png'
 import { StoreCouponSheet } from '@/features/coupon/components/StoreCouponSheet'
 import { useFilteredStores, useMyLocation, useStoreGroups, useStores } from '../hooks'
+import { openStatus } from '../openStatus'
 import { KAKAO_KEY, KAKAO_LOADER_OPTIONS } from '../kakao'
 import { DEFAULT_CENTER, type MapCategoryKey, type StoreSummary } from '../schema'
 import { MapBottomSheet } from './MapBottomSheet'
@@ -47,10 +48,13 @@ function KakaoStoreMap() {
   const [category, setCategory] = useState<MapCategoryKey | null>(null)
   const [keyword, setKeyword] = useState('')
   const [questOnly, setQuestOnly] = useState(false)
+  const [openOnly, setOpenOnly] = useState(false)
   const [couponStore, setCouponStore] = useState<StoreSummary | null>(null)
 
   const { data: stores, isError } = useStores(questOnly)
-  const filtered = useFilteredStores(stores, category, keyword)
+  const categoryFiltered = useFilteredStores(stores, category, keyword)
+  // "영업 중만": 영업시간을 못 읽는 가게는 빼지 않음
+  const filtered = openOnly ? categoryFiltered.filter((s) => openStatus(s.businessHours) !== 'CLOSED') : categoryFiltered
   const groups = useStoreGroups(map, filtered, viewVersion)
   const location = useMyLocation()
 
@@ -158,6 +162,18 @@ function KakaoStoreMap() {
         className="absolute top-[78px] left-[14px] z-20 rounded-full border border-green-1 bg-white px-3 py-1.5 text-[13px] font-bold text-ink shadow-sm aria-pressed:border-green-6 aria-pressed:bg-green-6 aria-pressed:text-white"
       >
         🚩 퀘스트 가게만
+      </button>
+
+      <button
+        type="button"
+        aria-pressed={openOnly}
+        onClick={() => {
+          setOpenOnly((v) => !v)
+          clearSelection()
+        }}
+        className="absolute top-[78px] left-[146px] z-20 rounded-full border border-green-1 bg-white px-3 py-1.5 text-[13px] font-bold text-ink shadow-sm aria-pressed:border-green-6 aria-pressed:bg-green-6 aria-pressed:text-white"
+      >
+        🕒 영업 중만
       </button>
 
       {couponStore && (

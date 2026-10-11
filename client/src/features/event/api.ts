@@ -37,3 +37,29 @@ export async function fetchEarlyOwnerEvent(): Promise<EarlyOwnerEvent> {
 export function useEarlyOwnerEvent() {
   return useQuery({ queryKey: ['events', 'early-owner'], queryFn: fetchEarlyOwnerEvent, staleTime: 30_000 })
 }
+
+/** GET /api/notices — 관리자 화면에서 작성한 공지 (앱에 들어 있는 출시 공지와 함께 보여 줌) */
+export interface ServerNotice {
+  noticeId: number
+  title: string
+  body: string
+  pinned: boolean
+  createdAt: string
+}
+
+/** 공개 API라 베타 체험에서도 실제 서버 공지를 보여 줌. 서버가 아직 모르면 빈 목록 */
+export async function fetchServerNotices(): Promise<ServerNotice[]> {
+  try {
+    const res = await fetch('/api/notices', { signal: AbortSignal.timeout(4000) })
+    const body = (await res.json()) as { result?: { notices?: ServerNotice[] } }
+    return body.result?.notices ?? []
+  } catch {
+    return []
+  }
+}
+
+export const noticeKeys = { all: ['notices'] as const }
+
+export function useServerNotices() {
+  return useQuery({ queryKey: noticeKeys.all, queryFn: fetchServerNotices, staleTime: 30_000 })
+}

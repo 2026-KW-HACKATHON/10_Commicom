@@ -15,4 +15,6 @@ public interface CouponVoucherRepository extends JpaRepository<CouponVoucher, Lo
     List<CouponVoucher> findAllByIdIn(Collection<Long> ids);
 
     void deleteByMemberId(Long memberId);
+
+    long countByStatus(CouponVoucher.Status status);
 }

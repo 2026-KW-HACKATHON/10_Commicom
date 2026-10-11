@@ -210,3 +210,9 @@ export function useExchangeVoucher() {
     },
   })
 }
+
+/** 교환권이 있고 지금 쿠폰으로 바꿀 수 있는지 (사장님들이 쿠폰을 내놓으면 true → 쿠폰함 배지) */
+export function useVoucherReady() {
+  const { data } = useVouchers()
+  return Boolean(data?.poolAvailable && data.vouchers.some((v) => v.status === 'ISSUED'))
+}
