@@ -27,6 +27,7 @@ import {
   TEMPLATE_REWARD_FEED,
   TEMPLATE_TARGET,
   MAX_LEVEL,
+  COUPON_FALLBACK_FEED,
   PIGEON_BREEDS,
   VISIT_RADIUS_M,
   type AlbumItem,
@@ -390,7 +391,7 @@ function feedPigeon(amount: number) {
       hatched = { breed, breedName: PIGEON_BREEDS[breed].name }
       continue
     }
-    const reward = draw(row, d.pigeon.level)
+    const reward = draw(row)
     // 뽑기로 나온 먹이도 바로 먹이지 않고 보유 먹이에 쌓음
     if (reward.type === 'FEED') d.pigeon.feedBalance = (d.pigeon.feedBalance ?? 0) + reward.feedAmount
 
@@ -403,10 +404,30 @@ function feedPigeon(amount: number) {
   return { fed: amount, pigeon: pigeonChange(levelBefore), hatched, levelUps, feedBalance: d.pigeon.feedBalance }
 }
 
-function draw(row: (typeof LEVEL_TABLE)[number], toLevel: number): LevelUp['reward'] {
+/**
+ * 베타 체험: 실제 서버에 비둘기 보상 쿠폰을 내놓은 사장님이 있는지 (이 기기의 목업 쿠폰은 실제로 쓸 수 없으므로).
+ * 응답이 없거나 서버가 아직 이 API를 모르면 없는 것으로 봄 → 서버와 똑같이 쿠폰 대신 먹이
+ */
+let serverRewardPool = false
+async function refreshServerRewardPool() {
+  if (!IS_BETA) return
+  try {
+    // 체험 계정의 목업 토큰이 붙지 않게 axios 대신 fetch
+    const res = await fetch('/api/coupons/pigeon-reward-pool', { signal: AbortSignal.timeout(3000) })
+    const body = (await res.json()) as { result?: { available?: boolean } }
+    serverRewardPool = Boolean(body.result?.available)
+  } catch {
+    serverRewardPool = false
+  }
+}
+
+function draw(row: (typeof LEVEL_TABLE)[number]): LevelUp['reward'] {
   const r = Math.random()
   if (r < row.coupon) {
-    const pool = db().coupons.filter((c) => c.useAsPigeonReward && c.status === 'ACTIVE' && remaining(c) > 0)
+    const pool =
+      IS_BETA && !serverRewardPool
+        ? []
+        : db().coupons.filter((c) => c.useAsPigeonReward && c.status === 'ACTIVE' && remaining(c) > 0)
     if (pool.length > 0) {
       const picked = pool[Math.floor(Math.random() * pool.length)]
       const uc = issueUserCoupon(picked, 'PIGEON_REWARD')
@@ -416,8 +437,8 @@ function draw(row: (typeof LEVEL_TABLE)[number], toLevel: number): LevelUp['rewa
         userCoupon: { userCouponId: uc.userCouponId, storeName: storeName(picked.storeId), title: picked.title, expiresAt: uc.expiresAt },
       }
     }
-    // 풀이 비었을 때: 중간 레벨은 먹이 2개로 대체. Lv.10 확정 쿠폰은 미정(열린 질문 4) → 목업은 먹이 0
-    return { type: 'FEED', feedAmount: toLevel >= MAX_LEVEL ? 0 : 2, userCoupon: null }
+    // 풀이 비었을 때(쿠폰을 내놓은 사장님이 없음): 서버와 같게 Lv.10 포함 먹이로 대체
+    return { type: 'FEED', feedAmount: COUPON_FALLBACK_FEED, userCoupon: null }
   }
   return { type: 'FEED', feedAmount: r < row.coupon + row.feed1 ? 1 : 2, userCoupon: null }
 }
@@ -693,14 +714,16 @@ export const mockPigeonApi = {
     }),
 
   /** 명세에 없는 추가 API(제안): POST /api/pigeon/feed { amount } — 보유 먹이를 비둘기에게 줌 */
-  feed: (amount: number) =>
-    respond<FeedPigeonResult>(() => {
+  feed: async (amount: number) => {
+    await refreshServerRewardPool()
+    return respond<FeedPigeonResult>(() => {
       const d = db()
       if (!Number.isInteger(amount) || amount < 1) fail(400, 'COMMON400', '입력값이 올바르지 않아요')
       if (d.pigeon.level >= MAX_LEVEL) fail(409, 'PIGEON409_3', '최고 레벨이에요. 졸업시키면 새 알을 키울 수 있어요')
       if ((d.pigeon.feedBalance ?? 0) < amount) fail(409, 'PIGEON409_4', '먹이가 부족해요')
       return feedPigeon(amount)
-    }),
+    })
+  },
 
   /** Lv.10 졸업 → 앨범에 남기고 새 알 (보유 먹이는 이어짐) */
   graduate: () =>

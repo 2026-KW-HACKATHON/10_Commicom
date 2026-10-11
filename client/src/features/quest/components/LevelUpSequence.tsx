@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { untilText } from '@/features/coupon/schema'
 import { ConfettiBurst } from '@/shared/ui/Confetti'
-import { pigeonImage, type LevelUp, type PigeonBreed } from '../schema'
+import { isCouponFallback, pigeonImage, type LevelUp, type PigeonBreed } from '../schema'
 import { CelebrationScreen, FeedBowlIcon, FeedIcon, OutlineButton, PrimaryButton } from './QuestUi'
 import { RewardCardDraw } from './RewardCardDraw'
 
@@ -102,6 +102,17 @@ function RewardResult({ reward }: { reward: LevelUp['reward'] }) {
             {coupon.storeName} · {coupon.title}
           </span>
           <span className="block text-[11px] text-q-muted">{untilText(coupon.expiresAt)} · 쿠폰함에 넣어 뒀어요</span>
+        </span>
+      </div>
+    )
+  }
+  if (isCouponFallback(reward)) {
+    return (
+      <div role="status" className={`${box} bg-white`}>
+        <FeedBowlIcon className="h-10 w-11 shrink-0" />
+        <span className="flex-1">
+          <span className="block text-[20px] leading-tight font-bold text-q-green">쿠폰 대신 먹이 +{reward.feedAmount}</span>
+          <span className="block text-[12px] text-q-muted">아직 비둘기 보상 쿠폰을 내놓은 가게가 없어서 먹이로 드렸어요</span>
         </span>
       </div>
     )

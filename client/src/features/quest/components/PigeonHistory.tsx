@@ -1,6 +1,6 @@
 import { untilText } from '@/features/coupon/schema'
 import { usePigeonAccess, usePigeonHistory } from '../hooks'
-import { pigeonImage, type HistoryItem } from '../schema'
+import { isCouponFallback, pigeonImage, type HistoryItem } from '../schema'
 import { FeedIcon } from './QuestUi'
 
 /** 성장 기록 — 레벨업 이력과 뽑기 결과 (3-4) */
@@ -56,7 +56,7 @@ function RewardText({ item }: { item: HistoryItem }) {
   return (
     <p className="mt-1 flex items-center gap-1 text-[13px] text-q-sub">
       <FeedIcon className="size-4" />
-      {reward.feedAmount > 0 ? `먹이 ${reward.feedAmount}개 획득` : '보상 없음'}
+      {isCouponFallback(reward) ? `쿠폰 대신 먹이 ${reward.feedAmount}개 획득` : reward.feedAmount > 0 ? `먹이 ${reward.feedAmount}개 획득` : '보상 없음'}
     </p>
   )
 }

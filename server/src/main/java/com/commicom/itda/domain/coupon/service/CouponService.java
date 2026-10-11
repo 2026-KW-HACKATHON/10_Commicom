@@ -236,15 +236,25 @@ public class CouponService {
                 .collect(Collectors.toMap(r -> (Long) r[0], r -> ((Number) r[1]).intValue()));
     }
 
+    /** 비둘기 레벨업 보상으로 나갈 수 있는 쿠폰이 하나라도 있는지 (사장님이 "비둘기 보상"으로 내놓고 아직 남은 쿠폰) */
+    @Transactional(readOnly = true)
+    public boolean hasPigeonRewardPool() {
+        return !pigeonRewardPool().isEmpty();
+    }
+
+    private List<Coupon> pigeonRewardPool() {
+        return couponRepository.findAllByStatusAndUseAsPigeonRewardTrue(CouponStatus.ACTIVE).stream()
+                .filter(Coupon::isIssuable)
+                .toList();
+    }
+
     /**
      * 비둘기 레벨업 보상: 사장님들이 비둘기 보상으로 내놓은 쿠폰 중 1장 (아직 안 가진 쿠폰을 먼저).
      * 풀이 비었으면 empty
      */
     @Transactional
     public Optional<UserCoupon> issuePigeonReward(Long memberId) {
-        List<Coupon> pool = couponRepository.findAllByStatusAndUseAsPigeonRewardTrue(CouponStatus.ACTIVE).stream()
-                .filter(Coupon::isIssuable)
-                .toList();
+        List<Coupon> pool = pigeonRewardPool();
         if (pool.isEmpty()) {
             return Optional.empty();
         }

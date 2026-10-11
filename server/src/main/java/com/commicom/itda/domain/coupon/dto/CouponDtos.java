@@ -4,6 +4,7 @@ import com.commicom.itda.domain.coupon.entity.CouponStatus;
 import com.commicom.itda.domain.coupon.entity.DiscountType;
 import com.commicom.itda.domain.coupon.entity.UserCouponSource;
 import com.commicom.itda.domain.coupon.entity.UserCouponStatus;
+import com.commicom.itda.domain.pigeon.service.PigeonRewardCouponIssuer;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -97,6 +98,11 @@ public final class CouponDtos {
     }
 
     public record AvailableCouponList(List<AvailableCoupon> coupons) {
+    }
+
+    /** 비둘기 보상 쿠폰 풀: available=false 면 레벨업 뽑기의 쿠폰이 먹이 fallbackFeed 개로 대체 */
+    public record PigeonRewardPool(boolean available, int fallbackFeed) {
+        public static final int FALLBACK_FEED = PigeonRewardCouponIssuer.FALLBACK_FEED;
     }
 
     public record DownloadResponse(Long userCouponId, String redeemCode, OffsetDateTime expiresAt) {

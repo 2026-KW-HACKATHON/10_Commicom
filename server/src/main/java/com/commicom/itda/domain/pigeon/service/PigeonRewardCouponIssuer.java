@@ -9,6 +9,9 @@ import java.util.Optional;
 /** 레벨업 뽑기에서 쿠폰이 나왔을 때 사장님들이 내놓은 쿠폰 풀에서 1장 발급 (쿠폰 도메인이 구현) */
 public interface PigeonRewardCouponIssuer {
 
+    /** 쿠폰이 나왔는데 풀이 비어 있으면(쿠폰을 내놓은 사장님이 없으면) 대신 주는 먹이 수 */
+    int FALLBACK_FEED = 3;
+
     /** 발급한 쿠폰, 풀이 비었으면 empty */
     Optional<RewardCoupon> issue(Long memberId);
 

@@ -258,6 +258,14 @@ export interface OwnerQuestTemplate {
 
 export const MAX_LEVEL = 10
 
+/**
+ * 레벨업 뽑기에서 쿠폰이 나왔는데 쿠폰을 내놓은 사장님이 없을 때 대신 주는 먹이 (서버 PigeonRewardCouponIssuer.FALLBACK_FEED).
+ * 일반 먹이 보상은 1·2개뿐이라 3개면 쿠폰이 대체된 것
+ */
+export const COUPON_FALLBACK_FEED = 3
+export const isCouponFallback = (reward: { type: string; feedAmount: number }) =>
+  reward.type === 'FEED' && reward.feedAmount === COUPON_FALLBACK_FEED
+
 /** key = 현재 레벨 (key → key+1 레벨업). 2026-10-08 확정 표, 0 = 알(먹이 1개로 부화, 뽑기 없음) */
 export const LEVEL_TABLE: Record<number, { requiredFeed: number; coupon: number; feed1: number; feed2: number }> = {
   0: { requiredFeed: 1, coupon: 0, feed1: 0, feed2: 0 },

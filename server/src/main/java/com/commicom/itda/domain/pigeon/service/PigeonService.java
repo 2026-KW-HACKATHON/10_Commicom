@@ -213,8 +213,9 @@ public class PigeonService {
             if (coupon != null) {
                 return new Drawn(new PigeonLevelHistory(memberId, generation, toLevel - 1, toLevel, RewardType.COUPON, 0, coupon.userCouponId()), coupon);
             }
-            // 쿠폰 풀이 비었을 때: 중간 레벨은 먹이 2개로 대체. Lv.10 확정 쿠폰은 미정 → 먹이 0
-            return new Drawn(new PigeonLevelHistory(memberId, generation, toLevel - 1, toLevel, RewardType.FEED, toLevel >= PigeonLevel.MAX_LEVEL ? 0 : 2, null), null);
+            // 쿠폰 풀이 비었을 때(쿠폰을 내놓은 사장님이 없음): Lv.10 확정 쿠폰도 포함해 먹이로 대체
+            return new Drawn(new PigeonLevelHistory(memberId, generation, toLevel - 1, toLevel, RewardType.FEED,
+                    PigeonRewardCouponIssuer.FALLBACK_FEED, null), null);
         }
         int feed = r < row.getCouponRate() + row.getFeed1Rate() ? 1 : 2;
         return new Drawn(new PigeonLevelHistory(memberId, generation, toLevel - 1, toLevel, RewardType.FEED, feed, null), null);
