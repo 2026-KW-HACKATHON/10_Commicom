@@ -1,13 +1,17 @@
 import { useState } from 'react'
+import pigeonPhoto from '@/assets/generation/pigeon-uploaded.png'
+import pigeonCoupon from '@/assets/owner/pigeon-coupon.png'
+import pigeonEgg from '@/assets/quest/pigeon-egg.png'
+import pigeonMap from '@/assets/quest/pigeon-gps.png'
 import pigeon from '@/assets/quest/pigeon-lv-01.png'
 
 const SEEN_KEY = 'itda-beta-intro-seen'
 
 const TRY_LIST = [
-  { icon: '📸', text: '피드에서 동네 가게 게시물 넘겨 보기' },
-  { icon: '🗺️', text: '지도에서 가게 핀 눌러 보기' },
-  { icon: '🐣', text: '퀘스트 하고 비둘기 먹이 주기 · 레벨업 뽑기' },
-  { icon: '🏪', text: '메뉴 → 사장님 모드에서 AI 게시물·쿠폰 만들기' },
+  { image: pigeonPhoto, text: '피드에서 동네 가게 게시물 넘겨 보기' },
+  { image: pigeonMap, text: '지도에서 가게 핀 눌러 보기' },
+  { image: pigeonEgg, text: '퀘스트 하고 비둘기 먹이 주기 · 레벨업 뽑기' },
+  { image: pigeonCoupon, text: '메뉴 → 사장님 모드에서 AI 게시물·쿠폰 만들기' },
 ]
 
 function seen() {
@@ -50,9 +54,9 @@ export function BetaIntro() {
         <h3 className="mt-5 text-xs font-bold text-q-muted">이렇게 해 보세요</h3>
         <ul className="mt-2 flex flex-col gap-2">
           {TRY_LIST.map((item) => (
-            <li key={item.text} className="flex items-center gap-3 rounded-2xl bg-q-panel px-4 py-3 text-[14px] font-medium text-ink">
-              <span aria-hidden className="text-lg">
-                {item.icon}
+            <li key={item.text} className="flex items-center gap-3 rounded-2xl bg-q-panel py-2 pr-4 pl-2.5 text-[14px] font-medium text-ink">
+              <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white">
+                <img src={item.image} alt="" className="size-10 object-contain" />
               </span>
               {item.text}
             </li>
