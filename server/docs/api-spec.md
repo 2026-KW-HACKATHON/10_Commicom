@@ -622,7 +622,7 @@ Response 예시 (404)
 
 > 회원 1명당 지금 키우는 비둘기 1마리. **알(Lv.0)** 로 시작 → 먹이 1개로 **부화**(종류 6가지 중 랜덤: `KOREAN` 한식 / `JAPANESE` 일식 / `CHINESE` 중식 / `WESTERN` 양식 / `MART` 마트 / `CAFE` 카페) → Lv.10 → **졸업**하면 앨범에 남고 새 알(다음 기수).
 > 먹이는 보유 먹이에 쌓이고 `POST /api/pigeon/feed`로 먹여야 레벨업. 최고 레벨이어도 무료·광고 먹이는 받아서 모아 둘 수 있고, 졸업해도 보유 먹이는 이어진다.
-> 레벨업마다 뽑기: 쿠폰 / 먹이 1개 / 먹이 2개. 쿠폰은 사장님들이 비둘기 보상으로 내놓은 쿠폰 풀에서 지급하고, 풀이 비면 먹이 2개(Lv.10은 0개).
+> 레벨업마다 뽑기: 쿠폰 / 먹이 1개 / 먹이 2개. 쿠폰은 사장님들이 비둘기 보상으로 내놓은 쿠폰 풀에서 지급하고, 풀이 비면(쿠폰을 내놓은 사장님이 없으면) Lv.10 포함 먹이 3개로 대체 (응답 `reward.type=FEED, feedAmount=3`). 일반 먹이 보상은 1·2개라 3개면 대체된 것.
 
 | API | Method · Path | 설명 |
 | --- | --- | --- |
@@ -680,6 +680,7 @@ Response 예시 (404)
 | 쿠폰 받기 | `POST /api/coupons/{couponId}/downloads` | 필수 | 같은 쿠폰은 한 번만. 응답 `userCouponId, redeemCode(6자리), expiresAt(받은 날 + validDays 23:59:59)` |
 | 내 쿠폰함 | `GET /api/coupons/me?status=&page=&size=` | 필수 | status `AVAILABLE`/`USED`/`EXPIRED`. 쓸 수 있는 쿠폰은 기한 임박 순, 나머지는 최근 순. `coupons[]`: `userCouponId, storeId, storeName, title, discountType, discountValue, minOrderAmount, source(DOWNLOAD/PIGEON_REWARD/QUEST_REWARD), redeemCode, status, expiresAt, usedAt` |
 | 사용 처리 | `POST /api/coupons/redeem` | 사장님 | Body `redeemCode` (대소문자 무관). 내 가게 쿠폰만. 응답 `userCouponId, title, discountType, discountValue, minOrderAmount, fee, redeemedAt` |
+| 비둘기 보상 쿠폰 풀 | `GET /api/coupons/pigeon-reward-pool` | 불필요 | 응답 `available`(보상으로 나갈 쿠폰이 남았는지), `fallbackFeed`(없을 때 쿠폰 대신 주는 먹이 수, 3) |
 | 정산 | `GET /api/stores/{storeId}/coupon-settlements?month=YYYY-MM` | 사장님 | KST 기준 그 달. `month, usedCount, totalDiscount, totalFee, items[]{userCouponId, title, discountValue, fee, redeemedAt}` |
 
 | 상태코드 | 의미 |
