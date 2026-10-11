@@ -40,8 +40,8 @@ function EventStatus({ event }: { event: EarlyOwnerEvent }) {
   )
 }
 
-/** 메뉴 → 이벤트: 지금은 초기 사장님 이벤트 하나 */
-export function EventList() {
+/** 이벤트 · 공지사항 → 초기 사장님 이벤트 상세 */
+export function EarlyOwnerEventDetail() {
   const { data: event } = useEarlyOwnerEvent()
   const navigate = useNavigate()
   const me = useMe()

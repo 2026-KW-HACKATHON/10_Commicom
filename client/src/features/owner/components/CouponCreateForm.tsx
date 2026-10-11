@@ -138,7 +138,7 @@ export function CouponCreateForm() {
       </label>
 
       {event && event.status !== 'CLOSED' && (
-        <Link to="/owner/events" className="mt-2 flex items-center gap-3 rounded-2xl border border-dashed border-point-orange bg-point-yellow/15 py-2 pr-4 pl-2">
+        <Link to="/owner/events/early-owner" className="mt-2 flex items-center gap-3 rounded-2xl border border-dashed border-point-orange bg-point-yellow/15 py-2 pr-4 pl-2">
           <img src={pigeonStar} alt="" className="size-12 shrink-0 object-contain" />
           <span className="min-w-0 flex-1 text-[12px] leading-snug text-q-sub">
             <b className="block text-[13px] text-point-red-dark">

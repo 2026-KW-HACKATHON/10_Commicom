@@ -5,7 +5,7 @@ import { WelcomePage } from './WelcomePage'
 import { CouponPage } from '@/pages/CouponPage'
 import { LoginPage, MyProfilePage, SignupPage } from '@/pages/AuthPage'
 import { CreatePage, RevisePage } from '@/pages/CreatePage'
-import { EventPage } from '@/pages/EventPage'
+import { EarlyOwnerEventPage, EventPage, NoticePage } from '@/pages/EventPage'
 import { FeedPage, ScrapPage, StoreShortformPage } from '@/pages/FeedPage'
 import { MapPage, StoreProfilePage } from '@/pages/MapPage'
 import {
@@ -50,7 +50,9 @@ export const router = createBrowserRouter([
       { path: '/quest/scan', element: <QuestScanPage />, handle: { title: '방문 인증' } },
       { path: '/quest/:questId/visit', element: <QuestVisitPage />, handle: { title: '방문 인증' } },
       { path: '/coupons', element: <CouponPage />, handle: { title: '내 쿠폰함' } },
-      { path: '/events', element: <EventPage />, handle: { title: '이벤트' } },
+      { path: '/events', element: <EventPage />, handle: { title: '이벤트 · 공지사항' } },
+      { path: '/events/early-owner', element: <EarlyOwnerEventPage />, handle: { title: '이벤트' } },
+      { path: '/events/notices/:noticeId', element: <NoticePage />, handle: { title: '공지사항' } },
       { path: '/scraps', element: <ScrapPage />, handle: { title: '스크랩' } },
       { path: '/profile', element: <MyProfilePage />, handle: { title: '프로필' } },
       // 예전 주소 호환
@@ -73,7 +75,9 @@ export const router = createBrowserRouter([
       { path: 'create', element: <OwnerVideosPage />, handle: { title: '게시물 제작', action: null } },
       { path: 'quest-store', element: <QuestStorePage />, handle: { title: '퀘스트 가게' } },
       { path: 'pro', element: <ProPage />, handle: { title: '잇다 PRO' } },
-      { path: 'events', element: <EventPage />, handle: { title: '이벤트' } },
+      { path: 'events', element: <EventPage />, handle: { title: '이벤트 · 공지사항' } },
+      { path: 'events/early-owner', element: <EarlyOwnerEventPage />, handle: { title: '이벤트' } },
+      { path: 'events/notices/:noticeId', element: <NoticePage />, handle: { title: '공지사항' } },
       // 예전 주소 호환 (정산은 쿠폰 탭 안으로, 내 영상은 제작 탭으로)
       { path: 'settlement', element: <Navigate to="/owner/coupons?view=settlement" replace /> },
       { path: 'videos', element: <Navigate to="/owner/create" replace /> },

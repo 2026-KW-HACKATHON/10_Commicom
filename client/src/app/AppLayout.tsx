@@ -17,7 +17,7 @@ const TABS: TabItem[] = [
 
 /** 로그인·스크랩·프로필 항목은 담당 팀원이 이어서 추가 */
 const MENU: MenuItem[] = [
-  { to: '/events', label: '이벤트', icon: '⭐', image: pigeonStar },
+  { to: '/events', label: '이벤트 · 공지사항', icon: '⭐', image: pigeonStar },
   { to: '/coupons', label: '내 쿠폰함', icon: '🎟', image: pigeonCouponBox },
   { to: '/quest', label: '내 비둘기·퀘스트', icon: '🕊', image: pigeonQuest },
   { to: '/quest/history', label: '성장 기록', icon: '📈', image: pigeonGrowth },

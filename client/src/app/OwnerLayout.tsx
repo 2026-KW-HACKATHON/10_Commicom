@@ -24,7 +24,7 @@ const TABS: TabItem[] = [
 ]
 
 const MENU: MenuItem[] = [
-  { to: '/owner/events', label: '이벤트', icon: '⭐', image: pigeonStar },
+  { to: '/owner/events', label: '이벤트 · 공지사항', icon: '⭐', image: pigeonStar },
   { to: '/owner/profile', label: '가게 정보 · 프로필', icon: '🏪', image: pigeonWalk },
   { to: '/owner/create', label: '게시물 제작', icon: '📸', image: OWNER_ILLUST.videoEdit },
   { to: '/owner/quest-store', label: '퀘스트 가게 · 방문 QR', icon: '📍', image: OWNER_ILLUST.qr },
