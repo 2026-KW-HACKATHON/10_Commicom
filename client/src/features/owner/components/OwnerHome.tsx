@@ -5,6 +5,7 @@ import { useIsPro } from '@/features/pro/hooks'
 import { useQuestSubscription } from '@/features/quest/hooks'
 import { HAS_MOCK, resetAllLocalData } from '@/mocks/db'
 import { IS_BETA } from '@/shared/lib/beta'
+import { num } from '@/shared/lib/format'
 import { useMyStoreId, useMyStoreName, useStoreManageAccess } from '../hooks'
 import { OWNER_ILLUST } from '../illustrations'
 import { currentMonth } from '../date'
@@ -62,8 +63,8 @@ export function OwnerHome() {
 
       <OwnerCard title="이번 달 쿠폰" className="mt-3" aside={<Link to="/owner/coupons?view=settlement" className="text-xs font-medium text-q-green">정산 보기 ›</Link>}>
         <dl className="grid grid-cols-3 gap-2 text-center">
-          <Stat label="발행 중" value={`${activeCoupons.length}종`} />
-          <Stat label="사용" value={`${settlement?.usedCount ?? 0}건`} />
+          <Stat label="발행 중" value={`${num(activeCoupons.length)}종`} />
+          <Stat label="사용" value={`${num(settlement?.usedCount ?? 0)}건`} />
           <Stat label="손님 할인" value={`${(settlement?.totalDiscount ?? 0).toLocaleString()}원`} />
         </dl>
       </OwnerCard>

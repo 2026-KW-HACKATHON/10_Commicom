@@ -1,4 +1,5 @@
 import { untilText } from '@/features/coupon/schema'
+import { num } from '@/shared/lib/format'
 import { usePigeonAccess, usePigeonHistory } from '../hooks'
 import { pigeonImage, type HistoryItem } from '../schema'
 import { FeedIcon } from './QuestUi'
@@ -69,7 +70,7 @@ function RewardText({ item }: { item: HistoryItem }) {
   return (
     <p className="mt-1 flex items-center gap-1 text-[13px] text-q-sub">
       <FeedIcon className="size-4" />
-      {reward.feedAmount > 0 ? `먹이 ${reward.feedAmount}개 획득` : '보상 없음'}
+      {reward.feedAmount > 0 ? `먹이 ${num(reward.feedAmount)}개 획득` : '보상 없음'}
     </p>
   )
 }

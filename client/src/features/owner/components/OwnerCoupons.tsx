@@ -4,6 +4,7 @@ import { useOwnerCoupons, useStopCoupon } from '@/features/coupon/hooks'
 import { discountText, minOrderText, type CouponStatus } from '@/features/coupon/schema'
 import { ProgressBar } from '@/features/quest/components/QuestUi'
 import { errorMessage } from '@/shared/lib/error'
+import { num } from '@/shared/lib/format'
 import { useMyStoreId } from '../hooks'
 import { OWNER_ILLUST } from '../illustrations'
 import { CouponStatusBadge, OwnerScreen } from './OwnerUi'
@@ -82,7 +83,7 @@ export function OwnerCoupons() {
             </div>
             <ProgressBar value={c.issuedCount} max={c.totalQuantity} className="mt-2.5 h-1.5" />
             <p className="mt-1 text-right text-[11px] text-q-muted">
-              {c.issuedCount} / {c.totalQuantity}장 지급
+              {num(c.issuedCount)} / {num(c.totalQuantity)}장 지급
             </p>
 
             <div className="mt-2 flex items-center justify-between border-t border-q-line pt-2.5">

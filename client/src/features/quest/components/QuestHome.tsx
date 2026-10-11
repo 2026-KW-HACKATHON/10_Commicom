@@ -3,6 +3,7 @@ import pigeonWalk from '@/assets/map/pigeon-walk.png'
 import pigeonGps from '@/assets/quest/pigeon-gps.png'
 import { OWNER_ILLUST } from '@/features/owner/illustrations'
 import { useMyCoupons } from '@/features/coupon/hooks'
+import { num } from '@/shared/lib/format'
 import { usePigeonAccess, useQuests } from '../hooks'
 import { questTemplate, type Quest } from '../schema'
 import { PigeonCard } from './PigeonCard'
@@ -31,7 +32,7 @@ export function QuestHome() {
       >
         <span className="text-[15px] font-bold text-q-text">내 쿠폰함</span>
         <span className="text-[13px] font-medium text-q-green">
-          사용 가능 {coupons?.length ?? 0}장 ›
+          사용 가능 {num(coupons?.length ?? 0)}장 ›
         </span>
       </Link>
 
@@ -117,7 +118,7 @@ function QuestCard({ quest }: { quest: Quest }) {
           <ProgressBar value={quest.currentCount} max={quest.targetCount} className="h-1 w-[116px]" />
           <span className="ml-auto flex shrink-0 items-center gap-1 text-[13px] font-bold text-q-green">
             <FeedIcon className="size-5" />
-            먹이 {quest.rewardFeed}개
+            먹이 {num(quest.rewardFeed)}개
           </span>
         </div>
       </div>

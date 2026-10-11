@@ -8,6 +8,7 @@ import { useMyLocation, useStores } from '@/features/map/hooks'
 import type { StoreSummary } from '@/features/map/schema'
 import { ApiError } from '@/shared/api/client'
 import { errorMessage } from '@/shared/lib/error'
+import { num } from '@/shared/lib/format'
 import { fetchTestQrHint } from '../api'
 import { distanceMeters, getCurrentPosition, GPS_BYPASS } from '../geo'
 import { useVisit } from '../hooks'
@@ -180,7 +181,7 @@ export function QuestVisit({ quest }: { quest: Quest }) {
           subtitle={`${store.name} 방문이 확인되었습니다.`}
           actions={<PrimaryButton onClick={afterVisited}>확인</PrimaryButton>}
         >
-          <RewardBox title={`먹이 ${result.feedGained}개를 획득했습니다`} caption="보유 먹이에 담았어요. 퀘스트 탭에서 비둘기에게 주세요!" />
+          <RewardBox title={`먹이 ${num(result.feedGained)}개를 획득했습니다`} caption="보유 먹이에 담았어요. 퀘스트 탭에서 비둘기에게 주세요!" />
         </CelebrationScreen>
       )}
 
@@ -196,7 +197,7 @@ export function QuestVisit({ quest }: { quest: Quest }) {
             </>
           }
         >
-          <RewardBox title={`보너스 먹이 ${result.quest.bonusFeed}개를 획득했습니다`} caption="보유 먹이에 담았어요" />
+          <RewardBox title={`보너스 먹이 ${num(result.quest.bonusFeed)}개를 획득했습니다`} caption="보유 먹이에 담았어요" />
         </CelebrationScreen>
       )}
 

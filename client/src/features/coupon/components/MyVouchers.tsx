@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useExchangeVoucher, useVouchers } from '@/features/quest/hooks'
 import { errorMessage } from '@/shared/lib/error'
+import { num } from '@/shared/lib/format'
 import { toast } from '@/stores/toastStore'
 import { untilText } from '../schema'
 
@@ -19,7 +20,7 @@ export function MyVouchers() {
     setPendingId(voucherId)
     exchange.mutate(voucherId, {
       onSuccess: (r) => {
-        if (r.feedGained > 0) toast(`기한이 지나 먹이 ${r.feedGained}개로 바꿨어요`)
+        if (r.feedGained > 0) toast(`기한이 지나 먹이 ${num(r.feedGained)}개로 바꿨어요`)
         else if (r.voucher.userCoupon) toast(`🎉 ${r.voucher.userCoupon.storeName} 쿠폰으로 바꿨어요!`)
       },
       onError: (e) => toast(errorMessage(e)),
@@ -30,7 +31,7 @@ export function MyVouchers() {
   return (
     <section aria-label="쿠폰 교환권" className="mb-5">
       <h2 className="mb-2 flex items-center justify-between text-[13px] font-bold text-q-text">
-        🎟 쿠폰 교환권 {issued.length}장
+        🎟 쿠폰 교환권 {num(issued.length)}장
         <span className="text-[11px] font-medium text-q-muted">
           {data.validDays / 7}주 안에 못 바꾸면 먹이 {data.expiryFeed}개
         </span>

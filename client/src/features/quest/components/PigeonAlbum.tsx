@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { num } from '@/shared/lib/format'
 import { usePigeon, usePigeonAccess, usePigeonAlbum } from '../hooks'
 import { breedLabel, PIGEON_BREEDS, PIGEON_EGG_IMAGE, pigeonImage, type AlbumItem } from '../schema'
 
@@ -61,9 +62,9 @@ function GraduateCard({ item }: { item: AlbumItem }) {
         {b.emoji} {b.name} 비둘기
       </p>
       <p className="mt-0.5 text-[11px] text-q-muted">
-        {dateText(item.graduatedAt)} 졸업 · {item.days}일
+        {dateText(item.graduatedAt)} 졸업 · {num(item.days)}일
       </p>
-      {item.rewardCouponCount > 0 && <p className="mt-0.5 text-[11px] font-medium text-q-green">쿠폰 {item.rewardCouponCount}장</p>}
+      {item.rewardCouponCount > 0 && <p className="mt-0.5 text-[11px] font-medium text-q-green">쿠폰 {num(item.rewardCouponCount)}장</p>}
     </div>
   )
 }

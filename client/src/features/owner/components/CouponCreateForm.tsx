@@ -7,6 +7,7 @@ import { useEarlyOwnerEvent } from '@/features/event/api'
 import { discountText, RATE_MAX, RATE_MIN, validateCoupon, type CreateCouponRequest, type DiscountType } from '@/features/coupon/schema'
 import { PrimaryButton } from '@/features/quest/components/QuestUi'
 import { errorMessage } from '@/shared/lib/error'
+import { num } from '@/shared/lib/format'
 import { toast } from '@/stores/toastStore'
 import { useMyStoreId } from '../hooks'
 import { OWNER_ILLUST } from '../illustrations'
@@ -199,7 +200,8 @@ function NumberInput({
     <div className="relative">
       <input
         inputMode="numeric"
-        value={value}
+        // 입력하는 동안에도 1,000 처럼 쉼표 (값은 숫자만 저장)
+        value={value ? num(Number(value)) : ''}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value.replace(/[^0-9]/g, ''))}
         className={`${inputClass} pr-10 text-right tabular-nums`}

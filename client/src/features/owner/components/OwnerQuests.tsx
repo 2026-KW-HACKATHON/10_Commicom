@@ -4,6 +4,7 @@ import { FeedIcon } from '@/features/quest/components/QuestUi'
 import { useQuestSubscription, useQuestTemplates, useToggleQuestTemplate } from '@/features/quest/hooks'
 import { CATEGORY_TEMPLATES, questTemplate, type OwnerQuestTemplate } from '@/features/quest/schema'
 import { errorMessage } from '@/shared/lib/error'
+import { num } from '@/shared/lib/format'
 import { useMyStore, useMyStoreId } from '../hooks'
 import { OWNER_ILLUST } from '../illustrations'
 import { OwnerScreen } from './OwnerUi'
@@ -52,7 +53,7 @@ export function OwnerQuests() {
           <br />
           참여 가게가 한 곳도 없는 퀘스트는 손님에게 보이지 않아요.
         </p>
-        <p className="mt-3 inline-block rounded-full bg-q-mint px-3 py-1 text-xs font-bold text-q-green">참여 중 {joinedCount}개</p>
+        <p className="mt-3 inline-block rounded-full bg-q-mint px-3 py-1 text-xs font-bold text-q-green">참여 중 {num(joinedCount)}개</p>
       </section>
 
       {isLoading && <div className="mt-3 h-40 animate-pulse rounded-2xl bg-white" />}
@@ -122,7 +123,7 @@ function TemplateCard({
           </span>
           <span className="flex shrink-0 items-center gap-0.5">
             <FeedIcon className="size-3.5" />
-            보상 {t.rewardFeed}개
+            보상 {num(t.rewardFeed)}개
           </span>
         </p>
       </div>

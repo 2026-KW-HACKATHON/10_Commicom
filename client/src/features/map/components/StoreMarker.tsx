@@ -1,4 +1,5 @@
 import { CustomOverlayMap } from 'react-kakao-maps-sdk'
+import { num } from '@/shared/lib/format'
 import type { StoreGroup } from '../hooks'
 import type { StoreSummary } from '../schema'
 import { PinIcon } from './PinIcon'
@@ -83,14 +84,14 @@ export function StoreMarker({
               className={`mb-1.5 max-w-48 truncate rounded-full border border-mint-line bg-mint px-[10px] py-1 text-green-6 ${bubbleText}`}
             >
               {group.stores.some((s) => s.isQuestStore) && <QuestFlag />}
-              {isGroup ? `${truncate(first.name, 6)} 외 ${rest.length}개` : first.name}
+              {isGroup ? `${truncate(first.name, 6)} 외 ${num(rest.length)}개` : first.name}
             </button>
           )}
           <button type="button" aria-label={first.name} onClick={handlePinClick} className="relative">
             <PinIcon active={Boolean(selected)} />
             {couponCount > 0 && (
               <span
-                aria-label={`쿠폰 ${couponCount}개`}
+                aria-label={`쿠폰 ${num(couponCount)}개`}
                 className="absolute -top-1.5 -right-3 rounded-full border border-white bg-point-red px-1.5 text-[10px] leading-4 font-bold text-white"
               >
                 쿠폰
@@ -158,7 +159,7 @@ function StorePopup({
             >
               <span>쿠폰 받기</span>
               <span className="flex items-center gap-1">
-                <span className="rounded-full bg-white px-2 py-px text-xs">{coupons}장</span>›
+                <span className="rounded-full bg-white px-2 py-px text-xs">{num(coupons)}장</span>›
               </span>
             </button>
           )}

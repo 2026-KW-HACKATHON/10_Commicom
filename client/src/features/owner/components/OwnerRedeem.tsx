@@ -4,6 +4,7 @@ import { discountText, minOrderText, type RedeemResult } from '@/features/coupon
 import { PrimaryButton } from '@/features/quest/components/QuestUi'
 import { mockFor } from '@/mocks/db'
 import { errorMessage } from '@/shared/lib/error'
+import { num } from '@/shared/lib/format'
 import { useMyStoreId } from '../hooks'
 import { OWNER_ILLUST } from '../illustrations'
 import { currentMonth, dateTimeText, isToday } from '../date'
@@ -114,7 +115,7 @@ export function RedeemPanel({ autoFocus = false }: { autoFocus?: boolean }) {
         )}
       </OwnerCard>
 
-      <OwnerCard title="오늘 처리한 쿠폰" className="mt-3" aside={<span className="text-xs text-q-muted">{today.length}건</span>}>
+      <OwnerCard title="오늘 처리한 쿠폰" className="mt-3" aside={<span className="text-xs text-q-muted">{num(today.length)}건</span>}>
         {today.length === 0 ? (
           <p className="py-3 text-center text-sm text-q-muted">아직 없어요</p>
         ) : (
