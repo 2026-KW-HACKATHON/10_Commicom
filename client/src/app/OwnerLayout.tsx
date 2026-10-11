@@ -8,7 +8,7 @@ import { OwnerStoreRegister } from '@/features/owner/components/OwnerStoreRegist
 import { useMyStoreQuery } from '@/features/owner/hooks'
 import { OWNER_ILLUST } from '@/features/owner/illustrations'
 import { errorCode, errorMessage } from '@/shared/lib/error'
-import { CreateNavIcon, FlagNavIcon, HomeNavIcon, ScanNavIcon, TicketNavIcon } from '@/shared/ui/icons'
+import { CreateNavIcon, FlagNavIcon, HomeNavIcon, TicketNavIcon } from '@/shared/ui/icons'
 import { useMe } from '@/stores/authStore'
 import { useModeStore } from '@/stores/modeStore'
 import { AppShell, type TabItem } from './AppShell'
@@ -19,7 +19,6 @@ const TABS: TabItem[] = [
   { to: '/owner/quests', label: '퀘스트', Icon: FlagNavIcon },
   // 피드 제작이 주 동작이라 가운데 (예전엔 우상단 + 로만 만들 수 있었음)
   { to: '/owner/create', label: '제작', Icon: CreateNavIcon },
-  { to: '/owner/redeem', label: '사용 처리', Icon: ScanNavIcon },
   // 쿠폰 관리 + 정산
   { to: '/owner/coupons', label: '쿠폰', Icon: TicketNavIcon },
 ]
@@ -35,7 +34,7 @@ const MENU: MenuItem[] = [
 ]
 
 /**
- * 사장님 모드: 홈 / 퀘스트 / 쿠폰 / 사용 처리 / 정산.
+ * 사장님 모드: 홈(쿠폰 사용 처리 포함) / 퀘스트 / 제작 / 쿠폰(관리·정산).
  * 손님 계정으로 로그인했으면 들어오지 못하게 안내 (로그인 전에는 시연용으로 열어 둠).
  */
 export function OwnerLayout() {

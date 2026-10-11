@@ -9,6 +9,7 @@ import { useMyStoreId, useMyStoreName, useStoreManageAccess } from '../hooks'
 import { OWNER_ILLUST } from '../illustrations'
 import { currentMonth } from '../date'
 import { OwnerCard, OwnerScreen } from './OwnerUi'
+import { RedeemPanel } from './OwnerRedeem'
 
 /** 사장님 홈 — 우리 가게 현황과 바로가기 */
 export function OwnerHome() {
@@ -70,12 +71,16 @@ export function OwnerHome() {
       <OwnerCard title="바로가기" className="mt-3">
         <div className="grid grid-cols-5 gap-1">
           <Shortcut to="/owner/create" image={OWNER_ILLUST.videoEdit} label="게시물 제작" />
-          <Shortcut to="/owner/redeem" image={OWNER_ILLUST.coupon} label="쿠폰 사용" />
+          <Shortcut to="/owner/coupons?view=settlement" image={OWNER_ILLUST.coupon} label="정산" />
           <Shortcut to="/owner/coupons/new" image={OWNER_ILLUST.couponNew} label="쿠폰 발행" />
           <Shortcut to="/owner/quest-store" image={OWNER_ILLUST.qr} label="방문 QR" />
           <Shortcut to="/owner/pro" image={OWNER_ILLUST.pro} label="PRO" />
         </div>
       </OwnerCard>
+
+      {/* 쿠폰 사용 처리는 따로 탭 없이 홈에서 바로 */}
+      <h3 className="mt-5 mb-2 px-1 text-[15px] font-bold text-q-text">쿠폰 사용 처리</h3>
+      <RedeemPanel />
 
       {/* 베타 체험은 메뉴의 "체험 처음부터 다시 하기"로 (여기서 지우면 체험 계정까지 지워짐) */}
       {HAS_MOCK && !IS_BETA && (

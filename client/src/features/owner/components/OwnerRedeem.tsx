@@ -11,8 +11,20 @@ import { OwnerCard, OwnerScreen } from './OwnerUi'
 
 const CODE_LENGTH = 6
 
-/** 쿠폰 사용 처리 (4-7) — 손님이 보여준 6자리 코드 입력 */
+/** 쿠폰 사용 처리 화면 (4-7) — 메뉴에서 따로 열 때 */
 export function OwnerRedeem() {
+  return (
+    <OwnerScreen>
+      <RedeemPanel autoFocus />
+    </OwnerScreen>
+  )
+}
+
+/**
+ * 손님이 보여준 6자리 코드로 쿠폰 사용 처리 + 오늘 처리한 쿠폰.
+ * 사장님 홈에도 넣어서 씀 (홈에서는 열자마자 키보드가 올라오지 않게 autoFocus 끔)
+ */
+export function RedeemPanel({ autoFocus = false }: { autoFocus?: boolean }) {
   const storeId = useMyStoreId()
   const redeem = useRedeemCoupon()
   const { data: settlement } = useSettlement(storeId, currentMonth())
@@ -33,7 +45,7 @@ export function OwnerRedeem() {
 
   if (done) {
     return (
-      <OwnerScreen>
+      <>
         <section className="rounded-3xl bg-white px-6 py-8 text-center">
           <img src={OWNER_ILLUST.coupon} alt="" className="mx-auto h-[130px] w-auto object-contain drop-shadow" />
           <p className="mt-3 text-sm font-bold text-q-green">사용 처리 완료</p>
@@ -49,12 +61,12 @@ export function OwnerRedeem() {
         <PrimaryButton className="mt-4" onClick={() => setDone(null)}>
           다음 쿠폰 처리하기
         </PrimaryButton>
-      </OwnerScreen>
+      </>
     )
   }
 
   return (
-    <OwnerScreen>
+    <>
       <OwnerCard>
         <img src={OWNER_ILLUST.coupon} alt="" className="mx-auto mb-2 h-[92px] w-auto object-contain" />
         <p className="text-center text-[15px] font-bold text-q-text">손님 쿠폰의 사용 코드를 입력하세요</p>
@@ -76,7 +88,7 @@ export function OwnerRedeem() {
         <input
           ref={inputRef}
           value={code}
-          autoFocus
+          autoFocus={autoFocus}
           autoCapitalize="characters"
           autoComplete="off"
           maxLength={CODE_LENGTH}
@@ -116,6 +128,6 @@ export function OwnerRedeem() {
           </ul>
         )}
       </OwnerCard>
-    </OwnerScreen>
+    </>
   )
 }
