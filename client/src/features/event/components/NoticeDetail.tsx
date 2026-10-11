@@ -13,7 +13,7 @@ export function NoticeDetail() {
       <div className="px-5 pt-16 text-center text-sm text-q-muted">
         공지사항을 찾을 수 없어요.
         <br />
-        <Link to={`${base}?tab=notice`} className="mt-3 inline-block font-bold text-green-6 underline">
+        <Link to={base} className="mt-3 inline-block font-bold text-green-6 underline">
           공지사항 목록으로
         </Link>
       </div>

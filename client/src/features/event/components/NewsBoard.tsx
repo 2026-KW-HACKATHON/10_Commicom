@@ -5,15 +5,16 @@ import { useNewsBase } from '../useNewsBase'
 
 type Tab = 'event' | 'notice'
 
+/** 공지사항이 먼저 (왼쪽·기본), 이벤트는 ?tab=event */
 const TABS: { key: Tab; label: string }[] = [
-  { key: 'event', label: '이벤트' },
   { key: 'notice', label: '공지사항' },
+  { key: 'event', label: '이벤트' },
 ]
 
 /** 메뉴 → 이벤트 · 공지사항: 위 탭으로 고르고, 목록에서 누르면 상세 */
 export function NewsBoard() {
   const [params, setParams] = useSearchParams()
-  const tab: Tab = params.get('tab') === 'notice' ? 'notice' : 'event'
+  const tab: Tab = params.get('tab') === 'event' ? 'event' : 'notice'
 
   return (
     <div className="h-full overflow-y-auto px-5 pt-4 pb-10">
@@ -24,14 +25,14 @@ export function NewsBoard() {
             type="button"
             role="tab"
             aria-selected={t.key === tab}
-            onClick={() => setParams(t.key === 'event' ? {} : { tab: t.key }, { replace: true })}
+            onClick={() => setParams(t.key === 'notice' ? {} : { tab: t.key }, { replace: true })}
             className="h-10 rounded-full text-[14px] font-bold text-q-muted aria-selected:bg-white aria-selected:text-green-6 aria-selected:shadow-sm"
           >
             {t.label}
           </button>
         ))}
       </div>
-      {tab === 'event' ? <EventItems /> : <NoticeItems />}
+      {tab === 'notice' ? <NoticeItems /> : <EventItems />}
     </div>
   )
 }
