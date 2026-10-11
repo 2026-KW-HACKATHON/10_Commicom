@@ -3,6 +3,7 @@ import { mockStoreEdit, saveMockStoreEdit } from '@/features/map/mock'
 import type { StoreDetail, StoreEdit } from '@/features/map/schema'
 import { mockFor } from '@/mocks/db'
 import { api, request } from '@/shared/api/client'
+import { shrinkForUpload } from '@/shared/lib/image'
 
 const wait = (ms = 400) => new Promise((r) => setTimeout(r, ms))
 
@@ -37,8 +38,8 @@ export async function updateMyStore(storeId: number, patch: StoreEdit, image?: F
   }
   if (image) {
     const form = new FormData()
-    form.append('image', image)
-    await request(api.patch(`/api/stores/${storeId}/image`, form))
+    form.append('image', await shrinkForUpload(image))
+    await request(api.patch(`/api/stores/${storeId}/image`, form, { timeout: 60_000 }))
   }
   if (Object.keys(body).length > 0) await request(api.patch(`/api/stores/${storeId}`, body))
 }
@@ -55,8 +56,8 @@ export async function registerMyStore(storeId: number, store: StoreEdit, image?:
   const data = { name: store.name, category: store.category, ...(await addressFields(store)) }
   const form = new FormData()
   form.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }))
-  if (image) form.append('image', image)
-  await request<StoreDetail>(api.post('/api/stores', form))
+  if (image) form.append('image', await shrinkForUpload(image))
+  await request<StoreDetail>(api.post('/api/stores', form, { timeout: 60_000 }))
 }
 
 /** 편집 화면 초기값: 도로명·상세주소를 나눠 둔 값 (목업만 보관, 서버는 address 하나) */

@@ -1,5 +1,6 @@
 import { USE_MOCK } from '@/mocks/db'
 import { api, request } from '@/shared/api/client'
+import { shrinkForUpload } from '@/shared/lib/image'
 import { mockExtractMenus, mockGenerationApi, mockShortformApi } from './mock'
 import type { GenerationCreated, GenerationRequest, GenerationState, MenuItem, ShortformDetail } from './schema'
 
@@ -20,9 +21,10 @@ function toMenuInfo(body: GenerationRequest) {
 export const MAX_POST_PHOTOS = 4
 
 /** POST /api/stores/{storeId}/photos (multipart photos) — 게시물에 넣을 사진을 올리고 주소를 받음 (사장님 본인 가게만) */
-export function uploadStorePhotos(storeId: number, files: File[]): Promise<string[]> {
+export async function uploadStorePhotos(storeId: number, files: File[]): Promise<string[]> {
   const form = new FormData()
-  files.forEach((f) => form.append('photos', f))
+  // 4장을 한 번에 보내니 장마다 더 작게 (합쳐서 4.5MB 아래로)
+  for (const f of files) form.append('photos', await shrinkForUpload(f, 1600))
   return request(api.post(`/api/stores/${storeId}/photos`, form, { timeout: 60_000 }))
 }
 
@@ -80,7 +82,7 @@ export async function extractMenus(storeId: number, files: File[], _mapUrl: stri
   const menus: MenuItem[] = []
   for (const file of files) {
     const form = new FormData()
-    form.append('image', file)
+    form.append('image', await shrinkForUpload(file))
     const { menuText } = await request<{ menuText: string }>(api.post('/api/ocr', form, { timeout: 60_000 }))
     menuText.split('\n').forEach((line) => {
       const item = parseMenuLine(line)
