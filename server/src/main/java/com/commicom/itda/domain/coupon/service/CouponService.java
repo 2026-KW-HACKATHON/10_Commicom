@@ -24,6 +24,7 @@ import com.commicom.itda.domain.coupon.repository.CouponRedemptionRepository;
 import com.commicom.itda.domain.coupon.repository.CouponRepository;
 import com.commicom.itda.domain.coupon.repository.UserCouponRepository;
 import com.commicom.itda.domain.event.service.EarlyOwnerEventService;
+import com.commicom.itda.domain.member.entity.Role;
 import com.commicom.itda.domain.store.entity.Store;
 import com.commicom.itda.domain.store.repository.StoreRepository;
 import com.commicom.itda.global.exception.BusinessException;
@@ -78,7 +79,7 @@ public class CouponService {
 
     @Transactional
     public CreateResponse create(Long memberId, Long storeId, CreateRequest request) {
-        findMyStore(memberId, storeId);
+        Store store = findMyStore(memberId, storeId);
         int value = request.discountValue();
         if (request.discountType() == DiscountType.AMOUNT && value < AMOUNT_MIN) {
             throw new BusinessException(ErrorCode.COUPON_AMOUNT_TOO_SMALL);
@@ -96,8 +97,9 @@ public class CouponService {
                 .validDays(request.validDays())
                 .useAsPigeonReward(Boolean.TRUE.equals(request.useAsPigeonReward()))
                 .build());
-        // 초기 사장님 이벤트: 비둘기 보상 쿠폰을 처음 발행한 선착순 10곳에 PRO·퀘스트 가게 혜택
-        boolean earlyOwnerReward = coupon.isUseAsPigeonReward() && earlyOwnerEventService.onPigeonRewardCouponCreated(storeId, coupon.getId());
+        // 초기 사장님 이벤트: 비둘기 보상 쿠폰을 처음 발행한 선착순 10곳에 PRO·퀘스트 가게 혜택 (관리자 가게는 자리를 차지하지 않음)
+        boolean admin = store.getOwner() != null && store.getOwner().getRole() == Role.ADMIN;
+        boolean earlyOwnerReward = !admin && coupon.isUseAsPigeonReward() && earlyOwnerEventService.onPigeonRewardCouponCreated(storeId, coupon.getId());
         return new CreateResponse(coupon.getId(), coupon.getStatus(), KstTime.offset(KstTime.now()), earlyOwnerReward);
     }
 
@@ -247,8 +249,11 @@ public class CouponService {
     }
 
     private List<Coupon> pigeonRewardPool() {
+        // 관리자 가게 쿠폰은 손님에게 나가지 않게
+        Set<Long> hidden = new HashSet<>(storeRepository.findAdminStoreIds());
         return couponRepository.findAllByStatusAndUseAsPigeonRewardTrue(CouponStatus.ACTIVE).stream()
                 .filter(Coupon::isIssuable)
+                .filter(c -> !hidden.contains(c.getStoreId()))
                 .toList();
     }
 

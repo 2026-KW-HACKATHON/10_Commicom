@@ -44,7 +44,10 @@ public class StoreService {
                 : storeRepository.findAllByCategory(category);
         Set<Long> questStoreIds = new HashSet<>(questSubscriptionRepository.findActiveStoreIds(KstTime.now()));
         Map<Long, Integer> couponCounts = couponService.issuableCountByStore();
+        // 관리자 가게는 손님 지도·목록에 안 보이게
+        Set<Long> hidden = new HashSet<>(storeRepository.findAdminStoreIds());
         return StoreListResponse.from(stores.stream()
+                .filter(s -> !hidden.contains(s.getId()))
                 .map(s -> StoreSummaryResponse.from(s, questStoreIds.contains(s.getId()), couponCounts.getOrDefault(s.getId(), 0)))
                 .toList());
     }

@@ -43,7 +43,9 @@ export function OwnerLayout() {
   if (!canUseOwnerMode(me)) return <OwnerAccountNotice nickname={me?.nickname ?? ''} />
   // 서버의 내 가게를 불러오는 동안엔 샘플 가게 화면이 잠깐 보이지 않게 기다림
   if (myStore.isLoading) return <div className="mx-auto h-full max-w-[430px] animate-pulse bg-app" />
-  if (errorCode(myStore.error) === 'STORE404_2') {
+  // 관리자는 가게가 없어도 사장님 화면을 둘러볼 수 있게 (가게 등록 화면으로 막지 않음)
+  const adminPreview = me?.role === 'ADMIN' && errorCode(myStore.error) === 'STORE404_2'
+  if (errorCode(myStore.error) === 'STORE404_2' && !adminPreview) {
     return (
       <>
         <OwnerStoreRegister />
@@ -51,7 +53,7 @@ export function OwnerLayout() {
       </>
     )
   }
-  if (myStore.isError) {
+  if (myStore.isError && !adminPreview) {
     return (
       <div className="mx-auto flex h-full max-w-[430px] flex-col items-center justify-center gap-3 bg-app px-6 text-center">
         <p className="text-[15px] text-ink">{errorMessage(myStore.error, '내 가게 정보를 불러오지 못했어요')}</p>
