@@ -50,7 +50,10 @@ export const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()
  * 사장님 모드를 쓸 수 있는지: 사장님 계정이거나, 아직 로그인 전(시연용으로 자유 전환).
  * 손님 계정으로 로그인했으면 막음.
  */
-export const canUseOwnerMode = (me: AuthMember | null) => !me || me.role === 'OWNER'
+/** 사장님 기능을 쓸 수 있는 역할 (관리자도 시연·확인을 위해 사장님 화면을 씀) */
+export const isOwnerRole = (role: AuthMember['role'] | undefined) => role === 'OWNER' || role === 'ADMIN'
+
+export const canUseOwnerMode = (me: AuthMember | null) => !me || isOwnerRole(me.role)
 
 /** 회원 유형 → 앱 이용 모드 (RESIDENT는 손님 화면) */
 export const modeOfRole = (role: AuthMember['role']): AppMode => (role === 'OWNER' ? 'OWNER' : 'USER')
