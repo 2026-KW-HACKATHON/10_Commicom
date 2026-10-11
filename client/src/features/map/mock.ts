@@ -8,6 +8,11 @@ export const MOCK_STORES: StoreSummary[] = [
   { storeId: 4, name: '춘리마라탕', category: 'RESTAURANT', categoryName: '음식점', address: '서울 노원구 광운로 30', latitude: 37.6188, longitude: 127.0585, thumbnailUrl: null, stepFree: false },
   { storeId: 5, name: '헤어살롱 잇다', category: 'BEAUTY', categoryName: '뷰티', address: '서울 노원구 석계로', latitude: 37.6168, longitude: 127.0575, thumbnailUrl: null, stepFree: true },
   { storeId: 6, name: '월계 정육마트', category: 'FOOD_RETAIL', categoryName: '식품 판매', address: '서울 노원구 월계로', latitude: 37.6215, longitude: 127.0625, thumbnailUrl: null, stepFree: true },
+  { storeId: 7, name: '월계 통닭', category: 'RESTAURANT', categoryName: '음식점', address: '서울 노원구 광운로 12', latitude: 37.6208, longitude: 127.0596, thumbnailUrl: null, stepFree: true },
+  { storeId: 8, name: '광운반점', category: 'RESTAURANT', categoryName: '음식점', address: '서울 노원구 광운로 41', latitude: 37.6181, longitude: 127.0603, thumbnailUrl: null, stepFree: false },
+  { storeId: 9, name: '스시 월계', category: 'RESTAURANT', categoryName: '음식점', address: '서울 노원구 월계로 52', latitude: 37.6199, longitude: 127.0624, thumbnailUrl: null, stepFree: true },
+  { storeId: 10, name: '라 피아짜', category: 'RESTAURANT', categoryName: '음식점', address: '서울 노원구 석계로 18', latitude: 37.6171, longitude: 127.0592, thumbnailUrl: null, stepFree: true },
+  { storeId: 11, name: '광운 동네마트', category: 'FOOD_RETAIL', categoryName: '식품 판매', address: '서울 노원구 월계로 30', latitude: 37.6212, longitude: 127.0611, thumbnailUrl: null, stepFree: true },
 ]
 
 /** 가게 상세 조회에만 있는 값 (명세 GET /api/stores/{storeId}) */
@@ -18,6 +23,11 @@ export const MOCK_STORE_DETAILS: Record<number, { phone: string | null; business
   4: { phone: '02-000-0004', businessHours: '매일 11:00-21:30', description: '원하는 재료를 골라 담는 마라탕. 맵기는 입맛대로 골라 보세요.', elevator: false },
   5: { phone: '02-000-0005', businessHours: '매일 10:00-20:00 (예약 우선)', description: '학생 할인 있는 동네 미용실. 예약 없이도 방문 가능해요.', elevator: true },
   6: { phone: '02-000-0006', businessHours: '매일 09:00-21:00', description: '매일 아침 들여오는 신선한 고기를 파는 정육점.', elevator: false },
+  7: { phone: '02-000-0007', businessHours: '매일 16:00-02:00', description: '가마솥에 튀기는 옛날 통닭과 양념치킨. 치맥 하기 좋은 동네 치킨집이에요.', elevator: false },
+  8: { phone: '02-000-0008', businessHours: '매일 11:00-21:00 (브레이크 15:00-16:30)', description: '직접 뽑은 수타면 짜장면과 바삭한 찹쌀 탕수육이 대표 메뉴예요.', elevator: false },
+  9: { phone: '02-000-0009', businessHours: '화-일 11:30-22:00 (월 휴무)', description: '매일 들여오는 생선으로 쥐는 초밥. 점심 오마카세가 인기예요.', elevator: true },
+  10: { phone: '02-000-0010', businessHours: '매일 11:30-22:00', description: '화덕에서 굽는 나폴리 피자와 생면 파스타, 와인 한 잔까지.', elevator: true },
+  11: { phone: '02-000-0011', businessHours: '매일 08:00-23:00', description: '산지에서 바로 온 채소·과일과 오늘의 특가. 동네 배달도 해 드려요.', elevator: false },
 }
 
 /**

@@ -14,6 +14,11 @@ const DETAILS: Record<number, { menus: string[]; description: string }> = {
   4: { menus: ['마라탕 100g - 1,800원', '꿔바로우(소) - 12,000원'], description: '원하는 재료를 골라 담는 마라탕. 숙주·푸주·피쉬볼 듬뿍, 맵기는 입맛대로 골라 보세요.' },
   5: { menus: ['커트 - 15,000원', '펌 - 60,000원~', '염색 - 50,000원~'], description: '커트·펌·염색 모두 OK! 학생 할인 있고 예약 없이도 방문 가능한 동네 미용실이에요 ✂️' },
   6: { menus: ['한우 꽃등심 1++ 100g - 15,000원', '한우 채끝 1++ 100g - 13,000원', '한우 안심 100g - 16,000원'], description: '매일 아침 들여오는 신선한 국내산 한우! 꽃등심·채끝·안심 모두 1++ 등급으로 준비했어요 🥩' },
+  7: { menus: ['후라이드 - 18,000원', '양념치킨 - 19,000원', '생맥주 500cc - 4,000원'], description: '가마솥에 바삭하게 튀긴 옛날 통닭! 달콤매콤 양념치킨에 시원한 생맥주 한 잔, 오늘 저녁은 치맥 어때요? 🍗' },
+  8: { menus: ['짜장면 - 7,000원', '찹쌀 탕수육(소) - 16,000원', '군만두 - 6,000원'], description: '직접 뽑은 쫄깃한 수타면 짜장면과 겉바속촉 찹쌀 탕수육. 군만두는 서비스로 드릴 때도 있어요 🥟' },
+  9: { menus: ['모둠초밥 12p - 18,000원', '연어초밥 8p - 14,000원', '점심 오마카세 - 35,000원'], description: '매일 아침 들여온 생선으로 쥐는 신선한 초밥. 점심 오마카세는 예약하면 더 좋아요 🍣' },
+  10: { menus: ['마르게리따 피자 - 17,000원', '봉골레 파스타 - 16,000원', '하우스 와인 - 8,000원'], description: '화덕에서 90초 만에 구워 내는 나폴리 피자와 생면 파스타. 와인 한 잔 곁들이기 좋은 분위기예요 🍕' },
+  11: { menus: ['오늘의 채소 꾸러미 - 9,900원', '제철 과일 - 시세', '2만 원 이상 동네 배달 무료'], description: '산지에서 바로 온 싱싱한 채소와 과일! 매일 바뀌는 오늘의 특가, 2만 원 이상이면 동네 배달도 무료예요 🥬' },
 }
 
 const CDN = 'https://d3fsd6ho09c0x2.cloudfront.net/test-feed'
@@ -27,6 +32,11 @@ const POST_IMAGES: Record<number, string[]> = {
   4: [`${CDN}/malatang.jpg`],
   5: ['/demo/salon.jpg'],
   6: ['/demo/butcher.jpg'],
+  7: ['/demo/chicken.jpg'],
+  8: ['/demo/chinese.jpg'],
+  9: ['/demo/sushi.jpg'],
+  10: ['/demo/pasta.jpg'],
+  11: ['/demo/mart.jpg'],
 }
 
 export const MOCK_SHORTFORMS: Shortform[] = MOCK_STORES.map((store, i) => {
@@ -41,7 +51,8 @@ export const MOCK_SHORTFORMS: Shortform[] = MOCK_STORES.map((store, i) => {
     menus: DETAILS[store.storeId]?.menus ?? [],
     description: DETAILS[store.storeId]?.description ?? '',
     ...(images ? { posterUrl: images[0], images } : { videoUrl: SAMPLE_VIDEO, posterUrl: SAMPLE_POSTER, frame: SAMPLE_FRAME }),
-    createdAt: `2026-10-${String(10 - i).padStart(2, '0')}T12:00:00`,
+    // 하루씩 앞선 날짜 (최신 글이 위)
+    createdAt: new Date(Date.UTC(2026, 9, 10 - i, 3)).toISOString().slice(0, 19),
   }
 })
 
