@@ -38,6 +38,7 @@ public class SecurityConfig {
             "/api/shortforms", "/api/shortforms/**",
             "/api/quests",
             "/api/coupons/pigeon-reward-pool",
+            "/api/events/**",
             "/api/members/*/profile",
             "/api/members/check-email", "/api/members/check-nickname",
     };

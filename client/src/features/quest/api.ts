@@ -16,6 +16,8 @@ import type {
   QuestSubscription,
   VisitRequest,
   VisitResult,
+  VoucherExchangeResult,
+  VoucherList,
 } from './schema'
 
 /* 2. Quest */
@@ -129,4 +131,16 @@ export async function addTestFeed(amount: number) {
 export function fetchPigeonHistory(page = 0, size = 20): Promise<HistoryPage> {
   if (mockFor('quest')) return mockPigeonApi.history(page, size)
   return request(api.get('/api/pigeon/history', { params: { page, size } }))
+}
+
+/** 내 쿠폰 교환권 (기한 지난 건 이때 먹이로 바뀜) */
+export function fetchVouchers(): Promise<VoucherList> {
+  if (mockFor('quest')) return mockPigeonApi.vouchers()
+  return request(api.get('/api/pigeon/vouchers'))
+}
+
+/** 교환권 → 쿠폰 (쿠폰이 없으면 VOUCHER409_2) */
+export function postExchangeVoucher(voucherId: number): Promise<VoucherExchangeResult> {
+  if (mockFor('quest')) return mockPigeonApi.exchangeVoucher(voucherId)
+  return request(api.post(`/api/pigeon/vouchers/${voucherId}/exchange`))
 }

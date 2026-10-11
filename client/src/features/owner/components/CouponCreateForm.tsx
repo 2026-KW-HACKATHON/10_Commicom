@@ -1,9 +1,13 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useState, type ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import pigeonStar from '@/assets/event/pigeon-star.png'
 import { useCreateCoupon } from '@/features/coupon/hooks'
+import { useEarlyOwnerEvent } from '@/features/event/api'
 import { discountText, RATE_MAX, RATE_MIN, validateCoupon, type CreateCouponRequest, type DiscountType } from '@/features/coupon/schema'
 import { PrimaryButton } from '@/features/quest/components/QuestUi'
 import { errorMessage } from '@/shared/lib/error'
+import { toast } from '@/stores/toastStore'
 import { useMyStoreId } from '../hooks'
 import { OWNER_ILLUST } from '../illustrations'
 
@@ -11,6 +15,8 @@ import { OWNER_ILLUST } from '../illustrations'
 export function CouponCreateForm() {
   const navigate = useNavigate()
   const create = useCreateCoupon(useMyStoreId())
+  const { data: event } = useEarlyOwnerEvent()
+  const queryClient = useQueryClient()
   const [form, setForm] = useState({
     title: '',
     discountType: 'AMOUNT' as DiscountType,
@@ -41,7 +47,14 @@ export function CouponCreateForm() {
     }
     setError(null)
     create.mutate(body, {
-      onSuccess: () => navigate('/owner/coupons', { replace: true }),
+      onSuccess: (result) => {
+        if (result.earlyOwnerReward) {
+          toast('🎉 초기 사장님 이벤트 당첨! 잇다 PRO·퀘스트 가게가 적용됐어요')
+          // PRO·퀘스트 가게 상태를 다시 받음
+          queryClient.invalidateQueries()
+        }
+        navigate('/owner/coupons', { replace: true })
+      },
       onError: (e) => setError(errorMessage(e)),
     })
   }
@@ -123,6 +136,19 @@ export function CouponCreateForm() {
           <span className="text-xs text-q-muted">손님이 비둘기를 레벨업할 때 뽑기 보상으로 우리 쿠폰이 나갈 수 있어요</span>
         </span>
       </label>
+
+      {event && event.status !== 'CLOSED' && (
+        <Link to="/owner/events" className="mt-2 flex items-center gap-3 rounded-2xl border border-dashed border-point-orange bg-point-yellow/15 py-2 pr-4 pl-2">
+          <img src={pigeonStar} alt="" className="size-12 shrink-0 object-contain" />
+          <span className="min-w-0 flex-1 text-[12px] leading-snug text-q-sub">
+            <b className="block text-[13px] text-point-red-dark">
+              초기 사장님 이벤트 {event.status === 'OPEN' ? `· 남은 자리 ${event.remaining}/${event.limit}` : `· ${new Date(event.startsAt).getMonth() + 1}월 ${new Date(event.startsAt).getDate()}일 시작`}
+            </b>
+            위 칸을 체크하고 발행하면 선착순 {event.limit}곳에 PRO + 퀘스트 가게 1개월 무료
+          </span>
+          <span className="text-q-muted">›</span>
+        </Link>
+      )}
 
       <div className="mt-5 rounded-2xl border border-dashed border-q-line px-4 py-3 text-center">
         <p className="text-xs text-q-muted">미리보기</p>

@@ -69,14 +69,42 @@ export interface RewardCoupon {
   expiresAt: string
 }
 
+/**
+ * 쿠폰 교환권: 레벨업 쿠폰이 나왔는데 쿠폰을 내놓은 사장님이 없을 때 받음.
+ * ISSUED 바꿀 수 있음 / EXCHANGED 쿠폰으로 바꿈 / EXPIRED 기한이 지나 먹이로 바뀜
+ */
+export interface RewardVoucher {
+  voucherId: number
+  status: 'ISSUED' | 'EXCHANGED' | 'EXPIRED'
+  expiresAt: string
+  userCoupon: RewardCoupon | null
+}
+
+/** GET /api/pigeon/vouchers */
+export interface VoucherList {
+  vouchers: RewardVoucher[]
+  /** 지금 바꿀 쿠폰이 있는지 */
+  poolAvailable: boolean
+  validDays: number
+  expiryFeed: number
+}
+
+/** POST /api/pigeon/vouchers/{id}/exchange — 기한이 이미 지났으면 feedGained 만큼 먹이로 바뀜 */
+export interface VoucherExchangeResult {
+  voucher: RewardVoucher
+  feedGained: number
+  feedBalance: number
+}
+
 /** 먹이를 지급하는 모든 API 응답의 levelUps[] (3-0) */
 export interface LevelUp {
   fromLevel: number
   toLevel: number
   reward: {
-    type: 'FEED' | 'COUPON'
+    type: 'FEED' | 'COUPON' | 'VOUCHER'
     feedAmount: number
     userCoupon: RewardCoupon | null
+    voucher?: RewardVoucher | null
   }
 }
 
@@ -258,13 +286,10 @@ export interface OwnerQuestTemplate {
 
 export const MAX_LEVEL = 10
 
-/**
- * 레벨업 뽑기에서 쿠폰이 나왔는데 쿠폰을 내놓은 사장님이 없을 때 대신 주는 먹이 (서버 PigeonRewardCouponIssuer.FALLBACK_FEED).
- * 일반 먹이 보상은 1·2개뿐이라 3개면 쿠폰이 대체된 것
- */
-export const COUPON_FALLBACK_FEED = 3
-export const isCouponFallback = (reward: { type: string; feedAmount: number }) =>
-  reward.type === 'FEED' && reward.feedAmount === COUPON_FALLBACK_FEED
+/** 쿠폰 교환권 기한 (3주, 서버 PigeonService.VOUCHER_DAYS) */
+export const VOUCHER_DAYS = 21
+/** 교환권을 기한 안에 못 바꾸면 대신 주는 먹이 (서버 VOUCHER_EXPIRY_FEED) */
+export const VOUCHER_EXPIRY_FEED = 4
 
 /** key = 현재 레벨 (key → key+1 레벨업). 2026-10-08 확정 표, 0 = 알(먹이 1개로 부화, 뽑기 없음) */
 export const LEVEL_TABLE: Record<number, { requiredFeed: number; coupon: number; feed1: number; feed2: number }> = {

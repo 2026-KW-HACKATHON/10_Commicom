@@ -27,7 +27,8 @@ import {
   TEMPLATE_REWARD_FEED,
   TEMPLATE_TARGET,
   MAX_LEVEL,
-  COUPON_FALLBACK_FEED,
+  VOUCHER_DAYS,
+  VOUCHER_EXPIRY_FEED,
   PIGEON_BREEDS,
   VISIT_RADIUS_M,
   type AlbumItem,
@@ -38,6 +39,10 @@ import {
   type HistoryPage,
   type LevelUp,
   type Pigeon,
+  type RewardCoupon,
+  type RewardVoucher,
+  type VoucherExchangeResult,
+  type VoucherList,
   type PigeonBreed,
   type QuestListResult,
   type QuestQr,
@@ -128,7 +133,9 @@ interface Db {
   pigeon: { level: number; currentFeed: number; feedBalance?: number; breed?: PigeonBreed | null; generation?: number; startedAt?: string }
   /** 졸업한 비둘기 (2026-10-09 추가 — 예전 저장본엔 없을 수 있음) */
   graduates?: AlbumItem[]
-  feedLogs: { date: string; source: 'DAILY' | 'AD' | 'QUEST' | 'DRAW'; amount: number; adTransactionId?: string }[]
+  feedLogs: { date: string; source: 'DAILY' | 'AD' | 'QUEST' | 'DRAW' | 'VOUCHER'; amount: number; adTransactionId?: string }[]
+  /** 쿠폰 교환권 (2026-10-12 추가 — 예전 저장본엔 없을 수 있음) */
+  vouchers?: RewardVoucher[]
   history: HistoryItem[]
   quests: { questId: number; title: string; type: QuestType; targetCount: number; rewardFeed: number; basicCount: number }[]
   visits: { questId: number; storeId: number; date: string }[]
@@ -350,7 +357,7 @@ export function mockStoreExtras(storeId: number) {
 
 /* ── 먹이 지급: 보유 먹이에 쌓기만 함 (레벨업 없음) ── */
 
-function grantFeed(amount: number, source: 'DAILY' | 'AD' | 'QUEST', adTransactionId?: string) {
+function grantFeed(amount: number, source: 'DAILY' | 'AD' | 'QUEST' | 'VOUCHER', adTransactionId?: string) {
   const d = db()
   d.feedLogs.push({ date: kstDate(), source, amount, adTransactionId })
   d.pigeon.feedBalance = (d.pigeon.feedBalance ?? 0) + amount
@@ -421,26 +428,53 @@ async function refreshServerRewardPool() {
   }
 }
 
+/** 비둘기 보상으로 나갈 쿠폰 (베타 체험은 실제 서버에 쿠폰이 없으면 비어 있음) */
+function rewardPool() {
+  return IS_BETA && !serverRewardPool ? [] : db().coupons.filter((c) => c.useAsPigeonReward && c.status === 'ACTIVE' && remaining(c) > 0)
+}
+
+/** 남은 수량만큼 추첨권 (서버 CouponService.pickByRemaining 과 같게) */
+function issueRewardCoupon(): RewardCoupon | null {
+  const pool = rewardPool()
+  const total = pool.reduce((sum, c) => sum + remaining(c), 0)
+  if (total === 0) return null
+  let ticket = Math.floor(Math.random() * total)
+  const picked = pool.find((c) => (ticket -= remaining(c)) < 0) ?? pool[pool.length - 1]
+  const uc = issueUserCoupon(picked, 'PIGEON_REWARD')
+  return { userCouponId: uc.userCouponId, storeName: storeName(picked.storeId), title: picked.title, expiresAt: uc.expiresAt }
+}
+
 function draw(row: (typeof LEVEL_TABLE)[number]): LevelUp['reward'] {
   const r = Math.random()
   if (r < row.coupon) {
-    const pool =
-      IS_BETA && !serverRewardPool
-        ? []
-        : db().coupons.filter((c) => c.useAsPigeonReward && c.status === 'ACTIVE' && remaining(c) > 0)
-    if (pool.length > 0) {
-      const picked = pool[Math.floor(Math.random() * pool.length)]
-      const uc = issueUserCoupon(picked, 'PIGEON_REWARD')
-      return {
-        type: 'COUPON',
-        feedAmount: 0,
-        userCoupon: { userCouponId: uc.userCouponId, storeName: storeName(picked.storeId), title: picked.title, expiresAt: uc.expiresAt },
-      }
-    }
-    // 풀이 비었을 때(쿠폰을 내놓은 사장님이 없음): 서버와 같게 Lv.10 포함 먹이로 대체
-    return { type: 'FEED', feedAmount: COUPON_FALLBACK_FEED, userCoupon: null }
+    const coupon = issueRewardCoupon()
+    if (coupon) return { type: 'COUPON', feedAmount: 0, userCoupon: coupon }
+    // 풀이 비었을 때(쿠폰을 내놓은 사장님이 없음): 서버와 같게 Lv.10 포함 교환권 — 3주 안에 쿠폰으로 바꾸거나, 지나면 먹이
+    const voucher: RewardVoucher = { voucherId: nextId(), status: 'ISSUED', expiresAt: endOfKstDay(addDays(kstDate(), VOUCHER_DAYS)), userCoupon: null }
+    const d = db()
+    d.vouchers = [voucher, ...(d.vouchers ?? [])]
+    return { type: 'VOUCHER', feedAmount: 0, userCoupon: null, voucher: { ...voucher } }
   }
   return { type: 'FEED', feedAmount: r < row.coupon + row.feed1 ? 1 : 2, userCoupon: null }
+}
+
+/** 교환권 상태가 바뀌면 성장 기록에도 반영 */
+function syncVoucherHistory(v: RewardVoucher) {
+  db().history.forEach((h) => {
+    if (h.reward.voucher?.voucherId === v.voucherId) h.reward.voucher = { ...v }
+  })
+}
+
+/** 기한 지난 교환권 → 먹이 */
+function expireVouchers() {
+  const now = kstIso()
+  ;(db().vouchers ?? [])
+    .filter((v) => v.status === 'ISSUED' && v.expiresAt <= now)
+    .forEach((v) => {
+      v.status = 'EXPIRED'
+      grantFeed(VOUCHER_EXPIRY_FEED, 'VOUCHER')
+      syncVoucherHistory(v)
+    })
 }
 
 function requiredFeed(level: number) {
@@ -668,6 +702,7 @@ function assertMyStore(storeId: number, code: string) {
 export const mockPigeonApi = {
   get: () =>
     respond<Pigeon>(() => {
+      expireVouchers()
       const d = db()
       const today = kstDate()
       return {
@@ -754,6 +789,35 @@ export const mockPigeonApi = {
       const all = db().history
       return { history: all.slice(page * size, (page + 1) * size), page, size, hasNext: (page + 1) * size < all.length }
     }),
+
+  /** 내 쿠폰 교환권 (기한 지난 건 먹이로) */
+  vouchers: async () => {
+    await refreshServerRewardPool()
+    return respond<VoucherList>(() => {
+      expireVouchers()
+      return { vouchers: db().vouchers ?? [], poolAvailable: rewardPool().length > 0, validDays: VOUCHER_DAYS, expiryFeed: VOUCHER_EXPIRY_FEED }
+    })
+  },
+
+  /** 교환권 → 쿠폰 */
+  exchangeVoucher: async (voucherId: number) => {
+    await refreshServerRewardPool()
+    return respond<VoucherExchangeResult>(() => {
+      const v = (db().vouchers ?? []).find((x) => x.voucherId === voucherId)
+      if (!v) fail(404, 'VOUCHER404', '교환권을 찾을 수 없어요')
+      if (v.status === 'ISSUED' && v.expiresAt <= kstIso()) {
+        expireVouchers()
+        return { voucher: { ...v }, feedGained: VOUCHER_EXPIRY_FEED, feedBalance: db().pigeon.feedBalance ?? 0 }
+      }
+      if (v.status !== 'ISSUED') fail(409, 'VOUCHER409', '이미 쿠폰으로 바꾼 교환권이에요')
+      const coupon = issueRewardCoupon()
+      if (!coupon) fail(409, 'VOUCHER409_2', '아직 바꿀 수 있는 쿠폰이 없어요. 사장님들이 쿠폰을 내놓으면 바꿀 수 있어요')
+      v.status = 'EXCHANGED'
+      v.userCoupon = coupon
+      syncVoucherHistory(v)
+      return { voucher: { ...v }, feedGained: 0, feedBalance: db().pigeon.feedBalance ?? 0 }
+    })
+  },
 }
 
 /* ── 4. 쿠폰 ── */

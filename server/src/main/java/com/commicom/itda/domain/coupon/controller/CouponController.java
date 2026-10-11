@@ -49,11 +49,10 @@ public class CouponController {
     }
 
     @Operation(summary = "비둘기 보상 쿠폰 풀 상태 (로그인 불필요)",
-            description = "사장님이 비둘기 보상으로 내놓은 쿠폰이 남아 있는지. 없으면 레벨업 뽑기의 쿠폰은 먹이 "
-                    + PigeonRewardPool.FALLBACK_FEED + "개로 대체된다")
+            description = "사장님이 비둘기 보상으로 내놓은 쿠폰이 남아 있는지. 없으면 레벨업 뽑기의 쿠폰은 교환권으로 나간다")
     @GetMapping("/pigeon-reward-pool")
     public ApiResponse<PigeonRewardPool> pigeonRewardPool() {
-        return ApiResponse.onSuccess(new PigeonRewardPool(couponService.hasPigeonRewardPool(), PigeonRewardPool.FALLBACK_FEED));
+        return ApiResponse.onSuccess(new PigeonRewardPool(couponService.hasPigeonRewardPool()));
     }
 
     @Operation(summary = "쿠폰 사용 처리 (사장님)", description = "손님이 보여 준 6자리 코드. 내 가게 쿠폰만, 건당 수수료가 정산에 남는다")

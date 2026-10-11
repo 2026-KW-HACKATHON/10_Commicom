@@ -622,7 +622,7 @@ Response 예시 (404)
 
 > 회원 1명당 지금 키우는 비둘기 1마리. **알(Lv.0)** 로 시작 → 먹이 1개로 **부화**(종류 6가지 중 랜덤: `KOREAN` 한식 / `JAPANESE` 일식 / `CHINESE` 중식 / `WESTERN` 양식 / `MART` 마트 / `CAFE` 카페) → Lv.10 → **졸업**하면 앨범에 남고 새 알(다음 기수).
 > 먹이는 보유 먹이에 쌓이고 `POST /api/pigeon/feed`로 먹여야 레벨업. 최고 레벨이어도 무료·광고 먹이는 받아서 모아 둘 수 있고, 졸업해도 보유 먹이는 이어진다.
-> 레벨업마다 뽑기: 쿠폰 / 먹이 1개 / 먹이 2개. 쿠폰은 사장님들이 비둘기 보상으로 내놓은 쿠폰 풀에서 지급하고, 풀이 비면(쿠폰을 내놓은 사장님이 없으면) Lv.10 포함 먹이 3개로 대체 (응답 `reward.type=FEED, feedAmount=3`). 일반 먹이 보상은 1·2개라 3개면 대체된 것.
+> 레벨업마다 뽑기: 쿠폰 / 먹이 1개 / 먹이 2개. 쿠폰은 사장님들이 비둘기 보상으로 내놓은 쿠폰 풀에서 **남은 수량 비례**로 지급한다 (A 30장·B 30장·C 30장이면 90장 중 1장). 풀이 비면(쿠폰을 내놓은 사장님이 없으면) Lv.10 포함 **쿠폰 교환권**을 준다 (`reward.type=VOUCHER`, `reward.voucher{voucherId, status, expiresAt, userCoupon}`). 교환권은 3주 안에 쿠폰으로 바꿀 수 있고, 기한이 지나면 먹이 4개로 바뀐다 (내 비둘기·교환권 조회 때 처리, 먹이 기록 source=VOUCHER).
 
 | API | Method · Path | 설명 |
 | --- | --- | --- |
@@ -632,7 +632,9 @@ Response 예시 (404)
 | 먹이 주기 | `POST /api/pigeon/feed` | Body `amount`(1 이상). 알이면 먹이 1개로 부화(`hatched{breed, breedName}`, 뽑기 없음), 그 뒤로는 필요 먹이를 채울 때마다 레벨업 + 뽑기 (한 번에 여러 레벨 가능). 응답 `fed, pigeon, hatched(부화 안 했으면 null), levelUps[], feedBalance` |
 | 졸업 | `POST /api/pigeon/graduate` | Lv.10 일 때만. 앨범에 남기고 새 알을 줌. 응답 `graduated{generation, breed, breedName, startedAt, graduatedAt, days, rewardCouponCount}, pigeon(새 알)` |
 | 비둘기 앨범 | `GET /api/pigeon/album` | 졸업한 비둘기 최근 순. `graduates[]` (졸업 응답의 graduated 와 같은 모양) |
-| 레벨업 기록 | `GET /api/pigeon/history?page&size` | 최근 순, size 최대 50. `history[]{historyId, generation, fromLevel, toLevel, reward{type, feedAmount, userCoupon}, createdAt}` |
+| 레벨업 기록 | `GET /api/pigeon/history?page&size` | 최근 순, size 최대 50. `history[]{historyId, generation, fromLevel, toLevel, reward{type(FEED/COUPON/VOUCHER), feedAmount, userCoupon, voucher}, createdAt}` |
+| 내 쿠폰 교환권 | `GET /api/pigeon/vouchers` | 기한 지난 교환권은 이때 먹이로 바뀜. 응답 `vouchers[]{voucherId, status(ISSUED/EXCHANGED/EXPIRED), expiresAt, userCoupon}, poolAvailable(지금 바꿀 쿠폰이 있는지), validDays(21), expiryFeed(4)` |
+| 교환권 → 쿠폰 | `POST /api/pigeon/vouchers/{voucherId}/exchange` | 쿠폰 풀에서 남은 수량 비례로 1장. 쿠폰이 없으면 `VOUCHER409_2`, 이미 바꿨으면 `VOUCHER409`, 내 것이 아니면 `VOUCHER404`. 기한이 이미 지났으면 먹이로 바뀌고 `feedGained`=4. 응답 `voucher, feedGained, feedBalance` |
 
 레벨 표 (현재 레벨 → 다음 레벨)
 
@@ -673,14 +675,14 @@ Response 예시 (404)
 
 | API | Method · Path | 인증 | 설명 |
 | --- | --- | --- | --- |
-| 쿠폰 발행 | `POST /api/stores/{storeId}/coupons` | 사장님 | Body `title`(1~30자), `discountType`(`AMOUNT`/`RATE`), `discountValue`(정액 100원 이상 / 정률 10~80%), `minOrderAmount`(선택, 0 이상), `totalQuantity`(1~1,000), `validDays`(1~30), `useAsPigeonReward`(선택). 응답 `couponId, status, createdAt` |
+| 쿠폰 발행 | `POST /api/stores/{storeId}/coupons` | 사장님 | Body `title`(1~30자), `discountType`(`AMOUNT`/`RATE`), `discountValue`(정액 100원 이상 / 정률 10~80%), `minOrderAmount`(선택, 0 이상), `totalQuantity`(1~1,000), `validDays`(1~30), `useAsPigeonReward`(선택). 응답 `couponId, status, createdAt, earlyOwnerReward`(이번 발행으로 초기 사장님 이벤트 혜택을 받았는지) |
 | 내 가게 쿠폰 목록 | `GET /api/stores/{storeId}/coupons?status=` | 사장님 | `coupons[]`: `couponId, title, discountType, discountValue, minOrderAmount, totalQuantity, issuedCount, usedCount, remainingQuantity, useAsPigeonReward, status(ACTIVE/STOPPED/SOLD_OUT), createdAt` |
 | 발행 중지 | `PATCH /api/stores/{storeId}/coupons/{couponId}` | 사장님 | Body `{ "status": "STOPPED" }`. 이미 받은 쿠폰은 기한까지 쓸 수 있음 |
 | 받을 수 있는 쿠폰 | `GET /api/stores/{storeId}/coupons/available` | 선택 | `coupons[]`: `couponId, title, discountType, discountValue, minOrderAmount, validDays, remainingQuantity, alreadyDownloaded`(로그인 전이면 false) |
 | 쿠폰 받기 | `POST /api/coupons/{couponId}/downloads` | 필수 | 같은 쿠폰은 한 번만. 응답 `userCouponId, redeemCode(6자리), expiresAt(받은 날 + validDays 23:59:59)` |
 | 내 쿠폰함 | `GET /api/coupons/me?status=&page=&size=` | 필수 | status `AVAILABLE`/`USED`/`EXPIRED`. 쓸 수 있는 쿠폰은 기한 임박 순, 나머지는 최근 순. `coupons[]`: `userCouponId, storeId, storeName, title, discountType, discountValue, minOrderAmount, source(DOWNLOAD/PIGEON_REWARD/QUEST_REWARD), redeemCode, status, expiresAt, usedAt` |
 | 사용 처리 | `POST /api/coupons/redeem` | 사장님 | Body `redeemCode` (대소문자 무관). 내 가게 쿠폰만. 응답 `userCouponId, title, discountType, discountValue, minOrderAmount, fee, redeemedAt` |
-| 비둘기 보상 쿠폰 풀 | `GET /api/coupons/pigeon-reward-pool` | 불필요 | 응답 `available`(보상으로 나갈 쿠폰이 남았는지), `fallbackFeed`(없을 때 쿠폰 대신 주는 먹이 수, 3) |
+| 비둘기 보상 쿠폰 풀 | `GET /api/coupons/pigeon-reward-pool` | 불필요 | 응답 `available`(보상으로 나갈 쿠폰이 남았는지 — 없으면 레벨업 쿠폰은 교환권으로 나감) |
 | 정산 | `GET /api/stores/{storeId}/coupon-settlements?month=YYYY-MM` | 사장님 | KST 기준 그 달. `month, usedCount, totalDiscount, totalFee, items[]{userCouponId, title, discountValue, fee, redeemedAt}` |
 
 | 상태코드 | 의미 |
@@ -697,6 +699,16 @@ Response 예시 (404)
 
 > **로컬 샘플:** 월계 분식 "떡볶이 10% 할인"(비둘기 보상), 광운 카페 "아메리카노 1,000원 할인"(비둘기 보상), 골목 베이커리 "소금빵 500원 할인".
 > 샘플 주민(resident@test.com)이 광운 카페 쿠폰 코드 **QK7M2P**를 가지고 있어 샘플 사장님으로 사용 처리를 해 볼 수 있다.
+
+---
+
+## Event
+
+> 초기 사장님 이벤트: 2026-10-13(KST)부터 **비둘기 보상 쿠폰**(`useAsPigeonReward=true`)을 처음 발행한 가게 선착순 10곳에 잇다 PRO + 퀘스트 가게 등록을 30일씩 무료로 준다 (가게당 1번, 이미 이용 중이면 남은 기간 뒤로 연장). 쿠폰 발행 응답 `earlyOwnerReward`가 true면 이번 발행으로 혜택을 받은 것.
+
+| API | Method · Path | 인증 | 설명 |
+| --- | --- | --- | --- |
+| 초기 사장님 이벤트 현황 | `GET /api/events/early-owner` | 불필요 | 응답 `status(UPCOMING/OPEN/CLOSED), startsAt, limit(10), joined, remaining, benefitDays(30)` |
 
 ---
 

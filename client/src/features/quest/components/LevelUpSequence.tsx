@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { untilText } from '@/features/coupon/schema'
 import { ConfettiBurst } from '@/shared/ui/Confetti'
-import { isCouponFallback, pigeonImage, type LevelUp, type PigeonBreed } from '../schema'
+import { pigeonImage, VOUCHER_EXPIRY_FEED, type LevelUp, type PigeonBreed } from '../schema'
 import { CelebrationScreen, FeedBowlIcon, FeedIcon, OutlineButton, PrimaryButton } from './QuestUi'
 import { RewardCardDraw } from './RewardCardDraw'
 
@@ -53,7 +53,7 @@ function LevelUpStep({
   const navigate = useNavigate()
   const [revealed, setRevealed] = useState(false)
   const { reward } = levelUp
-  const wonCoupon = revealed && reward.type === 'COUPON' && reward.userCoupon
+  const wonCoupon = revealed && ((reward.type === 'COUPON' && reward.userCoupon) || reward.type === 'VOUCHER')
 
   return (
     <CelebrationScreen
@@ -106,13 +106,18 @@ function RewardResult({ reward }: { reward: LevelUp['reward'] }) {
       </div>
     )
   }
-  if (isCouponFallback(reward)) {
+  if (reward.type === 'VOUCHER') {
     return (
-      <div role="status" className={`${box} bg-white`}>
-        <FeedBowlIcon className="h-10 w-11 shrink-0" />
-        <span className="flex-1">
-          <span className="block text-[20px] leading-tight font-bold text-q-green">쿠폰 대신 먹이 +{reward.feedAmount}</span>
-          <span className="block text-[12px] text-q-muted">아직 비둘기 보상 쿠폰을 내놓은 가게가 없어서 먹이로 드렸어요</span>
+      <div role="status" className={`${box} border border-dashed border-point-orange bg-point-yellow/25`}>
+        <span aria-hidden className="text-[30px] leading-none">🎟</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[17px] font-bold text-point-red-dark">쿠폰 교환권 획득!</span>
+          <span className="block text-[12px] leading-snug text-q-sub">
+            쿠폰을 내놓은 가게가 생기면 쿠폰함에서 쿠폰으로 바꿀 수 있어요
+          </span>
+          <span className="block text-[11px] text-q-muted">
+            {reward.voucher ? `${untilText(reward.voucher.expiresAt)} · ` : ''}못 바꾸면 먹이 {VOUCHER_EXPIRY_FEED}개로 드려요
+          </span>
         </span>
       </div>
     )
