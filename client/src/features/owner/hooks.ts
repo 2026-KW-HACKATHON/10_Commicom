@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { isOwnerRole } from '@/features/auth/schema'
 import { useStores } from '@/features/map/hooks'
 import { mockFor, MOCK_OWNER_STORE_ID, setMockOwnerStoreId } from '@/mocks/db'
 import { errorCode } from '@/shared/lib/error'
@@ -14,7 +15,7 @@ export function useMyStoreQuery() {
   return useQuery({
     queryKey: ['myStore', me?.memberId],
     queryFn: getMyStore,
-    enabled: !mockFor('storeEdit') && me?.role === 'OWNER',
+    enabled: !mockFor('storeEdit') && isOwnerRole(me?.role),
     staleTime: 60_000,
     // 아직 가게를 등록하지 않은 사장님(STORE404_2)은 다시 물어봐도 같음
     retry: (count, e) => errorCode(e) !== 'STORE404_2' && count < 2,
@@ -33,7 +34,7 @@ export function useStoreManageAccess(feature: Parameters<typeof mockFor>[0]) {
   const me = useMe()
   const myStore = useMyStoreQuery()
   const local = mockFor(feature)
-  const owner = me?.role === 'OWNER'
+  const owner = isOwnerRole(me?.role)
   return {
     local,
     storeId: !local && owner ? (myStore.data?.storeId ?? null) : null,

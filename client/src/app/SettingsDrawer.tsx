@@ -107,7 +107,7 @@ function AccountSection({ onLoggedIn, onLoggedOut }: { onLoggedIn: (mode: AppMod
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[15px] font-bold text-ink">{me.nickname} 님</span>
           <span className="block truncate text-[11px] text-q-muted">
-            {owner ? '사장님' : '손님'} · {me.email}
+            {me.role === 'ADMIN' ? '관리자' : owner ? '사장님' : '손님'} · {me.email}
           </span>
         </span>
       </div>

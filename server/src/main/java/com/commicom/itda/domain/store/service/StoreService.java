@@ -64,7 +64,8 @@ public class StoreService {
     public StoreDetailResponse createStore(Long memberId, StoreCreateRequest request, MultipartFile image) {
         Member owner = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
-        if (owner.getRole() != Role.OWNER) {
+        // 관리자도 시연·확인을 위해 가게를 등록할 수 있음
+        if (owner.getRole() != Role.OWNER && owner.getRole() != Role.ADMIN) {
             throw new BusinessException(ErrorCode.STORE_OWNER_ONLY);
         }
         if (storeRepository.existsByOwnerId(memberId)) {
