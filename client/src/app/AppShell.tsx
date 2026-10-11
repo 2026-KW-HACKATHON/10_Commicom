@@ -1,7 +1,9 @@
 import type { ComponentType, CSSProperties } from 'react'
 import { Navigate, NavLink, Outlet, useLocation, useMatches, useNavigate } from 'react-router-dom'
+import { IS_BETA } from '@/shared/lib/beta'
 import { BackIcon, PlusIcon } from '@/shared/ui/icons'
 import { useModeStore } from '@/stores/modeStore'
+import { BetaIntro } from './BetaIntro'
 import { SettingsDrawer, type MenuItem } from './SettingsDrawer'
 import { useShrinkOnScroll } from './useShrinkOnScroll'
 
@@ -59,6 +61,8 @@ export function AppShell({
   // 탭이 많으면(사장님 5개) 선택된 탭도 아이콘 위·글자 아래로
   const compact = tabs.length >= 5
   const { shrunk, onScrollCapture } = useShrinkOnScroll(pathname)
+  // 베타 체험 중이면 제목 위에 BETA 표시 (사장님 모드면 "BETA · 사장님")
+  const badge = [IS_BETA && 'BETA', modeBadge].filter(Boolean).join(' · ')
 
   // 처음 실행이면 손님/사장님 선택부터 (QR로 들어온 경우 고른 뒤 돌아오도록 next)
   if (!mode) return <Navigate to={`/welcome?next=${encodeURIComponent(pathname + search)}`} replace />
@@ -74,11 +78,10 @@ export function AppShell({
       >
         <SettingsDrawer buttonClassName={circleButton} items={menuItems} />
         <div className="flex min-w-0 flex-col items-center">
-          {modeBadge && (
-            <span className="mb-0.5 rounded-full bg-green-6 px-2 py-px text-[10px] font-bold text-white">{modeBadge}</span>
-          )}
+          {/* 화면 전체를 쓰는 탭(지도·퀘스트)은 제목 자리에 동네 이름이 있어 겹치므로 생략 */}
+          {badge && !immersive && <span className="mb-0.5 rounded-full bg-green-6 px-2 py-px text-[10px] font-bold text-white">{badge}</span>}
           {!immersive && (
-            <h1 className={`truncate font-bold text-ink ${modeBadge ? 'text-[21px] leading-tight' : 'text-[25px]'}`}>{title}</h1>
+            <h1 className={`truncate font-bold text-ink ${badge ? 'text-[21px] leading-tight' : 'text-[25px]'}`}>{title}</h1>
           )}
         </div>
         {showBack ? (
@@ -153,6 +156,8 @@ export function AppShell({
           ))}
         </div>
       </nav>
+
+      {IS_BETA && <BetaIntro />}
     </div>
   )
 }

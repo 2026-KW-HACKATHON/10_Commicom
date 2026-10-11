@@ -1,4 +1,5 @@
 import type { LatLng } from '@/features/map/schema'
+import { IS_BETA } from '@/shared/lib/beta'
 
 /** 두 좌표 사이 거리(m) — 하버사인 */
 export function distanceMeters(a: LatLng, b: LatLng) {
@@ -29,5 +30,5 @@ export function getCurrentPosition(): Promise<LatLng> {
   })
 }
 
-/** 개발·시연용: true면 거리 검사 없이 인증 (.env VITE_QUEST_GPS_BYPASS) */
-export const GPS_BYPASS = import.meta.env.VITE_QUEST_GPS_BYPASS === 'true'
+/** 개발·시연용: true면 거리 검사 없이 인증 (.env VITE_QUEST_GPS_BYPASS). 베타 체험은 전시장에서도 인증해 보게 항상 */
+export const GPS_BYPASS = import.meta.env.VITE_QUEST_GPS_BYPASS === 'true' || IS_BETA

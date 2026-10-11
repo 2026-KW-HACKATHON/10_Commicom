@@ -4,6 +4,7 @@
  * 상태는 localStorage에 저장 — resetMockDb()로 초기화.
  */
 import { ApiError } from '@/shared/api/client'
+import { IS_BETA } from '@/shared/lib/beta'
 import { MOCK_STORES } from '@/features/map/mock'
 import type {
   AvailableCoupon,
@@ -47,8 +48,8 @@ import {
   type VisitResult,
 } from '@/features/quest/schema'
 
-/** true면 모든 기능을 목업으로 (서버 없이 시연) */
-export const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
+/** true면 모든 기능을 목업으로 (서버 없이 시연). 베타 테스터 모드도 이 기기 목업으로만 동작 */
+export const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true' || IS_BETA
 
 /**
  * 서버에 아직 API가 없는 기능 — VITE_USE_MOCK=false여도 이 기능들만 목업으로 동작.
@@ -185,7 +186,7 @@ function seed(): Db {
       { questId: 3, title: '지도에서 가게 3곳 둘러보기', type: 'BASIC', targetCount: 3, rewardFeed: 1, basicCount: 1 },
     ],
     visits: [{ questId: 1, storeId: 5, date: ago(1) }],
-    // 1 월계 분식, 3 김가네, 5 헤어살롱 (모두 퀘스트 가게). 2 광운 카페(사장님 데모)는 아직 미참여
+    // 1 청년다방, 3 월계 해장국, 5 헤어살롱 (모두 퀘스트 가게). 2 광운 카페(사장님 데모)는 아직 미참여
     questParticipants: { restaurant: [1, 3], korean: [3], snack: [1], beauty: [5] },
     subscriptions: {
       1: { startedAt: `${ago(10)}T00:00:00+09:00`, expiresAt: endOfKstDay(addDays(today, 20)) },

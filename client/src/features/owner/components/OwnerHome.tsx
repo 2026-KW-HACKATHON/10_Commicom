@@ -4,6 +4,7 @@ import { untilText } from '@/features/coupon/schema'
 import { useIsPro } from '@/features/pro/hooks'
 import { useQuestSubscription } from '@/features/quest/hooks'
 import { HAS_MOCK, resetAllLocalData } from '@/mocks/db'
+import { IS_BETA } from '@/shared/lib/beta'
 import { useMyStoreId, useMyStoreName, useStoreManageAccess } from '../hooks'
 import { OWNER_ILLUST } from '../illustrations'
 import { currentMonth } from '../date'
@@ -76,7 +77,8 @@ export function OwnerHome() {
         </div>
       </OwnerCard>
 
-      {HAS_MOCK && (
+      {/* 베타 체험은 메뉴의 "체험 처음부터 다시 하기"로 (여기서 지우면 체험 계정까지 지워짐) */}
+      {HAS_MOCK && !IS_BETA && (
         <button
           type="button"
           onClick={resetAllLocalData}

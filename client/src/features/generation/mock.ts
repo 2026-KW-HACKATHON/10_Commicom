@@ -8,8 +8,7 @@ import type { GenerationCreated, GenerationRequest, GenerationState, MenuItem, S
  * 생성은 요청 후 약 2초 PENDING → 약 9초까지 PROCESSING → COMPLETED 로 흘러감.
  */
 const SAMPLE = {
-  imageUrl: '/samples/shortform-sample-poster.jpg',
-  frame: { top: 656 / 1920, height: 607 / 1920 },
+  imageUrl: 'https://images.unsplash.com/photo-1534687941688-651ccaafbff8?w=1080&q=80&fm=jpg&fit=crop&ar=4:5',
 }
 
 interface Job {

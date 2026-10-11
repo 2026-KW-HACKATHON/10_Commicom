@@ -3,6 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import pigeonWalk from '@/assets/map/pigeon-walk.png'
 import pigeonGps from '@/assets/quest/pigeon-gps.png'
 import logo from '@/assets/logo-itda.svg'
+import pigeonBeta from '@/assets/quest/pigeon-lv-01.png'
+import { IS_BETA, leaveBetaTo, startBeta } from '@/shared/lib/beta'
 import { MODE_HOME, useModeStore, type AppMode } from '@/stores/modeStore'
 
 const OPTIONS: { mode: AppMode; title: string; desc: string; points: string[]; image: string }[] = [
@@ -31,15 +33,18 @@ export function WelcomePage() {
 
   const start = () => {
     if (!picked) return
-    setMode(picked)
     // QR을 찍고 들어왔다가 온 경우 등 원래 가려던 곳으로 — 고른 모드의 화면일 때만
     const next = params.get('next')
     const nextFits = next?.startsWith('/') && next.startsWith('/owner') === (picked === 'OWNER')
-    navigate(nextFits ? next! : MODE_HOME[picked], { replace: true })
+    const target = nextFits ? next! : MODE_HOME[picked]
+    // 베타 체험 중이었다면 체험을 끝내고 실제 서버 모드로 (새로고침해야 목업 연결이 풀림)
+    if (IS_BETA) return leaveBetaTo(picked, target)
+    setMode(picked)
+    navigate(target, { replace: true })
   }
 
   return (
-    <div className="mx-auto flex h-full max-w-[430px] flex-col bg-white px-6 pt-[max(48px,env(safe-area-inset-top))] pb-[max(24px,env(safe-area-inset-bottom))]">
+    <div className="mx-auto flex h-full max-w-[430px] flex-col overflow-y-auto bg-white px-6 pt-[max(40px,env(safe-area-inset-top))] pb-[max(24px,env(safe-area-inset-bottom))]">
       <img src={logo} alt="잇다" className="h-[56px] w-fit" />
       <h1 className="mt-6 text-[26px] leading-snug font-bold text-ink">
         반가워요!
@@ -48,7 +53,23 @@ export function WelcomePage() {
       </h1>
       <p className="mt-2 text-sm text-q-muted">나중에 설정에서 언제든 바꿀 수 있어요</p>
 
-      <div role="radiogroup" aria-label="이용 모드" className="mt-7 flex flex-col gap-3">
+      {/* 전시회 QR 로 들어온 관람객용: 로그인 없이 손님·사장님 기능을 모두 체험 */}
+      <button
+        type="button"
+        onClick={startBeta}
+        className="mt-6 flex shrink-0 items-center gap-3 rounded-3xl bg-gradient-to-br from-green-6 to-green-4 px-5 py-4 text-left text-white shadow-[0_8px_24px_rgba(8,104,22,0.28)] active:opacity-90"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="inline-block rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold tracking-wider">BETA</span>
+          <span className="mt-1 block text-[18px] font-bold">베타 테스터로 체험하기</span>
+          <span className="mt-0.5 block text-[12px] text-white/85">로그인 없이 손님·사장님 기능을 모두 써 볼 수 있어요</span>
+        </span>
+        <img src={pigeonBeta} alt="" className="size-[64px] shrink-0 object-contain" />
+      </button>
+
+      <p className="mt-6 text-center text-[12px] text-q-muted">또는 직접 골라서 시작하기</p>
+
+      <div role="radiogroup" aria-label="이용 모드" className="mt-3 flex shrink-0 flex-col gap-3">
         {OPTIONS.map((o) => {
           const active = picked === o.mode
           return (
@@ -96,7 +117,7 @@ export function WelcomePage() {
         type="button"
         disabled={!picked}
         onClick={start}
-        className="mt-auto h-[54px] w-full rounded-full bg-green-6 text-base font-bold text-white transition-opacity disabled:opacity-30"
+        className="mt-auto h-[54px] w-full shrink-0 rounded-full bg-green-6 text-base font-bold text-white transition-opacity disabled:opacity-30"
       >
         {picked === 'OWNER' ? '사장님으로 시작하기' : picked === 'USER' ? '손님으로 시작하기' : '하나를 골라 주세요'}
       </button>
