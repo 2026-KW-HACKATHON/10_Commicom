@@ -33,7 +33,7 @@ public class EarlyOwnerEventService {
     private final QuestSubscriptionRepository questSubscriptionRepository;
 
     /** 이벤트 시작일 (KST 0시). 로컬에서 미리 확인할 땐 --event.early-owner.starts-on=날짜 로 바꿈 */
-    @Value("${event.early-owner.starts-on:2026-10-13}")
+    @Value("${event.early-owner.starts-on:2026-10-12}")
     private LocalDate startsOn;
 
     public EarlyOwnerEvent status() {

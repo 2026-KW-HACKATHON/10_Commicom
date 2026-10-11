@@ -12,8 +12,8 @@ export interface EarlyOwnerEvent {
 
 /** 서버가 아직 이 API를 모를 때(배포 전) 보여 줄 기본값 */
 export const EARLY_OWNER_DEFAULT: EarlyOwnerEvent = {
-  status: 'UPCOMING',
-  startsAt: '2026-10-13T00:00:00+09:00',
+  status: 'OPEN',
+  startsAt: '2026-10-12T00:00:00+09:00',
   limit: 10,
   joined: 0,
   remaining: 10,
