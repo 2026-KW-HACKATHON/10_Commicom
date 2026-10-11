@@ -1,13 +1,13 @@
-# 서버(server) 자동 배포: main 에 server/** 가 바뀌어 올라오면 jar 를 빌드해 EC2(15.164.102.84)에 올리고 재시작
+# 서버(server) 자동 배포: dev 에 server/** 가 바뀌어 올라오면 jar 를 빌드해 EC2(15.164.102.84)에 올리고 재시작
 # 새 jar 가 안 뜨면 옛 jar 로 되돌림.
-# ⚠️ DB 구조가 바뀌는 변경은 server/docs/sql/ 의 SQL 을 운영 DB에 먼저 실행한 뒤 main 에 올릴 것 (운영 ddl-auto: validate)
+# ⚠️ DB 구조가 바뀌는 변경은 server/docs/sql/ 의 SQL 을 운영 DB에 먼저 실행한 뒤 dev 에 올릴 것 (운영 ddl-auto: validate)
 # 필요한 저장소 Secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 #   (IAM 사용자 권한: ec2-instance-connect:SendSSHPublicKey 를 이 인스턴스에만 — 루트 계정 키는 쓰지 말 것)
 name: server-deploy
 
 on:
   push:
-    branches: [main]
+    branches: [dev]
     paths: ['server/**', '.github/workflows/server-deploy.yml']
   workflow_dispatch:
 

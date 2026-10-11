@@ -1,10 +1,10 @@
-# 화면(client) 자동 배포: main 에 client/** 가 바뀌어 올라오면 Vercel(itda-kappa.vercel.app)에 배포
+# 화면(client) 자동 배포: dev 에 client/** 가 바뀌어 올라오면 Vercel(itda-kappa.vercel.app)에 배포
 # 필요한 저장소 Secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID (client/.vercel/project.json 의 orgId·projectId)
 name: client-deploy
 
 on:
   push:
-    branches: [main]
+    branches: [dev]
     paths: ['client/**', '.github/workflows/client-deploy.yml']
   workflow_dispatch:
 
